@@ -1,0 +1,45 @@
+{
+ "query": "Which launched first, the Aurora X1 or the Vega S2?",
+ "documents": [
+  {
+   "id": "doc-aurora-01",
+   "text": "The Aurora X1 launched in March 2024.",
+   "source": "Blog",
+   "published": "2024-04-01"
+  },
+  {
+   "id": "doc-vega-02",
+   "text": "The Vega S2 launched in November 2024.",
+   "source": "Blog",
+   "published": "2024-12-01"
+  },
+  {
+   "id": "doc-rumor",
+   "text": "Rumor: the Vega S2 was expected to launch in January 2024, but it slipped to November.",
+   "source": "Blog",
+   "published": "2024-02-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-aurora-01",
+  "doc-vega-02"
+ ],
+ "must_cite": [
+  "doc-aurora-01",
+  "doc-vega-02"
+ ],
+ "must_not_cite": [
+  "doc-rumor"
+ ],
+ "order_check": [
+  [
+   "march 2024"
+  ],
+  [
+   "november 2024"
+  ]
+ ],
+ "expected": "The rumor doc mentions January 2024; it must not be treated as a launch date.",
+ "conflict_pair": null,
+ "should_abstain": false
+}
