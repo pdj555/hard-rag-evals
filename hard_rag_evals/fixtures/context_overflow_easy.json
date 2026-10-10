@@ -1,0 +1,52 @@
+{
+ "query": "What is the data backup policy?",
+ "documents": [
+  {
+   "id": "doc-bak-1",
+   "text": "The data backup policy requires daily backups retained for 90 days.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-bak-2",
+   "text": "Backup encryption uses AES-256. See the data backup policy for retention schedules.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "d1",
+   "text": "Our office backup generator runs on diesel.",
+   "source": "Facilities",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "d2",
+   "text": "Back up your files before the migration.",
+   "source": "IT",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "d3",
+   "text": "The backup quarterback started on Sunday.",
+   "source": "Sports",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "d4",
+   "text": "Data entry backup procedures are manual.",
+   "source": "Ops",
+   "published": "2025-01-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-bak-1",
+  "doc-bak-2"
+ ],
+ "must_cite": [
+  "doc-bak-1"
+ ],
+ "expected": "Six docs, budget four, mild distractors. The substantive docs win on term density.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
