@@ -1,0 +1,39 @@
+{
+ "query": "In what year does full coverage end for an Aurora X1 with extended coverage?",
+ "documents": [
+  {
+   "id": "doc-x1-launch",
+   "text": "The Aurora X1 launched on March 15, 2024.",
+   "source": "Blog",
+   "published": "2024-03-20"
+  },
+  {
+   "id": "doc-x1-warranty",
+   "text": "The Aurora X1 includes a 2 year standard warranty from the launch date.",
+   "source": "Docs",
+   "published": "2024-03-20"
+  },
+  {
+   "id": "doc-extended",
+   "text": "Extended coverage adds 1 year to the standard warranty period.",
+   "source": "Docs",
+   "published": "2024-06-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-x1-launch",
+  "doc-x1-warranty",
+  "doc-extended"
+ ],
+ "must_cite": [
+  "doc-x1-launch",
+  "doc-x1-warranty",
+  "doc-extended"
+ ],
+ "numeric_expected": 2027,
+ "numeric_tolerance": 0.5,
+ "expected": "Three hops plus arithmetic: 2024 + 2 + 1 = 2027. Citing the inputs is not enough; the answer must contain the computed year.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
