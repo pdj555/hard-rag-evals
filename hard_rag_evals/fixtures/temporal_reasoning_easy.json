@@ -1,0 +1,39 @@
+{
+ "query": "Which launched first, the Aurora X1 or the Vega S2?",
+ "documents": [
+  {
+   "id": "doc-aurora-01",
+   "text": "The Aurora X1 launched in March 2024.",
+   "source": "Blog",
+   "published": "2024-04-01"
+  },
+  {
+   "id": "doc-vega-02",
+   "text": "The Vega S2 launched in November 2024.",
+   "source": "Blog",
+   "published": "2024-12-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-aurora-01",
+  "doc-vega-02"
+ ],
+ "must_cite": [
+  "doc-aurora-01",
+  "doc-vega-02"
+ ],
+ "order_check": [
+  [
+   "march 2024",
+   "aurora"
+  ],
+  [
+   "november 2024",
+   "vega"
+  ]
+ ],
+ "expected": "Both dates explicit. The answer must name March 2024 before November 2024. Lexical ties rank the Vega doc first, so order-blind agents fail.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
