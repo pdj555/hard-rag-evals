@@ -1,0 +1,35 @@
+{
+ "query": "When was the Aurora X1 launched and what is its warranty?",
+ "documents": [
+  {
+   "id": "doc-launch",
+   "text": "The Aurora X1 launched in March 2024 to strong reviews.",
+   "source": "Blog",
+   "published": "2024-03-20"
+  },
+  {
+   "id": "doc-warranty",
+   "text": "The Aurora X1 ships with a 2 year limited warranty.",
+   "source": "Docs",
+   "published": "2024-03-20"
+  },
+  {
+   "id": "doc-vega",
+   "text": "The Vega S2 is our new flagship phone.",
+   "source": "Blog",
+   "published": "2024-09-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-launch",
+  "doc-warranty"
+ ],
+ "must_cite": [
+  "doc-launch",
+  "doc-warranty"
+ ],
+ "expected": "Two hops, no reasoning required. Both docs share query terms.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
