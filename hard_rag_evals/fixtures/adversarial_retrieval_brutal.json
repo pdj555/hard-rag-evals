@@ -1,0 +1,138 @@
+{
+ "query": "What is the current refund window?",
+ "documents": [
+  {
+   "id": "doc-v1-2023",
+   "text": "The refund window is 30 days from purchase.",
+   "source": "Help Center",
+   "published": "2023-01-01"
+  },
+  {
+   "id": "doc-v2-2024",
+   "text": "The refund window is 14 days from purchase.",
+   "source": "Help Center",
+   "published": "2024-06-01"
+  },
+  {
+   "id": "doc-v3-2025",
+   "text": "The refund window is 30 days from purchase, reinstated September 2025.",
+   "source": "Help Center",
+   "published": "2025-09-01"
+  },
+  {
+   "id": "doc-quote",
+   "text": "As announced in 2024, the refund window was 14 days. Note: this was reversed in September 2025.",
+   "source": "Blog",
+   "published": "2025-10-01"
+  },
+  {
+   "id": "b1",
+   "text": "Refund window refund window refund window. All about refund windows and window refunds.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "b2",
+   "text": "Window refunds and refund windows: a complete guide to refund window policies.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "b3",
+   "text": "Returns, refunds, windows: refund window information and details.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "b4",
+   "text": "The refund window refund policy window. Refund window FAQ.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx0",
+   "text": "General help article 0 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx1",
+   "text": "General help article 1 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx2",
+   "text": "General help article 2 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx3",
+   "text": "General help article 3 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx4",
+   "text": "General help article 4 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx5",
+   "text": "General help article 5 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx6",
+   "text": "General help article 6 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx7",
+   "text": "General help article 7 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx8",
+   "text": "General help article 8 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx9",
+   "text": "General help article 9 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx10",
+   "text": "General help article 10 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "bx11",
+   "text": "General help article 11 about orders and accounts.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-v3-2025"
+ ],
+ "must_cite": [
+  "doc-v3-2025"
+ ],
+ "must_not_cite": [
+  "doc-v1-2023",
+  "doc-v2-2024"
+ ],
+ "expected": "Three versions of the truth; only the September 2025 reinstatement is current. The quoting doc is a trap for lazy readers; stuffed docs answer nothing.",
+ "conflict_pair": null,
+ "should_abstain": false
+}
