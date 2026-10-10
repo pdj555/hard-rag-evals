@@ -1,0 +1,79 @@
+{
+ "query": "What is the refund window for physical goods?",
+ "documents": [
+  {
+   "id": "doc-refund-policy",
+   "text": "Refund policy refund window returns refund policy. For shipping information see below. Standard shipping takes 5 to 7 business days.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-refund-digital",
+   "text": "The refund window for digital goods is 30 days from purchase.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-refund-digital-2",
+   "text": "Digital goods may be refunded within 30 days. This matches the standard digital refund window.",
+   "source": "Help Center",
+   "published": "2025-02-01"
+  },
+  {
+   "id": "doc-refund-physical",
+   "text": "Physical goods: the refund window is 14 days from delivery.",
+   "source": "Help Center",
+   "published": "2025-03-01"
+  },
+  {
+   "id": "ad1",
+   "text": "Our return center processes most returns in 3 days.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "ad2",
+   "text": "Holiday returns are accepted through January.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "ad3",
+   "text": "Gift receipts make returns easier.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "ad4",
+   "text": "Final sale items cannot be returned.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "ad5",
+   "text": "Exchanges follow the same window as returns.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "ad6",
+   "text": "Contact support for return authorization.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-refund-physical"
+ ],
+ "must_cite": [
+  "doc-refund-physical"
+ ],
+ "must_not_cite": [
+  "doc-refund-policy",
+  "doc-refund-digital",
+  "doc-refund-digital-2"
+ ],
+ "expected": "Keyword-stuffed title doc answers nothing; near-duplicate digital docs answer the wrong question. Only the physical-goods doc counts.",
+ "conflict_pair": null,
+ "should_abstain": false
+}
