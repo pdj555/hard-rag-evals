@@ -1,0 +1,29 @@
+{
+ "query": "What is the warranty return process?",
+ "documents": [
+  {
+   "id": "doc-warranty-coverage",
+   "text": "The warranty covers manufacturing defects for 2 years from purchase.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-refund-process",
+   "text": "To return a non-warranty item, open a ticket with your order number.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-shipping-returns",
+   "text": "Return shipping labels are available in your account.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  }
+ ],
+ "should_abstain": true,
+ "expected": "Near-miss corpus: coverage, process, and returns each appear, but the warranty return process itself is never described. Tempting to stitch; must abstain.",
+ "conflict_pair": null,
+ "gold_doc_ids": [],
+ "must_cite": [],
+ "must_not_cite": []
+}
