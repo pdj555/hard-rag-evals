@@ -1,0 +1,136 @@
+{
+ "query": "What is the data backup policy?",
+ "documents": [
+  {
+   "id": "doc-bak-1",
+   "text": "The data backup policy requires daily backups retained for 90 days.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-bak-2",
+   "text": "Backup encryption uses AES-256. See the data backup policy for retention schedules.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx0",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 0.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx1",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 1.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx2",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 2.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx3",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 3.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx4",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 4.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx5",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 5.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx6",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 6.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx7",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 7.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx8",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 8.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx9",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 9.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx10",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 10.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx11",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 11.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx12",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 12.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx13",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 13.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx14",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 14.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx15",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 15.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx16",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 16.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dx17",
+   "text": "Data backup policy data backup policy. Frequently asked about the data backup policy and backup policy details. Backup policy overview 17.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-bak-1",
+  "doc-bak-2"
+ ],
+ "must_cite": [
+  "doc-bak-1"
+ ],
+ "expected": "Twenty docs, budget three, eighteen stuffed with the exact query phrase. Term frequency loses to substance only with better retrieval.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
