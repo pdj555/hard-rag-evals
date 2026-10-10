@@ -1,0 +1,32 @@
+{
+ "query": "What is the refund window?",
+ "documents": [
+  {
+   "id": "doc-refund-old",
+   "text": "Our refund window is 30 days from purchase. Open a ticket with your order number.",
+   "source": "Help Center",
+   "published": "2024-01-10"
+  },
+  {
+   "id": "doc-refund-new",
+   "text": "Our refund window is 14 days from purchase. This change replaced the previous 30 day window.",
+   "source": "Help Center",
+   "published": "2025-02-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-refund-old",
+  "doc-refund-new"
+ ],
+ "must_cite": [
+  "doc-refund-old",
+  "doc-refund-new"
+ ],
+ "conflict_pair": [
+  "doc-refund-old",
+  "doc-refund-new"
+ ],
+ "expected": "Cite both; the window changed from 30 to 14 days. The word 'replaces' is in the extractable text, so even an extractive agent can pass.",
+ "must_not_cite": [],
+ "should_abstain": false
+}
