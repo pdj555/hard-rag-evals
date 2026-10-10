@@ -1,0 +1,35 @@
+{
+ "query": "What did engineer Michael Chen deliver?",
+ "documents": [
+  {
+   "id": "doc-chen-eng",
+   "text": "Michael Chen, senior engineer, delivered the Hermes migration in Q2.",
+   "source": "Engineering",
+   "published": "2025-05-01"
+  },
+  {
+   "id": "doc-chen-cfo",
+   "text": "Michael Chen, our CFO, announced record quarterly revenue.",
+   "source": "Press",
+   "published": "2025-05-01"
+  },
+  {
+   "id": "doc-lin",
+   "text": "Sarah Lin, engineer, reviewed the Hermes migration test plan.",
+   "source": "Engineering",
+   "published": "2025-05-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-chen-eng"
+ ],
+ "must_cite": [
+  "doc-chen-eng"
+ ],
+ "must_not_cite": [
+  "doc-chen-cfo"
+ ],
+ "expected": "The Lin doc shares 'engineer' and 'Hermes' but is a third person entirely.",
+ "conflict_pair": null,
+ "should_abstain": false
+}
