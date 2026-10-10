@@ -1,0 +1,38 @@
+{
+ "query": "How much does the Pro plan cost per month?",
+ "documents": [
+  {
+   "id": "doc-pro-2023",
+   "text": "Pro plan: $49 per month. Includes 10 projects and priority support.",
+   "source": "Pricing archive",
+   "published": "2023-05-01"
+  },
+  {
+   "id": "doc-pro-2024",
+   "text": "Pro plan: $59 per month. Includes 25 projects and priority support.",
+   "source": "Pricing archive",
+   "published": "2024-08-15"
+  },
+  {
+   "id": "doc-pro-faq",
+   "text": "How much is the Pro plan? Pro plan pricing depends on your region and billing cycle. Contact sales for a quote.",
+   "source": "FAQ",
+   "published": "2024-01-20"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-pro-2023",
+  "doc-pro-2024"
+ ],
+ "must_cite": [
+  "doc-pro-2023",
+  "doc-pro-2024"
+ ],
+ "conflict_pair": [
+  "doc-pro-2023",
+  "doc-pro-2024"
+ ],
+ "expected": "Neither dated doc says it supersedes the other; the agent must use published dates and flag the conflict. The FAQ is a distractor with high term overlap.",
+ "must_not_cite": [],
+ "should_abstain": false
+}
