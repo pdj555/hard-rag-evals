@@ -1,0 +1,27 @@
+{
+ "query": "What is the enterprise support SLA?",
+ "documents": [
+  {
+   "id": "doc-sla",
+   "text": "Enterprise support responds within 4 hours. See doc-sla-addendum-7 for regional exceptions.",
+   "source": "Docs",
+   "published": "2025-06-01"
+  },
+  {
+   "id": "doc-support-hours",
+   "text": "Standard support hours are 9 to 5 Eastern, Monday through Friday.",
+   "source": "Docs",
+   "published": "2025-06-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-sla"
+ ],
+ "must_cite": [
+  "doc-sla"
+ ],
+ "expected": "The text names doc-sla-addendum-7, which is not in the corpus. Citing it is fabrication even though it looks real. Targets models that hallucinate citations from in-text references.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
