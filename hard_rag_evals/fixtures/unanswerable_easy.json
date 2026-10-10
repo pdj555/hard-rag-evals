@@ -1,0 +1,29 @@
+{
+ "query": "What was the Q3 revenue?",
+ "documents": [
+  {
+   "id": "doc-ship",
+   "text": "Standard shipping takes 5 to 7 business days.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-ref",
+   "text": "The refund window is 14 days.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-careers",
+   "text": "We are hiring engineers in Austin.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  }
+ ],
+ "should_abstain": true,
+ "expected": "Nothing in the corpus is close. The only correct move is abstention.",
+ "conflict_pair": null,
+ "gold_doc_ids": [],
+ "must_cite": [],
+ "must_not_cite": []
+}
