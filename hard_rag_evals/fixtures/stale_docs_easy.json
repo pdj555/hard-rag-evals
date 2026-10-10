@@ -1,0 +1,29 @@
+{
+ "query": "What is the API rate limit?",
+ "documents": [
+  {
+   "id": "doc-ratelimit-new",
+   "text": "The current API rate limit is 1000 requests per hour.",
+   "source": "API docs",
+   "published": "2026-01-05"
+  },
+  {
+   "id": "doc-ratelimit-old",
+   "text": "Legacy gateway quotas are documented here for historical reference. Quotas were lower on the old gateway.",
+   "source": "API docs archive",
+   "published": "2023-02-10"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-ratelimit-new"
+ ],
+ "must_cite": [
+  "doc-ratelimit-new"
+ ],
+ "must_not_cite": [
+  "doc-ratelimit-old"
+ ],
+ "expected": "The stale doc shares no query terms, so even lexical retrieval prefers the current doc.",
+ "conflict_pair": null,
+ "should_abstain": false
+}
