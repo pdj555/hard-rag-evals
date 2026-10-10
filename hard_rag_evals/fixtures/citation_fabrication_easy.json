@@ -1,0 +1,27 @@
+{
+ "query": "What is the refund window?",
+ "documents": [
+  {
+   "id": "doc-a",
+   "text": "The refund window is 14 days.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-b",
+   "text": "Refunds go to the original payment method.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-a"
+ ],
+ "must_cite": [
+  "doc-a"
+ ],
+ "expected": "Tiny corpus; nothing to fabricate from.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
