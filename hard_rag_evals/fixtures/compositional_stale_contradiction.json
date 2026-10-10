@@ -1,0 +1,40 @@
+{
+ "query": "What is the current Pro plan price and seat limit?",
+ "documents": [
+  {
+   "id": "doc-pro-2023",
+   "text": "Pro plan: $49 per month, 10 seats included.",
+   "source": "Pricing archive",
+   "published": "2023-05-01"
+  },
+  {
+   "id": "doc-pro-2024",
+   "text": "Pro plan: $69 per month, 25 seats included.",
+   "source": "Pricing archive",
+   "published": "2024-08-15"
+  },
+  {
+   "id": "doc-pro-2025",
+   "text": "Pro plan: $69 per month, unlimited seats.",
+   "source": "Pricing",
+   "published": "2025-02-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-pro-2024",
+  "doc-pro-2025"
+ ],
+ "must_cite": [
+  "doc-pro-2024",
+  "doc-pro-2025"
+ ],
+ "must_not_cite": [
+  "doc-pro-2023"
+ ],
+ "conflict_pair": [
+  "doc-pro-2024",
+  "doc-pro-2025"
+ ],
+ "expected": "Stale plus contradictory: ignore the 2023 doc, then notice 2024 and 2025 agree on price ($69) but conflict on seats (25 vs unlimited).",
+ "should_abstain": false
+}
