@@ -1,0 +1,29 @@
+{
+ "query": "What did CFO Michael Chen announce?",
+ "documents": [
+  {
+   "id": "doc-chen-cfo",
+   "text": "Michael Chen, our CFO, announced a quarterly dividend of $0.50 per share.",
+   "source": "Press",
+   "published": "2025-05-01"
+  },
+  {
+   "id": "doc-chen-eng",
+   "text": "Michael Chen, senior engineer, led the Hermes migration project.",
+   "source": "Engineering",
+   "published": "2025-05-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-chen-cfo"
+ ],
+ "must_cite": [
+  "doc-chen-cfo"
+ ],
+ "must_not_cite": [
+  "doc-chen-eng"
+ ],
+ "expected": "The role keyword disambiguates. The shared name gives both docs overlap, so naive agents cite the wrong one too.",
+ "conflict_pair": null,
+ "should_abstain": false
+}
