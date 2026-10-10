@@ -1,0 +1,31 @@
+{
+ "query": "What was total revenue for the first half of the year?",
+ "documents": [
+  {
+   "id": "doc-q1",
+   "text": "Q1 revenue was $4.2 million.",
+   "source": "Earnings",
+   "published": "2025-04-01"
+  },
+  {
+   "id": "doc-q2",
+   "text": "Q2 revenue was $5.8 million.",
+   "source": "Earnings",
+   "published": "2025-07-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-q1",
+  "doc-q2"
+ ],
+ "must_cite": [
+  "doc-q1",
+  "doc-q2"
+ ],
+ "numeric_expected": 10000000,
+ "numeric_tolerance": 500000,
+ "expected": "4.2 + 5.8 = $10 million. Quoting the inputs is not enough.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
