@@ -1,0 +1,29 @@
+{
+ "query": "What did engineer Michael Chen ship?",
+ "documents": [
+  {
+   "id": "doc-chen-eng",
+   "text": "Michael Chen, senior engineer, delivered the Hermes migration in Q2.",
+   "source": "Engineering",
+   "published": "2025-05-01"
+  },
+  {
+   "id": "doc-chen-cfo",
+   "text": "Michael Chen, our CFO, praised the team that ships our product every day.",
+   "source": "Press",
+   "published": "2025-05-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-chen-eng"
+ ],
+ "must_cite": [
+  "doc-chen-eng"
+ ],
+ "must_not_cite": [
+  "doc-chen-cfo"
+ ],
+ "expected": "Retrieval miss plus disambiguation: the right doc uses 'delivered' for 'ship'; the wrong person's doc matches 'ships' exactly.",
+ "conflict_pair": null,
+ "should_abstain": false
+}
