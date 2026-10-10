@@ -1,0 +1,29 @@
+{
+ "query": "What project did engineer Michael Chen lead?",
+ "documents": [
+  {
+   "id": "doc-chen-eng",
+   "text": "Michael Chen, senior engineer, led the Hermes migration.",
+   "source": "Engineering",
+   "published": "2025-05-01"
+  },
+  {
+   "id": "doc-chen-cfo",
+   "text": "Michael Chen, our CFO, praised the engineering team and the engineer leadership program.",
+   "source": "Press",
+   "published": "2025-05-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-chen-eng"
+ ],
+ "must_cite": [
+  "doc-chen-eng"
+ ],
+ "must_not_cite": [
+  "doc-chen-cfo"
+ ],
+ "expected": "The CFO doc is stuffed with 'engineer'/'engineering' to win lexical ranking. Only the role appositive disambiguates.",
+ "conflict_pair": null,
+ "should_abstain": false
+}
