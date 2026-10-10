@@ -1,0 +1,89 @@
+{
+ "query": "When does the Aurora X1 warranty expire?",
+ "documents": [
+  {
+   "id": "doc-launch",
+   "text": "The Aurora X1 launched in March 2024.",
+   "source": "Blog",
+   "published": "2024-03-20"
+  },
+  {
+   "id": "doc-warranty",
+   "text": "The Aurora X1 warranty lasts 2 years from the launch date.",
+   "source": "Docs",
+   "published": "2024-03-20"
+  },
+  {
+   "id": "cx0",
+   "text": "Aurora X1 warranty expire Aurora X1 warranty. Everything about the Aurora X1 warranty expiring and warranty expire dates. Warranty expire FAQ 0.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "cx1",
+   "text": "Aurora X1 warranty expire Aurora X1 warranty. Everything about the Aurora X1 warranty expiring and warranty expire dates. Warranty expire FAQ 1.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "cx2",
+   "text": "Aurora X1 warranty expire Aurora X1 warranty. Everything about the Aurora X1 warranty expiring and warranty expire dates. Warranty expire FAQ 2.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "cx3",
+   "text": "Aurora X1 warranty expire Aurora X1 warranty. Everything about the Aurora X1 warranty expiring and warranty expire dates. Warranty expire FAQ 3.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "cx4",
+   "text": "Aurora X1 warranty expire Aurora X1 warranty. Everything about the Aurora X1 warranty expiring and warranty expire dates. Warranty expire FAQ 4.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "cx5",
+   "text": "Aurora X1 warranty expire Aurora X1 warranty. Everything about the Aurora X1 warranty expiring and warranty expire dates. Warranty expire FAQ 5.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "cx6",
+   "text": "Aurora X1 warranty expire Aurora X1 warranty. Everything about the Aurora X1 warranty expiring and warranty expire dates. Warranty expire FAQ 6.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "cx7",
+   "text": "Aurora X1 warranty expire Aurora X1 warranty. Everything about the Aurora X1 warranty expiring and warranty expire dates. Warranty expire FAQ 7.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "cx8",
+   "text": "Aurora X1 warranty expire Aurora X1 warranty. Everything about the Aurora X1 warranty expiring and warranty expire dates. Warranty expire FAQ 8.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "cx9",
+   "text": "Aurora X1 warranty expire Aurora X1 warranty. Everything about the Aurora X1 warranty expiring and warranty expire dates. Warranty expire FAQ 9.",
+   "source": "SEO",
+   "published": "2025-01-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-launch",
+  "doc-warranty"
+ ],
+ "must_cite": [
+  "doc-launch",
+  "doc-warranty"
+ ],
+ "expected": "Overflow plus multi-hop: two gold docs for a two-hop question, buried among ten stuffed distractors under a budget of four.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
