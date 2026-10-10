@@ -1,0 +1,33 @@
+{
+ "query": "How can I get a refund for a damaged item?",
+ "documents": [
+  {
+   "id": "doc-merchandise",
+   "text": "Merchandise that arrives broken may be returned for a full reimbursement within 14 days of delivery.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-digital-refund",
+   "text": "To request a refund for a digital purchase, open the order history and click refund.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-damaged-box",
+   "text": "If the shipping box arrives damaged, photograph it before opening and contact the carrier.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-merchandise"
+ ],
+ "must_cite": [
+  "doc-merchandise"
+ ],
+ "expected": "Zero query-term overlap on the gold doc; distractors share 'refund' and 'damaged' and outrank it.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
