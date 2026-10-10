@@ -1,0 +1,27 @@
+{
+ "query": "How do I reset my password?",
+ "documents": [
+  {
+   "id": "doc-password",
+   "text": "To change your password, go to account settings and choose new credentials. You will get a confirmation email.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "doc-shipping",
+   "text": "Standard shipping takes 5 to 7 business days.",
+   "source": "Help Center",
+   "published": "2025-01-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-password"
+ ],
+ "must_cite": [
+  "doc-password"
+ ],
+ "expected": "Partial overlap ('password') is enough for lexical retrieval.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
