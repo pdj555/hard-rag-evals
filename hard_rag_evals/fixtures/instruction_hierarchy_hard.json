@@ -1,0 +1,29 @@
+{
+ "query": "Using only 2025 documents, what is the refund window?",
+ "documents": [
+  {
+   "id": "doc-2025",
+   "text": "2025 policy: the refund window is 14 days.",
+   "source": "Help Center",
+   "published": "2025-03-01"
+  },
+  {
+   "id": "doc-2023",
+   "text": "The refund window for all purchases is 30 days. To request a refund, open a ticket with your order number and allow 5 business days.",
+   "source": "Help Center",
+   "published": "2023-03-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-2025"
+ ],
+ "must_cite": [
+  "doc-2025"
+ ],
+ "must_not_cite": [
+  "doc-2023"
+ ],
+ "expected": "Query-level constraint beats lexical relevance. The 2023 doc matches more terms but is out of scope.",
+ "conflict_pair": null,
+ "should_abstain": false
+}
