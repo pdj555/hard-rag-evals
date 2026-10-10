@@ -1,0 +1,39 @@
+{
+ "query": "What was total H1 revenue?",
+ "documents": [
+  {
+   "id": "doc-q1",
+   "text": "Q1 revenue: $4,200K.",
+   "source": "Earnings",
+   "published": "2025-04-01"
+  },
+  {
+   "id": "doc-q2",
+   "text": "Q2 revenue: $5.8M.",
+   "source": "Earnings",
+   "published": "2025-07-01"
+  },
+  {
+   "id": "doc-q2-lastyear",
+   "text": "Q2 revenue last year was $3.1M, a record at the time.",
+   "source": "Earnings",
+   "published": "2024-07-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-q1",
+  "doc-q2"
+ ],
+ "must_cite": [
+  "doc-q1",
+  "doc-q2"
+ ],
+ "must_not_cite": [
+  "doc-q2-lastyear"
+ ],
+ "numeric_expected": 10000000,
+ "numeric_tolerance": 500000,
+ "expected": "4,200K = $4.2M; 4.2 + 5.8 = $10M. Last year's Q2 is the trap.",
+ "conflict_pair": null,
+ "should_abstain": false
+}
