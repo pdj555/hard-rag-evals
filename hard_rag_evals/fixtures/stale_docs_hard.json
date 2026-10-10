@@ -1,0 +1,29 @@
+{
+ "query": "What is the API rate limit?",
+ "documents": [
+  {
+   "id": "doc-rl-a",
+   "text": "Rate limits (page updated February 2026). The API rate limit is 100 requests per hour. Contact us to raise it.",
+   "source": "API docs",
+   "published": "2026-02-01"
+  },
+  {
+   "id": "doc-rl-b",
+   "text": "November 2025: the API rate limit was raised to 1000 requests per hour. This replaces the old 100 per hour limit.",
+   "source": "API changelog",
+   "published": "2025-11-10"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-rl-b"
+ ],
+ "must_cite": [
+  "doc-rl-b"
+ ],
+ "must_not_cite": [
+  "doc-rl-a"
+ ],
+ "expected": "Doc A was cosmetically updated in 2026 but its content is stale. Content dates beat published dates.",
+ "conflict_pair": null,
+ "should_abstain": false
+}
