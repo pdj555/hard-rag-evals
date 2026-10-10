@@ -1,0 +1,195 @@
+{
+ "query": "How long are backups retained?",
+ "documents": [
+  {
+   "id": "doc-needle",
+   "text": "Archives are preserved for 90 days before deletion.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm0",
+   "text": "Nightly backups run at 2am and complete by 4am.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm1",
+   "text": "Backup encryption uses AES-256 for data at rest.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm2",
+   "text": "Test your backups quarterly with a restore drill.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm3",
+   "text": "The backup dashboard shows job status and history.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm4",
+   "text": "Incremental backups run hourly during business hours.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm5",
+   "text": "Backup storage is replicated across two regions.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm6",
+   "text": "Failed backup jobs alert the on-call engineer.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm7",
+   "text": "The backup agent requires port 443 outbound.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm8",
+   "text": "Backup windows exclude the monthly maintenance slot.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm9",
+   "text": "Deduplication keeps backup storage costs flat.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm10",
+   "text": "Restore from backup takes about 20 minutes per terabyte.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm11",
+   "text": "Backup job logs are kept for one year.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm12",
+   "text": "Contact support to change your backup schedule.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm13",
+   "text": "Full backups run every Sunday at midnight.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm14",
+   "text": "The backup service supports Windows and Linux.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm15",
+   "text": "Backup notifications go to the team channel.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm16",
+   "text": "Snapshot backups are faster than file backups.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm17",
+   "text": "The backup client auto-updates on restart.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm18",
+   "text": "Offsite backups ship on encrypted drives.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm19",
+   "text": "Backup verification runs after each job.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm20",
+   "text": "Old backup sets are pruned automatically.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm21",
+   "text": "The backup API supports listing and restore.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm22",
+   "text": "Backup throughput averages 500 MB per second.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm23",
+   "text": "Encrypted backups cannot be read without the key.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm24",
+   "text": "The backup team meets every Thursday.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm25",
+   "text": "Backup costs are billed per terabyte stored.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm26",
+   "text": "Regional backups stay in-region for compliance.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm27",
+   "text": "The backup runbook covers common failures.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  },
+  {
+   "id": "dm28",
+   "text": "Backup alerts fire after two missed jobs.",
+   "source": "Docs",
+   "published": "2025-01-01"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-needle"
+ ],
+ "must_cite": [
+  "doc-needle"
+ ],
+ "expected": "Thirty docs; the needle uses synonyms for every query term. Lexical retrieval cannot see it.",
+ "conflict_pair": null,
+ "must_not_cite": [],
+ "should_abstain": false
+}
