@@ -1,0 +1,32 @@
+{
+ "query": "What is the current data retention period?",
+ "documents": [
+  {
+   "id": "doc-ret-2023",
+   "text": "Data retention: all customer data is retained for 30 days, then deleted. See the retention schedule for details on extensions.",
+   "source": "Docs",
+   "published": "2023-01-10"
+  },
+  {
+   "id": "doc-ret-2025",
+   "text": "Data retention is now 90 days, effective January 2025.",
+   "source": "Docs",
+   "published": "2025-01-10"
+  }
+ ],
+ "gold_doc_ids": [
+  "doc-ret-2025"
+ ],
+ "must_cite": [
+  "doc-ret-2025"
+ ],
+ "must_not_cite": [
+  "doc-ret-2023"
+ ],
+ "conflict_pair": [
+  "doc-ret-2023",
+  "doc-ret-2025"
+ ],
+ "expected": "Temporal plus stale: the current doc is short, the stale one long and detailed. Cite the current one and acknowledge the change from 30 to 90 days.",
+ "should_abstain": false
+}
