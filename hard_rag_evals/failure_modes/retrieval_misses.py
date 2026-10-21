@@ -11,12 +11,30 @@ from ..types import EvalCase, RetrievalBudget
 from . import _build_case
 
 
-def build() -> EvalCase:
-    # Tight budget on purpose: the gold document ranks below the two
-    # distractors on lexical overlap, so it is never retrieved at all.
+# Tight budget on purpose: the gold document ranks below the two
+# distractors on lexical overlap, so it is never retrieved at all.
+_BUDGET = RetrievalBudget(max_docs=2, max_chars=8000)
+
+
+def _make(difficulty: str) -> EvalCase:
+    suffix = "" if difficulty == "medium" else f"_{difficulty}"
+    case_id = f"retrieval-miss-{difficulty}"
     return _build_case(
-        case_id="retrieval-miss-01",
+        case_id=case_id,
         mode="retrieval_misses",
-        name="retrieval_misses",
-        budget=RetrievalBudget(max_docs=2, max_chars=8000),
+        name=f"retrieval_misses{suffix}",
+        budget=_BUDGET,
+        difficulty=difficulty,
     )
+
+
+def build() -> EvalCase:
+    return _make("medium")
+
+
+def build_easy() -> EvalCase:
+    return _make("easy")
+
+
+def build_hard() -> EvalCase:
+    return _make("hard")

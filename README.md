@@ -1,6 +1,13 @@
 # hard-rag-evals
 
-Failure-mode evals for agentic RAG. 42 hand-built cases across 14 failure modes, graded from easy to brutal. Standard benchmarks measure whether the answer is right. This suite measures how it fails.
+> **How can we trust agents to merge without a human reading every diff?**
+> One question, four repos. [agent-harness](https://github.com/pdj555/agent-harness) is the gate · [agent-eval-harness](https://github.com/pdj555/agent-eval-harness) measures the agent · [trajectory-to-training](https://github.com/pdj555/trajectory-to-training) keeps only verified work for training · **hard-rag-evals** asks the same of answers
+
+The same question applies to answers. When an agent answers from documents, nobody rereads the sources to check it. So the answer has to carry its own evidence: real citations, the current fact rather than the stale one, a contradiction flagged instead of hidden, and an abstention when the corpus has nothing.
+
+42 hand-built cases across 14 failure modes, graded easy, medium, hard, and brutal. Standard benchmarks measure whether the answer is right. This suite measures how it fails, one failure per case, so a failing case names exactly what broke.
+
+The deterministic reference agent scores **10/42**, and nothing passes the brutal tier. An agent that appends one invented citation scores **0/42**, because the citation check fires on every case.
 
 ## Quickstart
 
@@ -43,7 +50,7 @@ The bundled reference agent (lexical retrieval, extractive synthesis) scores **1
 
 The demo also runs a fabricating variant that appends a fake citation id. It scores 0/42: the citation check fires on every case. That is the check working, not the agent failing.
 
-A careful human scores 42/42 (see `docs/human_baseline.md`): every case is solvable by reading. The suite measures whether the agent reads as carefully as a human would. Every failure is classified in `docs/error_taxonomy.md`, which doubles as a debugging guide.
+Every case is built to be answerable by careful reading of its own corpus. Every reference-agent failure is classified in [docs/error_taxonomy.md](docs/error_taxonomy.md), which doubles as a debugging guide.
 
 ## The failure modes
 
@@ -81,7 +88,7 @@ Two more modes go further:
 
 **Deterministic everything.** Same code, same corpus, same scores, every run. Heuristic graders keep the suite fast and free; swap in model-graded checks behind the same metric names when you need them.
 
-**Human ceiling.** Every case is solvable by careful reading. The taxonomy maps each failure to the capability it needs.
+**Solvable by reading.** Every case is built to be answerable from its corpus. The taxonomy maps each failure to the capability it needs.
 
 ## Architecture
 
@@ -99,7 +106,6 @@ hard_rag_evals/
   fixtures/           42 hand-built JSON corpora with ground truth
   reference_agent/    deterministic extractive baseline (no API keys)
 docs/
-  human_baseline.md   careful-pass and skim-pass human scores per tier
   error_taxonomy.md   every reference-agent failure classified (R/S/C/K/I)
 examples/
   demo.py             full suite plus fabricating variant, tier bars
@@ -111,7 +117,7 @@ examples/
 
 ## What this does not do
 
-It does not test generation quality, latency, or cost. It does not cover multimodal retrieval, streaming, or conversation state. The faithfulness and ordering metrics are lexical heuristics, not entailment models. The human baseline is author-graded, not a third-party study.
+It does not test generation quality, latency, or cost. It does not cover multimodal retrieval, streaming, or conversation state. The faithfulness and ordering metrics are lexical heuristics, not entailment models. There is no measured human baseline yet.
 
 ## Roadmap
 
@@ -122,7 +128,7 @@ It does not test generation quality, latency, or cost. It does not cover multimo
 
 ## The one-line version
 
-42 ways RAG breaks in production, graded from "a careful intern gets this" to "nothing passes." If your agent cannot outread the reference implementation, it cannot outread a human either.
+42 ways RAG breaks in production, graded from "a careful intern gets this" to "nothing passes."
 
 ---
 

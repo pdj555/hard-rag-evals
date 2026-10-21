@@ -11,10 +11,28 @@ from ..types import EvalCase, RetrievalBudget
 from . import _build_case
 
 
-def build() -> EvalCase:
+_BUDGET = RetrievalBudget(max_docs=5, max_chars=8000)
+
+
+def _make(difficulty: str) -> EvalCase:
+    suffix = "" if difficulty == "medium" else f"_{difficulty}"
+    case_id = f"contradiction-{difficulty}"
     return _build_case(
-        case_id="contradiction-01",
+        case_id=case_id,
         mode="contradictory_sources",
-        name="contradictory_sources",
-        budget=RetrievalBudget(max_docs=5, max_chars=8000),
+        name=f"contradictory_sources{suffix}",
+        budget=_BUDGET,
+        difficulty=difficulty,
     )
+
+
+def build() -> EvalCase:
+    return _make("medium")
+
+
+def build_easy() -> EvalCase:
+    return _make("easy")
+
+
+def build_hard() -> EvalCase:
+    return _make("hard")

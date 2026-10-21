@@ -11,6 +11,8 @@ from . import metrics as M
 from .failure_modes import ALL_CASES
 from .types import Agent, EvalCase, EvalResult
 
+DIFFICULTY_ORDER = ("easy", "medium", "hard", "brutal")
+
 
 def grade(case: EvalCase, answer) -> EvalResult:
     notes: list[str] = []
@@ -59,33 +61,100 @@ def grade(case: EvalCase, answer) -> EvalResult:
             else "did not surface the contradiction"
         )
 
+    if case.numeric_expected is not None:
+        ok = M.numeric_answer_correct(answer, case.numeric_expected, case.numeric_tolerance)
+        passed = passed and ok
+        notes.append(
+            "computed the expected number"
+            if ok
+            else f"did not state the expected number {case.numeric_expected:g}"
+        )
+
+    if case.order_check is not None:
+        ok = M.mentions_in_order(answer, *case.order_check)
+        passed = passed and ok
+        notes.append("events in the right order" if ok else "events missing or out of order")
+
+    if case.forbidden_phrases:
+        ok = M.forbidden_phrase_absent(answer, case.forbidden_phrases)
+        passed = passed and ok
+        if not ok:
+            notes.append("repeated a forbidden phrase from an injected instruction")
+
     if not notes:
         notes.append("all checks passed")
 
     return EvalResult(
-        case_id=case.id, mode=case.mode, passed=passed, scores=scores, notes=notes
+        case_id=case.id,
+        mode=case.mode,
+        passed=passed,
+        scores=scores,
+        notes=notes,
+        difficulty=case.difficulty,
     )
 
 
-def run_suite(agent: Agent) -> list[EvalResult]:
-    return [grade(case, agent.answer(case.query, case.corpus, case.budget)) for case in ALL_CASES]
+def _as_set(value: str | tuple[str, ...] | list[str] | None) -> set[str] | None:
+    if value is None:
+        return None
+    return {value} if isinstance(value, str) else set(value)
+
+
+def select_cases(
+    difficulty: str | tuple[str, ...] | None = None,
+    modes: str | tuple[str, ...] | None = None,
+) -> list[EvalCase]:
+    tiers = _as_set(difficulty)
+    wanted = _as_set(modes)
+    if tiers is not None and tiers - set(DIFFICULTY_ORDER):
+        raise ValueError(f"unknown difficulty: {sorted(tiers - set(DIFFICULTY_ORDER))}")
+    return [
+        c
+        for c in ALL_CASES
+        if (tiers is None or c.difficulty in tiers) and (wanted is None or c.mode in wanted)
+    ]
+
+
+def run_suite(
+    agent: Agent,
+    difficulty: str | tuple[str, ...] | None = None,
+    modes: str | tuple[str, ...] | None = None,
+) -> list[EvalResult]:
+    """Grade the agent on every case, or on the tiers and modes asked for."""
+    return [
+        grade(case, agent.answer(case.query, case.corpus, case.budget))
+        for case in select_cases(difficulty, modes)
+    ]
+
+
+def summary_by_difficulty(results: list[EvalResult]) -> dict[str, tuple[int, int]]:
+    """(passed, total) per tier, in DIFFICULTY_ORDER, for tiers present."""
+    out: dict[str, tuple[int, int]] = {}
+    for tier in DIFFICULTY_ORDER:
+        rows = [r for r in results if r.difficulty == tier]
+        if rows:
+            out[tier] = (sum(r.passed for r in rows), len(rows))
+    return out
 
 
 def render_markdown(agent_name: str, results: list[EvalResult]) -> str:
-    lines = [
-        f"# Eval report: {agent_name}",
+    passed = sum(1 for r in results if r.passed)
+    lines = [f"# Eval report: {agent_name}", "", f"**{passed}/{len(results)} cases passed.**", ""]
+    lines += ["| tier | passed |", "| ---- | ------ |"]
+    for tier, (p, t) in summary_by_difficulty(results).items():
+        lines.append(f"| {tier} | {p}/{t} |")
+    lines += [
         "",
-        "| case | mode | pass | cit_prec | cit_rec | ret_rec | faithful | notes |",
-        "| ---- | ---- | ---- | -------- | ------- | ------- | -------- | ----- |",
+        "| case | tier | mode | pass | cit_prec | cit_rec | ret_rec | faithful | notes |",
+        "| ---- | ---- | ---- | ---- | -------- | ------- | ------- | -------- | ----- |",
     ]
-    for r in results:
+    order = {t: i for i, t in enumerate(DIFFICULTY_ORDER)}
+    for r in sorted(results, key=lambda r: order.get(r.difficulty, len(order))):
         s = r.scores
         lines.append(
-            f"| {r.case_id} | {r.mode} | {'yes' if r.passed else 'no'} "
+            f"| {r.case_id} | {r.difficulty} | {r.mode} | {'yes' if r.passed else 'no'} "
             f"| {s['citation_precision']:.2f} | {s['citation_recall']:.2f} "
             f"| {s['retrieval_recall']:.2f} | {s['faithfulness']:.2f} "
             f"| {'; '.join(r.notes)} |"
         )
-    passed = sum(1 for r in results if r.passed)
-    lines += ["", f"**{passed}/{len(results)} cases passed.**"]
     return "\n".join(lines) + "\n"

@@ -1,8 +1,9 @@
 """hard-rag-evals: failure mode evals for agentic RAG."""
-from .runner import grade, render_markdown, run_suite
+from .runner import DIFFICULTY_ORDER, grade, render_markdown, run_suite, summary_by_difficulty
 from .types import Agent, Answer, Corpus, Document, EvalCase, EvalResult, RetrievalBudget
 
 __all__ = [
+    "DIFFICULTY_ORDER",
     "Agent",
     "Answer",
     "Corpus",
@@ -13,4 +14,5 @@ __all__ = [
     "grade",
     "render_markdown",
     "run_suite",
+    "summary_by_difficulty",
 ]
