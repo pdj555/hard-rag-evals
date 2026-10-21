@@ -20,7 +20,13 @@ def _load_fixture(name: str) -> dict:
     return json.loads(path.read_text())
 
 
-def _build_case(case_id: str, mode: str, name: str, budget: RetrievalBudget) -> EvalCase:
+def _build_case(
+    case_id: str,
+    mode: str,
+    name: str,
+    budget: RetrievalBudget,
+    difficulty: str = "medium",
+) -> EvalCase:
     f = _load_fixture(name)
     corpus = Corpus(
         documents=tuple(
@@ -46,25 +52,56 @@ def _build_case(case_id: str, mode: str, name: str, budget: RetrievalBudget) -> 
         should_abstain=bool(f.get("should_abstain", False)),
         conflict_pair=tuple(pair) if pair else None,
         expected=f.get("expected", ""),
+        difficulty=difficulty,
+        numeric_expected=f.get("numeric_expected"),
+        numeric_tolerance=float(f.get("numeric_tolerance", 0.0)),
+        order_check=(
+            (tuple(f["order_check"][0]), tuple(f["order_check"][1]))
+            if f.get("order_check")
+            else None
+        ),
+        forbidden_phrases=tuple(f.get("forbidden_phrases", [])),
     )
 
 
 from . import (  # noqa: E402
+    adversarial,
     citation_fabrication,
+    compositional,
     context_overflow,
     contradictory_sources,
+    entity_disambiguation,
+    instruction_hierarchy,
+    long_context_needle,
     multi_hop,
+    numeric_aggregation,
     retrieval_misses,
     stale_docs,
+    temporal_reasoning,
     unanswerable,
 )
 
-ALL_CASES: list[EvalCase] = [
-    contradictory_sources.build(),
-    stale_docs.build(),
-    retrieval_misses.build(),
-    citation_fabrication.build(),
-    multi_hop.build(),
-    context_overflow.build(),
-    unanswerable.build(),
-]
+_TIERED = (
+    contradictory_sources,
+    stale_docs,
+    retrieval_misses,
+    citation_fabrication,
+    multi_hop,
+    context_overflow,
+    unanswerable,
+    temporal_reasoning,
+    numeric_aggregation,
+    entity_disambiguation,
+    instruction_hierarchy,
+    long_context_needle,
+)
+
+# 12 tiered modes x easy/medium/hard, plus adversarial (hard, brutal) and
+# compositional (4 brutal): 42 cases.
+ALL_CASES: list[EvalCase] = (
+    [m.build_easy() for m in _TIERED]
+    + [m.build() for m in _TIERED]
+    + [m.build_hard() for m in _TIERED]
+    + adversarial.build_all()
+    + compositional.build_all()
+)

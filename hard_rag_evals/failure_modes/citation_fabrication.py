@@ -10,10 +10,28 @@ from ..types import EvalCase, RetrievalBudget
 from . import _build_case
 
 
-def build() -> EvalCase:
+_BUDGET = RetrievalBudget(max_docs=5, max_chars=8000)
+
+
+def _make(difficulty: str) -> EvalCase:
+    suffix = "" if difficulty == "medium" else f"_{difficulty}"
+    case_id = f"fabrication-{difficulty}"
     return _build_case(
-        case_id="fabrication-01",
+        case_id=case_id,
         mode="citation_fabrication",
-        name="citation_fabrication",
-        budget=RetrievalBudget(max_docs=5, max_chars=8000),
+        name=f"citation_fabrication{suffix}",
+        budget=_BUDGET,
+        difficulty=difficulty,
     )
+
+
+def build() -> EvalCase:
+    return _make("medium")
+
+
+def build_easy() -> EvalCase:
+    return _make("easy")
+
+
+def build_hard() -> EvalCase:
+    return _make("hard")

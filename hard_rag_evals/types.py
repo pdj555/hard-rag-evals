@@ -76,6 +76,11 @@ class EvalCase:
     should_abstain: bool = False
     conflict_pair: tuple[str, str] | None = None
     expected: str = ""
+    difficulty: str = "medium"  # easy, medium, hard, or brutal
+    numeric_expected: float | None = None
+    numeric_tolerance: float = 0.0
+    order_check: tuple[tuple[str, ...], tuple[str, ...]] | None = None
+    forbidden_phrases: tuple[str, ...] = ()
 
 
 @dataclass
@@ -85,3 +90,4 @@ class EvalResult:
     passed: bool
     scores: dict[str, float]
     notes: list[str]
+    difficulty: str = "medium"
