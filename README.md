@@ -1,6 +1,8 @@
 # hard-rag-evals
 
-**42 ways a RAG agent's answer can't be trusted, and which grader checks can be gamed.**
+42 failure modes for agents that answer from retrieved documents, and a map of which grader checks can be gamed.
+
+A RAG agent looks documents up, then answers from what it finds. This repo scores the answers, then turns around and attacks the grader.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.svg">
@@ -12,7 +14,7 @@
 
 ## The finding
 
-Nobody rereads the sources behind an agent's answer, so the answer has to carry its own evidence: real citations, the current fact over the stale one, a contradiction flagged instead of hidden, an abstention when the corpus has nothing.
+Nobody rereads the sources behind an agent's answer. The answer has to carry its own proof: real citations, the current fact over the stale one, a contradiction named instead of buried, and no answer at all when the documents hold nothing.
 
 | Agent | Easy | Medium | Hard | Brutal | Total |
 | --- | --- | --- | --- | --- | --- |
@@ -45,16 +47,16 @@ python examples/grader_attacks.py   # which checks can be gamed
   <img alt="A question and corpus go to the agent, which retrieves, answers, and cites. The grader checks citations, freshness, contradiction, abstention, numbers, and injected text. A hedge sentence fools the contradiction check and a number spray fools the numeric check." src="docs/assets/flow-light.svg" width="100%">
 </picture>
 
-- **One failure per case.** A stale doc that outranks the update, two sources that disagree, a citation to a doc that doesn't exist, an instruction planted in a retrieved doc.
-- **Four tiers.** 12 modes in easy, medium, and hard. Compositional and adversarial cases make up hard and brutal.
-- **Strict grading.** A real citation to the wrong doc fails. Citing both sides of a contradiction without saying so fails.
-- **Deterministic.** Same code, same corpus, same score, every run.
+- **One failure per case.** A stale document that outranks its own update, two sources that disagree, a citation to a document that does not exist, an instruction planted in a retrieved document.
+- **Four tiers.** Easy, medium, hard, and brutal hold 12, 12, 13, and 5 cases. The hard and brutal cases stack failures, and some are built to attack the agent.
+- **Strict grading.** A real citation to the wrong document fails. Citing both sides of a contradiction and not saying so fails the case.
+- **Deterministic.** Same code, same documents, same score, every run.
 
 ## Limits
 
 - Faithfulness, ordering, and contradiction checks match words, not meaning. The hedge shows the cost.
-- The reference agent is deliberately naive. No real model has been run yet.
-- 42 hand-built cases, no measured human baseline.
+- The reference agent is deliberately naive. No real model has been run against it yet.
+- 42 cases built by hand, and no measured human baseline.
 
 ## Docs
 
