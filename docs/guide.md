@@ -1,6 +1,6 @@
 # hard-rag-evals guide
 
-The full reference: setup, usage, architecture, and design. For what this repo found and why it matters, see the [README](../README.md) and the [research summary](research.md).
+For what this repo found and why it matters, see the [README](../README.md) and the [research summary](research.md).
 
 ## Quickstart
 
@@ -56,17 +56,17 @@ Two more modes go further:
 | compositional | brutal (4 cases) | two or three modes at once: stale+contradiction, overflow+multihop, miss+disambiguation, temporal+stale |
 | adversarial_retrieval | hard, brutal | keyword-stuffed titles, near-duplicate docs, three versions of one fact where only date reasoning picks the current truth |
 
-## Key features
+## Design
 
-**Isolated failure modes.** One failure per case. When a case fails you know exactly what broke.
+One failure per case. When a case fails you know exactly what broke.
 
-**Graduated difficulty.** Easy shows the behavior. Hard shows where production breaks. Brutal combines modes the way the real world does.
+Easy shows the behavior. Hard shows where it breaks. Brutal combines modes.
 
-**Strict grading.** A real citation to the wrong document fails. Citing both sides of a contradiction without comment fails. Quoting numbers without summing them fails. Repeating an injected instruction fails.
+A real citation to the wrong document fails. Citing both sides of a contradiction without comment fails. Quoting numbers without summing them fails. Repeating an injected instruction fails.
 
-**Deterministic everything.** Same code, same corpus, same scores, every run. Heuristic graders keep the suite fast and free; swap in model-graded checks behind the same metric names when you need them.
+Same code, same corpus, same scores, every run. Heuristic graders keep the suite fast and free; swap in model-graded checks behind the same metric names when you need them.
 
-**Solvable by reading.** Every case is built to be answerable from its corpus. The taxonomy maps each failure to the capability it needs.
+Every case is built to be answerable from its corpus. The taxonomy maps each failure to the capability it needs.
 
 ## Architecture
 
@@ -79,14 +79,21 @@ hard_rag_evals/
                       numeric answers, event ordering, injected phrases
   runner.py           grades every case, filters by tier/mode,
                       renders the tier-grouped markdown report
+  gamers.py           four agents that attack the grader, one trick each
   failure_modes/      one module per mode, each builds easy/medium/hard;
                       compositional.py and adversarial.py build the rest
   fixtures/           42 hand-built JSON corpora with ground truth
   reference_agent/    deterministic extractive baseline (no API keys)
 docs/
+  research.md         what the suite found, and where the grader breaks
+  guide.md            this file
   error_taxonomy.md   every reference-agent failure classified (R/S/C/K/I)
+  assets/             the diagrams in the README and research summary
 examples/
   demo.py             full suite plus fabricating variant, tier bars
+  grader_attacks.py   runs the four gaming agents against the grader
+  game_the_grader.py  one gaming agent only: the hedger, in detail
+  run_report_*.md     demo.py output: the two reports the README cites
 ```
 
 ## Verification
@@ -101,5 +108,5 @@ It does not test generation quality, latency, or cost. It does not cover multimo
 
 - Model-graded faithfulness and conflict detection behind the metric names
 - Leaderboard script for comparing agents across runs
-- Multihop chains longer than two documents
+- Multi-hop chains longer than two documents
 - A second reference agent with embeddings, to show what hybrid retrieval buys per tier
