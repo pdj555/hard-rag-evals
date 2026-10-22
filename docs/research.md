@@ -44,7 +44,6 @@ Two hold. Citing everything gains nothing, because citing a forbidden doc fails 
 python examples/grader_attacks.py
 ```
 
-That's the same lesson as the test suites in agent-harness, one level up: keyword graders here, unit tests there.
 
 ## Where it breaks
 

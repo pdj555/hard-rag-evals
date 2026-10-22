@@ -91,8 +91,7 @@ The agent misjudges whether it should answer.
 
 **K1 - never abstains.** `unanswerable-easy`, `unanswerable-medium`,
 `unanswerable-hard` (near-miss corpus). The reference agent has no
-abstention path at all. This is the most human-like failure: the skim
-pass also misses `unanswerable-easy`. Fix: an explicit "answerable?"
+abstention path at all. Fix: an explicit "answerable?"
 gate before generation.
 
 ## I: instruction failures

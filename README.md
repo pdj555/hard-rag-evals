@@ -43,8 +43,8 @@ python examples/grader_attacks.py   # which checks can be gamed
 ## How it works
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/flow-dark.svg">
-  <img alt="A question and corpus go to the agent, which retrieves, answers, and cites. The grader checks citations, freshness, contradiction, abstention, numbers, and injected text. A hedge sentence fools the contradiction check and a number spray fools the numeric check." src="docs/assets/flow-light.svg" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/flow-animated-dark.svg">
+  <img alt="A question and corpus go to the agent, which retrieves, answers, and cites. The grader checks citations, freshness, contradiction, abstention, numbers, and injected text. A hedge sentence fools the contradiction check and a number spray fools the numeric check." src="docs/assets/flow-animated-light.svg" width="100%">
 </picture>
 
 - A stale document that outranks its own update, two sources that disagree, a citation to a document that does not exist, an instruction planted in a retrieved document.
