@@ -5,7 +5,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.svg">
-  <img alt="Reference agent passes 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal. One hedging sentence passes two contradiction cases without detecting either." src="docs/assets/hero-light.svg" width="100%">
+  <img alt="Reference agent passes 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal. Of four grader-gaming tricks, a hedge sentence and a number spray beat the grader; citing everything and refusing everything do not." src="docs/assets/hero-light.svg" width="100%">
 </picture>
 
 The same question applies to answers. When an agent answers from documents, nobody rereads the sources to check it. So the answer has to carry its own evidence: real citations, the current fact rather than the stale one, a contradiction flagged instead of hidden, and an abstention when the corpus has nothing.
@@ -13,6 +13,8 @@ The same question applies to answers. When an agent answers from documents, nobo
 42 hand-built cases across 14 failure modes, graded easy, medium, hard, and brutal. Standard benchmarks measure whether the answer is right. This suite measures how it fails, one failure per case, so a failing case names exactly what broke.
 
 The deterministic reference agent scores **10/42**, and nothing passes the brutal tier. An agent that appends one invented citation scores **0/42**, because the citation check fires on every case.
+
+The grader has its own weak spots. Of four gaming agents, each the reference agent plus one cheap trick, two beat it: a hedge sentence passes both contradiction cases, and spraying every number from the sources passes a numeric case. Citing everything and refusing everything don’t pay. `python examples/grader_attacks.py`
 
 **[Research summary](docs/research.md)**: results, an agent that games the grader, and where it breaks, on one page.
 
@@ -120,7 +122,7 @@ examples/
 
 ## Verification
 
-31/31 tests pass. `python -m pytest` from the repo root. The demo runs end to end with no API keys.
+35/35 tests pass. `python -m pytest` from the repo root. The demo runs end to end with no API keys.
 
 ## What this does not do
 

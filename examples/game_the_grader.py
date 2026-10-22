@@ -14,18 +14,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from hard_rag_evals import Answer, Corpus, RetrievalBudget, run_suite
+from hard_rag_evals import run_suite
+from hard_rag_evals.gamers import Hedger as MarkerGamer
 from hard_rag_evals.reference_agent import ReferenceAgent
-
-
-class MarkerGamer(ReferenceAgent):
-    name = "marker-gamer"
-
-    def answer(self, query: str, corpus: Corpus, budget: RetrievalBudget) -> Answer:
-        ans = super().answer(query, corpus, budget)
-        ans.citations = list(dict.fromkeys(ans.citations + ans.retrieved_ids))
-        ans.text += " However, the sources may conflict."
-        return ans
 
 
 def main() -> None:
