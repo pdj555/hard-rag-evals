@@ -12,7 +12,7 @@ A RAG agent looks documents up, then answers from what it finds. This repo score
 <sub>One question, four repos: **how can we trust agents to merge without a human reading every diff?**<br>
 [agent-harness](https://github.com/pdj555/agent-harness) · [agent-eval-harness](https://github.com/pdj555/agent-eval-harness) · [trajectory-to-training](https://github.com/pdj555/trajectory-to-training) · **hard-rag-evals**</sub>
 
-## The finding
+## The findings
 
 Nobody rereads the sources behind an agent's answer. The answer has to carry its own proof: real citations, the current fact over the stale one, a contradiction named instead of buried, and no answer at all when the documents hold nothing.
 
@@ -47,10 +47,10 @@ python examples/grader_attacks.py   # which checks can be gamed
   <img alt="A question and corpus go to the agent, which retrieves, answers, and cites. The grader checks citations, freshness, contradiction, abstention, numbers, and injected text. A hedge sentence fools the contradiction check and a number spray fools the numeric check." src="docs/assets/flow-light.svg" width="100%">
 </picture>
 
-- **One failure per case.** A stale document that outranks its own update, two sources that disagree, a citation to a document that does not exist, an instruction planted in a retrieved document.
-- **Four tiers.** Easy, medium, hard, and brutal hold 12, 12, 13, and 5 cases. The hard and brutal cases stack failures, and some are built to attack the agent.
-- **Strict grading.** A real citation to the wrong document fails. Citing both sides of a contradiction and not saying so fails the case.
-- **Deterministic.** Same code, same documents, same score, every run.
+- A stale document that outranks its own update, two sources that disagree, a citation to a document that does not exist, an instruction planted in a retrieved document.
+- Easy, medium, hard, and brutal hold 12, 12, 13, and 5 cases. The hard and brutal cases stack failures, and some are built to attack the agent.
+- A real citation to the wrong document fails. Citing both sides of a contradiction and not saying so fails the case.
+- Same code, same documents, same score, every run.
 
 ## Limits
 
