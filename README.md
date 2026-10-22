@@ -40,6 +40,11 @@ python examples/grader_attacks.py   # which checks can be gamed
 
 ## How it works
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/flow-dark.svg">
+  <img alt="A question and corpus go to the agent, which retrieves, answers, and cites. The grader checks citations, freshness, contradiction, abstention, numbers, and injected text. A hedge sentence fools the contradiction check and a number spray fools the numeric check." src="docs/assets/flow-light.svg" width="100%">
+</picture>
+
 - **One failure per case.** A stale doc that outranks the update, two sources that disagree, a citation to a doc that doesn't exist, an instruction planted in a retrieved doc.
 - **Four tiers.** 12 modes in easy, medium, and hard. Compositional and adversarial cases make up hard and brutal.
 - **Strict grading.** A real citation to the wrong doc fails. Citing both sides of a contradiction without saying so fails.
