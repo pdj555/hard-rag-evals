@@ -1,5 +1,10 @@
 # Research summary
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg">
+  <img alt="Reference agent passes 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal. One hedging sentence passes two contradiction cases without detecting either." src="assets/hero-light.svg" width="100%">
+</picture>
+
 When an agent answers from documents, nobody goes back and reads the sources. So the answer has to carry its own evidence. This suite checks whether it does.
 
 It's the same question as [agent-harness](https://github.com/pdj555/agent-harness), applied to answers instead of diffs: **how can we trust what an agent hands back without a human checking it?**

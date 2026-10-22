@@ -3,6 +3,11 @@
 > **How can we trust agents to merge without a human reading every diff?**
 > One question, four repos. [agent-harness](https://github.com/pdj555/agent-harness) is the gate · [agent-eval-harness](https://github.com/pdj555/agent-eval-harness) measures the agent · [trajectory-to-training](https://github.com/pdj555/trajectory-to-training) keeps only verified work for training · **hard-rag-evals** asks the same of answers
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.svg">
+  <img alt="Reference agent passes 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal. One hedging sentence passes two contradiction cases without detecting either." src="docs/assets/hero-light.svg" width="100%">
+</picture>
+
 The same question applies to answers. When an agent answers from documents, nobody rereads the sources to check it. So the answer has to carry its own evidence: real citations, the current fact rather than the stale one, a contradiction flagged instead of hidden, and an abstention when the corpus has nothing.
 
 42 hand-built cases across 14 failure modes, graded easy, medium, hard, and brutal. Standard benchmarks measure whether the answer is right. This suite measures how it fails, one failure per case, so a failing case names exactly what broke.
