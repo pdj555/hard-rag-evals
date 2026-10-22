@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg">
-  <img alt="Reference agent passes 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal. Of four grader-gaming tricks, a hedge sentence and a number spray beat the grader; citing everything and refusing everything do not." src="assets/hero-light.svg" width="100%">
+  <img alt="42 cases by tier. The reference agent passes 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal. Cheap tricks turn 3 failed cases into passes, including the sentence: However, the sources may conflict." src="assets/hero-light.svg" width="100%">
 </picture>
 
 When an agent answers from documents, nobody goes back and reads the sources. So the answer has to carry its own evidence. This suite checks whether it does.

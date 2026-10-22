@@ -1,144 +1,56 @@
 # hard-rag-evals
 
-> **How can we trust agents to merge without a human reading every diff?**
-> One question, four repos. [agent-harness](https://github.com/pdj555/agent-harness) is the gate · [agent-eval-harness](https://github.com/pdj555/agent-eval-harness) measures the agent · [trajectory-to-training](https://github.com/pdj555/trajectory-to-training) keeps only verified work for training · **hard-rag-evals** asks the same of answers
+**42 ways a RAG agent's answer can't be trusted, and which grader checks can be gamed.**
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.svg">
-  <img alt="Reference agent passes 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal. Of four grader-gaming tricks, a hedge sentence and a number spray beat the grader; citing everything and refusing everything do not." src="docs/assets/hero-light.svg" width="100%">
+  <img alt="42 cases by tier. The reference agent passes 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal. Cheap tricks turn 3 failed cases into passes, including the sentence: However, the sources may conflict." src="docs/assets/hero-light.svg" width="100%">
 </picture>
 
-The same question applies to answers. When an agent answers from documents, nobody rereads the sources to check it. So the answer has to carry its own evidence: real citations, the current fact rather than the stale one, a contradiction flagged instead of hidden, and an abstention when the corpus has nothing.
+<sub>One question, four repos: **how can we trust agents to merge without a human reading every diff?**<br>
+[agent-harness](https://github.com/pdj555/agent-harness) · [agent-eval-harness](https://github.com/pdj555/agent-eval-harness) · [trajectory-to-training](https://github.com/pdj555/trajectory-to-training) · **hard-rag-evals**</sub>
 
-42 hand-built cases across 14 failure modes, graded easy, medium, hard, and brutal. Standard benchmarks measure whether the answer is right. This suite measures how it fails, one failure per case, so a failing case names exactly what broke.
+## The finding
 
-The deterministic reference agent scores **10/42**, and nothing passes the brutal tier. An agent that appends one invented citation scores **0/42**, because the citation check fires on every case.
+Nobody rereads the sources behind an agent's answer, so the answer has to carry its own evidence: real citations, the current fact over the stale one, a contradiction flagged instead of hidden, an abstention when the corpus has nothing.
 
-The grader has its own weak spots. Of four gaming agents, each the reference agent plus one cheap trick, two beat it: a hedge sentence passes both contradiction cases, and spraying every number from the sources passes a numeric case. Citing everything and refusing everything don’t pay. `python examples/grader_attacks.py`
+| Agent | Easy | Medium | Hard | Brutal | Total |
+| --- | --- | --- | --- | --- | --- |
+| Reference (lexical retrieval, extractive answers) | 7/12 | 2/12 | 1/13 | 0/5 | **10/42** |
+| Reference plus one invented citation | 0/12 | 0/12 | 0/13 | 0/5 | **0/42** |
 
-**[Research summary](docs/research.md)**: results, an agent that games the grader, and where it breaks, on one page.
+The grader has weak spots too. Four agents each add one cheap trick to the reference:
 
-## Quickstart
+| Trick | Score | Check |
+| --- | --- | --- |
+| Hedge: cite everything, add "However, the sources may conflict." | 11/42 | contradiction **falls** |
+| Spray every number, pairwise sum, and total from the sources | 11/42 | numeric **falls** |
+| Cite every retrieved doc | 9/42 | citation holds |
+| Refuse every question | 3/42 | abstention holds |
+
+## Run it
+
+No API key, no model calls.
 
 ```bash
 pip install -e .
-python examples/demo.py
+python examples/demo.py             # the suite, by tier
+python examples/grader_attacks.py   # which checks can be gamed
 ```
 
-No API keys. No model calls. The reference agent is deterministic, so the demo runs anywhere.
+## How it works
 
-Filter by tier or mode:
+- **One failure per case.** A stale doc that outranks the update, two sources that disagree, a citation to a doc that doesn't exist, an instruction planted in a retrieved doc.
+- **Four tiers.** 12 modes in easy, medium, and hard. Compositional and adversarial cases make up hard and brutal.
+- **Strict grading.** A real citation to the wrong doc fails. Citing both sides of a contradiction without saying so fails.
+- **Deterministic.** Same code, same corpus, same score, every run.
 
-```python
-from hard_rag_evals import run_suite
+## Limits
 
-run_suite(agent, difficulty="hard")            # 13 cases
-run_suite(agent, difficulty=("easy", "medium"))
-run_suite(agent, modes="temporal_reasoning")  # one mode, all tiers
-```
+- Faithfulness, ordering, and contradiction checks match words, not meaning. The hedge shows the cost.
+- The reference agent is deliberately naive. No real model has been run yet.
+- 42 hand-built cases, no measured human baseline.
 
-Eval your own agent by implementing the `Agent` protocol:
+## Docs
 
-```python
-from hard_rag_evals import run_suite, render_markdown
-
-results = run_suite(my_agent)
-print(render_markdown(my_agent.name, results))
-```
-
-## What the baseline scores
-
-The bundled reference agent (lexical retrieval, extractive synthesis) scores **10/42**. The tier split is the story:
-
-| tier | score | meaning |
-| ---- | ----- | ------- |
-| easy | 7/12 | passes the simple forms |
-| medium | 2/12 | the original baseline behavior |
-| hard | 1/13 | only the fabrication trap built for smarter agents |
-| brutal | 0/5 | nothing passes |
-
-The demo also runs a fabricating variant that appends a fake citation id. It scores 0/42: the citation check fires on every case. That is the check working, not the agent failing.
-
-Every case is built to be answerable by careful reading of its own corpus. Every reference-agent failure is classified in [docs/error_taxonomy.md](docs/error_taxonomy.md), which doubles as a debugging guide.
-
-## The failure modes
-
-Twelve modes ship in easy / medium / hard tiers:
-
-| mode | what breaks | easy | hard |
-| ---- | ----------- | ---- | ---- |
-| contradictory_sources | corpus holds old and new versions of a fact; agent picks one silently | "replaced" is extractable | no supersession language; dates only |
-| stale_docs | long stale page outranks the short update | stale doc shares no query terms | stale doc cosmetically "updated" later |
-| retrieval_misses | query says "cars", doc says "automobiles" | partial overlap | zero overlap plus decoy distractors |
-| citation_fabrication | model invents a plausible doc id | tiny corpus | phantom id named in real doc text |
-| multi_hop | answer needs several docs plus synthesis | two docs, no reasoning | three docs plus arithmetic |
-| context_overflow | more docs than budget, keyword-stuffed noise | 6 docs, mild noise | 20 docs, budget 3, exact-phrase stuffing |
-| unanswerable | corpus contains nothing relevant | obviously unrelated | near-miss corpus that tempts stitching |
-| temporal_reasoning | events with dates; "which happened first?" | two explicit dates | event dates contradict published dates |
-| numeric_aggregation | sum or average across documents | two quarters, same units | mixed $4,200K/$5.8M plus a trap doc |
-| entity_disambiguation | two people, one name | role keyword disambiguates | wrong doc stuffed with query terms |
-| instruction_hierarchy | retrieved docs try to boss the agent | blatant injection | query-level constraint vs relevance |
-| long_context_needle | answer buried in dozens of docs | 15 docs, shared terms | 50 docs, near-duplicate wrong numbers |
-
-Two more modes go further:
-
-| mode | tier | what breaks |
-| ---- | ---- | ----------- |
-| compositional | brutal (4 cases) | two or three modes at once: stale+contradiction, overflow+multihop, miss+disambiguation, temporal+stale |
-| adversarial_retrieval | hard, brutal | keyword-stuffed titles, near-duplicate docs, three versions of one fact where only date reasoning picks the current truth |
-
-## Key features
-
-**Isolated failure modes.** One failure per case. When a case fails you know exactly what broke.
-
-**Graduated difficulty.** Easy shows the behavior. Hard shows where production breaks. Brutal combines modes the way the real world does.
-
-**Strict grading.** A real citation to the wrong document fails. Citing both sides of a contradiction without comment fails. Quoting numbers without summing them fails. Repeating an injected instruction fails.
-
-**Deterministic everything.** Same code, same corpus, same scores, every run. Heuristic graders keep the suite fast and free; swap in model-graded checks behind the same metric names when you need them.
-
-**Solvable by reading.** Every case is built to be answerable from its corpus. The taxonomy maps each failure to the capability it needs.
-
-## Architecture
-
-```
-hard_rag_evals/
-  types.py            Agent protocol, Answer, Corpus, EvalCase, EvalResult
-  retrieval.py        IDF weighted keyword retrieval with a hard budget
-  metrics.py          citation precision/recall, faithfulness, retrieval
-                      recall, conflict acknowledgment, abstention,
-                      numeric answers, event ordering, injected phrases
-  runner.py           grades every case, filters by tier/mode,
-                      renders the tier-grouped markdown report
-  failure_modes/      one module per mode, each builds easy/medium/hard;
-                      compositional.py and adversarial.py build the rest
-  fixtures/           42 hand-built JSON corpora with ground truth
-  reference_agent/    deterministic extractive baseline (no API keys)
-docs/
-  error_taxonomy.md   every reference-agent failure classified (R/S/C/K/I)
-examples/
-  demo.py             full suite plus fabricating variant, tier bars
-```
-
-## Verification
-
-35/35 tests pass. `python -m pytest` from the repo root. The demo runs end to end with no API keys.
-
-## What this does not do
-
-It does not test generation quality, latency, or cost. It does not cover multimodal retrieval, streaming, or conversation state. The faithfulness and ordering metrics are lexical heuristics, not entailment models. There is no measured human baseline yet.
-
-## Roadmap
-
-- Model-graded faithfulness and conflict detection behind the metric names
-- Leaderboard script for comparing agents across runs
-- Multihop chains longer than two documents
-- A second reference agent with embeddings, to show what hybrid retrieval buys per tier
-
-## The one-line version
-
-42 ways RAG breaks in production, graded from "a careful intern gets this" to "nothing passes."
-
----
-
-Built by [Preston Jones](https://github.com/pdj555). Part of a series on agent infrastructure: evals, training data, and failure analysis.
+[Research summary](docs/research.md) · [Guide](docs/guide.md) · [Error taxonomy](docs/error_taxonomy.md)
