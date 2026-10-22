@@ -9,6 +9,8 @@ The same question applies to answers. When an agent answers from documents, nobo
 
 The deterministic reference agent scores **10/42**, and nothing passes the brutal tier. An agent that appends one invented citation scores **0/42**, because the citation check fires on every case.
 
+**[Research summary](docs/research.md)**: results, an agent that games the grader, and where it breaks, on one page.
+
 ## Quickstart
 
 ```bash
