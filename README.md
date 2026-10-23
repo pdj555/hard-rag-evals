@@ -1,49 +1,22 @@
 # hard-rag-evals
 
-Evals for agents that answer from retrieved documents. 14 failure modes, 42 cases. A reference agent passes 10 of 42. Four agents built to game the grader turn 3 failed cases into passes, and this repo maps which checks fall and which hold.
+across 42 cases covering 14 ways an agent answering from documents can go wrong, an agent that invents its citations scores 0 of 42, because an answer that looks sourced can still be made up
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.svg">
-  <img alt="42 cases by tier. The reference agent passes 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal. Cheap tricks turn 3 failed cases into passes, including the sentence: However, the sources may conflict." src="docs/assets/hero-light.svg" width="100%">
-</picture>
+## The numbers
 
-<sub>Four repos share one question: how can we trust what an agent hands back without a human checking it?<br>
-[agent-harness](https://github.com/pdj555/agent-harness) · [agent-eval-harness](https://github.com/pdj555/agent-eval-harness) · [trajectory-to-training](https://github.com/pdj555/trajectory-to-training) · **hard-rag-evals**</sub>
+The suite has 42 cases in four tiers: 12 easy, 12 medium, 13 hard, 5 brutal. Twelve of the 14 failure modes build one case at easy, medium, and hard. Adversarial retrieval builds 2 cases and compositional builds 4.
 
-## The findings
+Each case gives the agent a small set of documents and a question. The agent answers from the documents and cites the ones it used.
 
-An answer from retrieved documents has to carry its own proof: real citations, the current fact over the stale one, a contradiction named instead of buried, and no answer at all when the documents hold nothing.
-
-| Agent | Easy | Medium | Hard | Brutal | Total |
-| --- | --- | --- | --- | --- | --- |
-| Reference (lexical retrieval, extractive answers) | 7/12 | 2/12 | 1/13 | 0/5 | **10/42** |
-| Reference plus one invented citation | 0/12 | 0/12 | 0/13 | 0/5 | **0/42** |
-
-Four agents each add one cheap trick to the reference agent:
-
-| Trick | Score | What it shows |
-| --- | --- | --- |
-| Hedge: cite everything, add "However, the sources may conflict." | 11/42 | the contradiction check is beaten |
-| Spray every number, pairwise sum, and total from the sources | 11/42 | the numeric check is beaten |
-| Cite every retrieved doc | 9/42 | the citation gates hold, and the trick loses a case |
-| Refuse every question | 3/42 | passes exactly the 3 unanswerable cases |
-
-Three cases show the shape of the suite:
-
-- contradiction-hard: two pricing archives, $49 a month in 2023 and $59 in 2024, neither saying it replaces the other. Only the dates separate them.
-- stale-hard: the document with the newest published date gives the old API rate limit. The newest document is the stale one.
-- adversarial-brutal: three versions of a refund policy, 30 days, then 14, then 30 again when the 2025 version reinstates it, plus a later blog quoting the stale 14.
+- The reference agent retrieves documents by shared words and answers with extracts from them. It passes 10 of 42: 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal.
+- The same agent with one invented citation added to every answer passes 0 of 42.
+- Four more agents each add one cheap trick to the reference agent. Citing every retrieved document and adding the sentence "However, the sources may conflict." scores 11 of 42. Appending every number in the documents, every pairwise sum, and the total scores 11 of 42. Citing every retrieved document scores 9 of 42. Refusing every question scores 3 of 42, which is exactly the 3 cases where the documents hold no answer.
 
 ## How grading works
 
-A case passes only if every hard gate holds: the agent abstains exactly when the case is unanswerable, every required document is cited, no forbidden document is cited, every citation names a document that exists, and the contradiction, numeric, order, and forbidden phrase checks pass when the case sets them. Four scores are also computed for every case, citation precision and recall, retrieval recall, and faithfulness, and they never decide a pass.
+A case passes only when every hard gate holds. The agent must refuse exactly when the documents hold no answer. Every document the case requires must be cited, no forbidden document may be cited, and every citation must name a document that exists. When a case sets them, the contradiction, numeric, order, and forbidden phrase checks must also pass.
 
-The grader's own weak spots, stated plainly:
-
-- Faithfulness counts a citation as supported when the document shares one content word with the answer. It is a score, and a weak one.
-- The contradiction check searches the answer for 13 marker words and requires both documents cited. An answer that copies a word like "replaced" out of a document passes without comparing anything.
-- There is no freshness check and no meaning check anywhere in the grader. Stale and wrong document failures are enforced case by case, through the required and forbidden citation lists written into each fixture.
-- Each fixture carries an "expected" answer in prose. The grader loads it and never reads it.
+Four scores are computed for every case: citation precision, citation recall, retrieval recall, and faithfulness. The scores are reported and never decide a pass.
 
 ## Run it
 
@@ -51,19 +24,24 @@ No API key, no model calls, no network. Grading is deterministic.
 
 ```bash
 pip install -e .
-python examples/demo.py             # the suite, by tier
-python examples/grader_attacks.py   # which checks can be gamed
-python -m pytest                    # 35 tests
+python examples/demo.py
+python examples/grader_attacks.py
+python -m pytest
 ```
+
+The test suite is 35 tests.
+
+## What the grader does not check
+
+These limits are in the code, stated here so nobody has to find them.
+
+- Faithfulness counts a citation as supported when the cited document shares one content word with the answer. It is a weak score, and it never gates.
+- The contradiction check needs both documents of a conflicting pair cited, then looks for any of 12 marker words in the answer, words such as "however", "changed", and "replaced". An answer that copies one of those words out of a document passes without comparing the two claims.
+- There is no freshness check anywhere in the grader. Cases about stale documents are enforced one at a time, through lists written into each fixture: 39 of 42 cases name documents that must be cited, and 16 name documents that must not be cited.
+- Each fixture carries an expected answer written in prose. The grader loads it and never reads it.
 
 ## Limits
 
-- No model has been run through the suite. The only agents are the reference agent, its fabricating variant, and the four gamers, all scripted.
-- Every corpus is hand built and small: 2 to 50 short documents per case. There is no measured human baseline.
-- The four gamers were written against these checks by the same author. Their gains are pinned by tests, and hardening a check is expected to break the matching test and be recorded.
-
-## Docs
-
-[Research summary](docs/research.md) · [Guide](docs/guide.md) · [Error taxonomy](docs/error-taxonomy.md)
-
-MIT
+- No model has been run through this suite. The only agents are the reference agent, the variant that invents citations, and the four trick agents. All of them are scripted.
+- Every document set is hand built and small. No case has more than 50 documents, and there is no measured human baseline.
+- The four trick agents were written against these checks by the same author. Their scores are pinned by tests, so hardening a check is expected to break the matching test and be recorded.
