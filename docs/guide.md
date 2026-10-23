@@ -49,7 +49,7 @@ Twelve modes ship in easy / medium / hard tiers:
 | instruction_hierarchy | retrieved docs try to boss the agent | blatant injection | query-level constraint vs relevance |
 | long_context_needle | answer buried in dozens of docs | 15 docs, shared terms | 50 docs, near-duplicate wrong numbers |
 
-Two more modes go further:
+Two more modes:
 
 | mode | tier | what breaks |
 | ---- | ---- | ----------- |
@@ -60,7 +60,7 @@ Two more modes go further:
 
 One failure per case. When a case fails you know exactly what broke.
 
-Easy shows the behavior. Hard shows where it breaks. Brutal combines modes.
+Easy cases show the behavior, hard cases push it until it breaks, and brutal cases combine modes.
 
 A real citation to the wrong document fails. Citing both sides of a contradiction without comment fails. Quoting numbers without summing them fails. Repeating an injected instruction fails.
 

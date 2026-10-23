@@ -2,14 +2,14 @@
 
 42 failure modes for agents that answer from retrieved documents, and a map of which grader checks can be gamed.
 
-A RAG agent looks documents up, then answers from what it finds. This repo scores the answers, then turns around and attacks the grader.
+A RAG agent looks up documents, then answers from what it finds. This repo scores the answers, then turns around and attacks the grader.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.svg">
   <img alt="42 cases by tier. The reference agent passes 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal. Cheap tricks turn 3 failed cases into passes, including the sentence: However, the sources may conflict." src="docs/assets/hero-light.svg" width="100%">
 </picture>
 
-<sub>One question, four repos: **how can we trust agents to merge without a human reading every diff?**<br>
+<sub>Four repos share one question. Here it is: **how can we trust what an agent hands back without a human checking it?**<br>
 [agent-harness](https://github.com/pdj555/agent-harness) · [agent-eval-harness](https://github.com/pdj555/agent-eval-harness) · [trajectory-to-training](https://github.com/pdj555/trajectory-to-training) · **hard-rag-evals**</sub>
 
 ## The findings
@@ -25,8 +25,8 @@ The grader has weak spots too. Four agents each add one cheap trick to the refer
 
 | Trick | Score | Check |
 | --- | --- | --- |
-| Hedge: cite everything, add "However, the sources may conflict." | 11/42 | contradiction **falls** |
-| Spray every number, pairwise sum, and total from the sources | 11/42 | numeric **falls** |
+| Hedge: cite everything, add "However, the sources may conflict." | 11/42 | contradiction is beaten |
+| Spray every number, pairwise sum, and total from the sources | 11/42 | numeric is beaten |
 | Cite every retrieved doc | 9/42 | citation holds |
 | Refuse every question | 3/42 | abstention holds |
 
