@@ -2,6 +2,12 @@
 
 across 42 cases covering 14 ways an agent answering from documents can go wrong, an agent that invents its citations scores 0 of 42, because an answer that looks sourced can still be made up
 
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.svg">
+  <img alt="42 cases by tier. The reference agent passes 7 of 12 easy, 2 of 12 medium, 1 of 13 hard, 0 of 5 brutal. Cheap tricks turn 3 failed cases into passes, including the sentence: However, the sources may conflict." src="docs/assets/hero-light.svg" width="100%">
+</picture>
+
 ## The numbers
 
 The suite has 42 cases in four tiers: 12 easy, 12 medium, 13 hard, 5 brutal. Twelve of the 14 failure modes build one case at easy, medium, and hard. Adversarial retrieval builds 2 cases and compositional builds 4.
@@ -13,6 +19,11 @@ Each case gives the agent a small set of documents and a question. The agent ans
 - Four more agents each add one cheap trick to the reference agent. Citing every retrieved document and adding the sentence "However, the sources may conflict." scores 11 of 42. Appending every number in the documents, every pairwise sum, and the total scores 11 of 42. Citing every retrieved document scores 9 of 42. Refusing every question scores 3 of 42, which is exactly the 3 cases where the documents hold no answer.
 
 ## How grading works
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/flow-animated-dark.svg">
+  <img alt="A question and corpus go to the agent, which retrieves, answers, and cites. The grader checks citations, required documents, contradiction, abstention, numbers, and injected text. A hedge sentence fools the contradiction check and a number spray fools the numeric check." src="docs/assets/flow-animated-light.svg" width="100%">
+</picture>
 
 A case passes only when every hard gate holds. The agent must refuse exactly when the documents hold no answer. Every document the case requires must be cited, no forbidden document may be cited, and every citation must name a document that exists. When a case sets them, the contradiction, numeric, order, and forbidden phrase checks must also pass.
 
