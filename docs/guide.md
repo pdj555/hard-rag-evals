@@ -1,112 +1,59 @@
-# hard-rag-evals guide
+# Guide
 
-For what this repo found and why it matters, see the [README](../README.md) and the [research summary](research.md).
+What this repo found is in the [README](../README.md). The experiment, in full, is in the [research summary](research.md). This guide covers how a case is built, how grading runs, and what the scores do and do not decide.
 
-## Quickstart
+## A case
+
+Each case is one JSON fixture in `hard_rag_evals/fixtures/`, built by a module in `hard_rag_evals/failure_modes/`. The registry in `failure_modes/__init__.py` assembles all 42 cases as ALL_CASES: 12 modes at easy, medium, and hard, plus adversarial retrieval (2 cases) and compositional (4).
+
+A fixture holds:
+
+- A query and a corpus of short documents, each with an id, a source, and a published date.
+- A retrieval budget: how many documents, and how many characters, the agent may pull.
+- The gates for the case: required citations (`must_cite`), forbidden citations (`must_not_cite`), a conflict pair, an expected number with a tolerance, an order pair, forbidden phrases, and an abstain flag for unanswerable cases.
+- An "expected" answer in prose, and the gold document ids. The grader never reads the prose; the gold ids feed only the retrieval recall score.
+
+## How grading runs
+
+`runner.grade()` is all or nothing. Fail any gate and the case fails:
+
+1. Abstention matches the case: the agent refuses exactly when the case is unanswerable.
+2. Every `must_cite` id is cited, and no `must_not_cite` id is cited.
+3. Every citation names a document in the corpus. One invented id fails the case.
+4. When the case sets a conflict pair, both documents are cited and the answer contains at least one of 13 marker substrings: conflict, contradict, however, disagree, changed, updated, differs, whereas, although, supersede, replaced, inconsistent. It is a substring search on the lowercased text. Nothing compares the two claims.
+5. When the case sets an expected number, at least one number in the answer lands within tolerance. Numbers are extracted with K, M, and B scaling, so "$4,200K" reads as 4,200,000.
+6. When the case sets an order pair, the events appear in that order. When it sets forbidden phrases, none appears.
+
+Grading is deterministic. Retrieval sorts by score with document id as the tiebreak, and there is no randomness, network call, or model call anywhere in the package.
+
+## The scores
+
+Four scores are computed for every case and never decide a pass:
+
+- Citation precision: the share of citations that name a real document in the corpus.
+- Citation recall: the share of required documents that were cited.
+- Retrieval recall: the share of gold documents the retriever pulled inside the budget.
+- Faithfulness: a cited document counts as supported when it shares at least one content word with the answer text. Treat this score as weak evidence; it is a word overlap count, not a check of meaning.
+
+There is no freshness check, no ordering check on documents, and no meaning check in the grader. When a stale or wrong document fails a case, it fails because the fixture author listed that document as forbidden, or required a different one.
+
+## The agents
+
+`reference_agent/agent.py` is the baseline: IDF weighted keyword retrieval inside the budget, then the two sentences per document with the most query overlap, each prefixed with its document id, citing what it copied from. It never abstains.
+
+`gamers.py` holds four variants, each the reference agent plus one change: Hedger (cite everything retrieved, append " However, the sources may conflict."), NumberSpray (append every number found, every pairwise sum, and the total), CiteEverything (cite everything retrieved, text unchanged), AlwaysAbstain (the same refusal on every case). `tests/test_gamers.py` pins each gamer's exact gains and losses. If a check is hardened, the matching test should fail; update it and the research summary together.
+
+`examples/demo.py` also runs a fabricating variant: the reference agent plus one invented citation, "doc-does-not-exist-99", on every answer. It scores 0 of 42.
+
+## Run it
 
 ```bash
 pip install -e .
-python examples/demo.py
+python examples/demo.py             # reference and fabricating agents, by tier
+python examples/grader_attacks.py   # the four gamers against the checks
+python -m pytest                    # 35 tests: depth 18, metrics 8, runner 5, gamers 4
 ```
 
-No API keys. No model calls. The reference agent is deterministic, so the demo runs anywhere.
+## Adding a case
 
-Filter by tier or mode:
-
-```python
-from hard_rag_evals import run_suite
-
-run_suite(agent, difficulty="hard")            # 13 cases
-run_suite(agent, difficulty=("easy", "medium"))
-run_suite(agent, modes="temporal_reasoning")  # one mode, all tiers
-```
-
-Eval your own agent by implementing the `Agent` protocol:
-
-```python
-from hard_rag_evals import run_suite, render_markdown
-
-results = run_suite(my_agent)
-print(render_markdown(my_agent.name, results))
-```
-
-## The failure modes
-
-Twelve modes ship in easy / medium / hard tiers:
-
-| mode | what breaks | easy | hard |
-| ---- | ----------- | ---- | ---- |
-| contradictory_sources | corpus holds old and new versions of a fact; agent picks one silently | "replaced" is extractable | no supersession language; dates only |
-| stale_docs | long stale page outranks the short update | stale doc shares no query terms | stale doc cosmetically "updated" later |
-| retrieval_misses | query says "cars", doc says "automobiles" | partial overlap | zero overlap plus decoy distractors |
-| citation_fabrication | model invents a plausible doc id | tiny corpus | phantom id named in real doc text |
-| multi_hop | answer needs several docs plus synthesis | two docs, no reasoning | three docs plus arithmetic |
-| context_overflow | more docs than budget, keyword-stuffed noise | 6 docs, mild noise | 20 docs, budget 3, exact-phrase stuffing |
-| unanswerable | corpus contains nothing relevant | obviously unrelated | near-miss corpus that tempts stitching |
-| temporal_reasoning | events with dates; "which happened first?" | two explicit dates | event dates contradict published dates |
-| numeric_aggregation | sum or average across documents | two quarters, same units | mixed $4,200K/$5.8M plus a trap doc |
-| entity_disambiguation | two people, one name | role keyword disambiguates | wrong doc stuffed with query terms |
-| instruction_hierarchy | retrieved docs try to boss the agent | blatant injection | query-level constraint vs relevance |
-| long_context_needle | answer buried in dozens of docs | 15 docs, shared terms | 50 docs, near-duplicate wrong numbers |
-
-Two more modes:
-
-| mode | tier | what breaks |
-| ---- | ---- | ----------- |
-| compositional | brutal (4 cases) | two or three modes at once: stale+contradiction, overflow+multihop, miss+disambiguation, temporal+stale |
-| adversarial_retrieval | hard, brutal | keyword-stuffed titles, near-duplicate docs, three versions of one fact where only date reasoning picks the current truth |
-
-## Design
-
-One failure per case. When a case fails you know exactly what broke.
-
-Easy cases show the behavior, hard cases push it until it breaks, and brutal cases combine modes.
-
-A real citation to the wrong document fails. Citing both sides of a contradiction without comment fails. Quoting numbers without summing them fails. Repeating an injected instruction fails.
-
-Same code, same corpus, same scores, every run. Heuristic graders keep the suite fast and free; swap in model-graded checks behind the same metric names when you need them.
-
-Every case is built to be answerable from its corpus. The taxonomy maps each failure to the capability it needs.
-
-## Architecture
-
-```
-hard_rag_evals/
-  types.py            Agent protocol, Answer, Corpus, EvalCase, EvalResult
-  retrieval.py        IDF weighted keyword retrieval with a hard budget
-  metrics.py          citation precision/recall, faithfulness, retrieval
-                      recall, conflict acknowledgment, abstention,
-                      numeric answers, event ordering, injected phrases
-  runner.py           grades every case, filters by tier/mode,
-                      renders the tier-grouped markdown report
-  gamers.py           four agents that attack the grader, one trick each
-  failure_modes/      one module per mode, each builds easy/medium/hard;
-                      compositional.py and adversarial.py build the rest
-  fixtures/           42 hand-built JSON corpora with ground truth
-  reference_agent/    deterministic extractive baseline (no API keys)
-docs/
-  research.md         what the suite found, and where the grader breaks
-  guide.md            this file
-  error_taxonomy.md   every reference-agent failure classified (R/S/C/K/I)
-  assets/             the diagrams in the README and research summary
-examples/
-  demo.py             full suite plus fabricating variant, tier bars
-  grader_attacks.py   runs the four gaming agents against the grader
-  game_the_grader.py  one gaming agent only: the hedger, in detail
-  run_report_*.md     demo.py output: the two reports the README cites
-```
-
-## Verification
-
-35/35 tests pass. `python -m pytest` from the repo root. The demo runs end to end with no API keys.
-
-## What this does not do
-
-It does not test generation quality, latency, or cost. It does not cover multimodal retrieval, streaming, or conversation state. The faithfulness and ordering metrics are lexical heuristics, not entailment models. There is no measured human baseline yet.
-
-## Roadmap
-
-- Model-graded faithfulness and conflict detection behind the metric names
-- Leaderboard script for comparing agents across runs
-- Multi-hop chains longer than two documents
-- A second reference agent with embeddings, to show what hybrid retrieval buys per tier
+Add the fixture JSON, and a builder for it in the mode's module in `failure_modes/`, following the existing builders. Write the gates the case is meant to enforce into the fixture: the required and forbidden citation lists are what make a stale or wrong document fail. Register the case in ALL_CASES through the mode's build functions, and add a test that pins the reference agent's result on it.
