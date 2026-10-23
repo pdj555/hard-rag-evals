@@ -33,10 +33,10 @@ Any cheap check an agent can see, it can satisfy without doing the work. So I wr
 | Cite everything | cite every retrieved doc | 9/42 | none |
 | Always abstain | refuse every question | 3/42 | the 3 unanswerable cases, at the cost of 10 others |
 
-The reference agent scores 10/42. Two checks fall:
+The reference agent scores 10/42. Two checks are beaten:
 
-- **Contradiction.** It passes an answer that cites both sides and uses a word like "however." The hedger never detects a contradiction.
-- **Numeric.** It passes if any number in the answer matches. The spray hits the right total on 2 of the 4 numeric cases. One passes outright; the other is still failed by the forbidden-citation check.
+- The contradiction check passes an answer that cites both sides and uses a word like "however." The hedger never detects a contradiction.
+- The numeric check passes if any number in the answer matches. The spray hits the right total on 2 of the 4 numeric cases. One passes outright; the other is still failed by the forbidden-citation check.
 
 Two hold. Citing everything gains nothing, because citing a forbidden doc fails the case. Refusing everything loses far more than it gains.
 
