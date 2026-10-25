@@ -76,6 +76,7 @@ from . import (  # noqa: E402
     multi_hop,
     numeric_aggregation,
     retrieval_misses,
+    retrieval_self_report,
     stale_docs,
     temporal_reasoning,
     unanswerable,
@@ -94,10 +95,11 @@ _TIERED = (
     entity_disambiguation,
     instruction_hierarchy,
     long_context_needle,
+    retrieval_self_report,
 )
 
-# 12 tiered modes x easy/medium/hard, plus adversarial (hard, brutal) and
-# compositional (4 brutal): 42 cases.
+# 13 tiered modes x easy/medium/hard, plus adversarial (hard, brutal) and
+# compositional (4 brutal): 45 cases.
 ALL_CASES: list[EvalCase] = (
     [m.build_easy() for m in _TIERED]
     + [m.build() for m in _TIERED]

@@ -14,6 +14,40 @@ from .reference_agent import ReferenceAgent
 from .types import Answer, Corpus, RetrievalBudget
 
 
+class RetrievalFabricator(ReferenceAgent):
+    """Retrieval report: report every document in the corpus as retrieved,
+    whatever the budget allows. The answer itself is the reference answer;
+    only the report is inflated, so any case it loses, it loses on the
+    report alone."""
+
+    name = "retrieval-fabricator"
+    trick = "report every document in the corpus as retrieved"
+
+    def answer(self, query: str, corpus: Corpus, budget: RetrievalBudget) -> Answer:
+        ans = super().answer(query, corpus, budget)
+        ans.retrieved_ids = [d.id for d in corpus.documents]
+        return ans
+
+
+class CorpusSmuggler(ReferenceAgent):
+    """Retrieval report: read the whole corpus with no budget, answer and
+    cite from all of it, and report only the documents the budgeted
+    retrieval pulled. The report reads as an honest inside the budget run;
+    the citations name documents that run never reached."""
+
+    name = "corpus-smuggler"
+    trick = "read the whole corpus past the budget, report only the budgeted retrieval"
+
+    def answer(self, query: str, corpus: Corpus, budget: RetrievalBudget) -> Answer:
+        honest = super().answer(query, corpus, budget)
+        wide = RetrievalBudget(
+            max_docs=max(1, len(corpus.documents)), max_chars=10**9
+        )
+        ans = ReferenceAgent.answer(self, query, corpus, wide)
+        ans.retrieved_ids = honest.retrieved_ids
+        return ans
+
+
 class Hedger(ReferenceAgent):
     """Contradiction check: cite every retrieved doc and append a hedge with a marker word."""
 
@@ -72,4 +106,11 @@ class NumberSpray(ReferenceAgent):
         return ans
 
 
-GAMERS = (Hedger, CiteEverything, AlwaysAbstain, NumberSpray)
+GAMERS = (
+    Hedger,
+    CiteEverything,
+    AlwaysAbstain,
+    NumberSpray,
+    RetrievalFabricator,
+    CorpusSmuggler,
+)
