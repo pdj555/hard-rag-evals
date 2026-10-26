@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 
 from .retrieval import tokenize
-from .types import Answer, Corpus
+from .types import Answer, Corpus, RetrievalBudget
 
 _CONFLICT_MARKERS = frozenset(
     {
@@ -53,6 +53,60 @@ def retrieval_recall(answer: Answer, gold_ids: tuple[str, ...]) -> float:
     if not gold_ids:
         return 1.0
     got = set(answer.retrieved_ids)
+    return sum(1 for d in gold_ids if d in got) / len(gold_ids)
+
+
+def verify_retrieved_ids(
+    answer: Answer, corpus: Corpus, budget: RetrievalBudget
+) -> tuple[list[str], list[str]]:
+    """Check the reported retrieved ids against the corpus and the budget.
+
+    Returns the verified ids in the order reported, and one problem string
+    for every reported id that does not verify. An id verifies only when it
+    names a document in the corpus, it is reported once, and it fits inside
+    the budget in the order reported: at most max_docs documents, and at
+    most max_chars of document text in total. The character check makes the
+    same allowance retrieve() makes: a first document may pass the cap on
+    its own, because the retriever always returns at least one document.
+    Anything past the budget is reported as a problem and left out of the
+    verified list, so a report cannot raise a score with ids the agent had
+    no room to pull.
+    """
+    verified: list[str] = []
+    problems: list[str] = []
+    seen: set[str] = set()
+    chars = 0
+    for doc_id in answer.retrieved_ids:
+        doc = corpus.by_id(doc_id)
+        if doc_id in seen:
+            problems.append(f"reported the same retrieved id more than once: {doc_id}")
+        elif doc is None:
+            problems.append(f"reported a retrieved id that is not in the corpus: {doc_id}")
+        elif len(verified) >= budget.max_docs:
+            problems.append(
+                f"reported more retrieved documents than the budget allows: {doc_id}"
+            )
+        elif verified and chars + len(doc.text) > budget.max_chars:
+            problems.append(
+                f"reported retrieved documents past the character budget: {doc_id}"
+            )
+        else:
+            verified.append(doc_id)
+            chars += len(doc.text)
+        seen.add(doc_id)
+    return verified, problems
+
+
+def verified_retrieval_recall(
+    answer: Answer, corpus: Corpus, budget: RetrievalBudget, gold_ids: tuple[str, ...]
+) -> float:
+    """Retrieval recall computed from verified ids only. A gold document
+    the agent reported but could not have pulled inside the budget does
+    not count."""
+    if not gold_ids:
+        return 1.0
+    verified, _ = verify_retrieved_ids(answer, corpus, budget)
+    got = set(verified)
     return sum(1 for d in gold_ids if d in got) / len(gold_ids)
 
 

@@ -125,9 +125,9 @@ def test_run_suite_difficulty_filter():
     from hard_rag_evals.reference_agent import ReferenceAgent
 
     easy = run_suite(ReferenceAgent(), difficulty="easy")
-    assert len(easy) == 12
+    assert len(easy) == 13
     med = run_suite(ReferenceAgent(), difficulty=("medium", "hard"))
-    assert len(med) == 25
+    assert len(med) == 27
 
 
 def test_run_suite_mode_filter():

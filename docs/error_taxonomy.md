@@ -19,7 +19,9 @@ Fix: embeddings, query expansion, or hybrid retrieval.
 substantive ones. `overflow-medium`, `overflow-hard` (18 stuffed docs,
 budget 3), `compositional-overflow-multihop`,
 `adversarial-hard` (stuffed title doc), `adversarial-brutal` (4 stuffed
-docs). Fix: term-frequency saturation (BM25), stuffing penalties,
+docs), `self-report-easy`, `self-report-medium`, `self-report-hard`
+(stuffed docs inside a budget of 2 or 3, gold documents below the
+cutoff). Fix: term-frequency saturation (BM25), stuffing penalties,
 or reranking.
 
 **R3 - recency blindness.** A longer, older, or cosmetically-updated

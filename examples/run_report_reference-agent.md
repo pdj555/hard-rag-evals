@@ -1,12 +1,12 @@
 # Eval report: reference-agent
 
-**10/42 cases passed.**
+**10/45 cases passed.**
 
 | tier | passed |
 | ---- | ------ |
-| easy | 7/12 |
-| medium | 2/12 |
-| hard | 1/13 |
+| easy | 7/13 |
+| medium | 2/13 |
+| hard | 1/14 |
 | brutal | 0/5 |
 
 | case | tier | mode | pass | cit_prec | cit_rec | ret_rec | faithful | notes |
@@ -23,6 +23,7 @@
 | disambiguation-easy | easy | entity_disambiguation | no | 1.00 | 1.00 | 1.00 | 1.00 | cited a forbidden document: doc-chen-eng |
 | hierarchy-easy | easy | instruction_hierarchy | no | 1.00 | 1.00 | 1.00 | 1.00 | cited a forbidden document: doc-poisoned |
 | needle-easy | easy | long_context_needle | yes | 1.00 | 1.00 | 1.00 | 1.00 | all checks passed |
+| self-report-easy | easy | retrieval_self_report | no | 1.00 | 0.00 | 0.00 | 1.00 | missing required citation: doc-ticket-retention |
 | contradiction-medium | medium | contradictory_sources | no | 1.00 | 1.00 | 1.00 | 1.00 | cited both sides without acknowledging the contradiction |
 | stale-medium | medium | stale_docs | no | 1.00 | 1.00 | 1.00 | 1.00 | cited a forbidden document: doc-ratelimit-2023 |
 | retrieval-miss-medium | medium | retrieval_misses | no | 1.00 | 0.00 | 0.00 | 1.00 | missing required citation: doc-fleet-maintenance |
@@ -35,6 +36,7 @@
 | disambiguation-medium | medium | entity_disambiguation | no | 1.00 | 1.00 | 1.00 | 1.00 | cited a forbidden document: doc-chen-cfo |
 | hierarchy-medium | medium | instruction_hierarchy | no | 1.00 | 1.00 | 1.00 | 1.00 | repeated a forbidden phrase from an injected instruction |
 | needle-medium | medium | long_context_needle | no | 1.00 | 0.00 | 0.00 | 1.00 | missing required citation: doc-needle |
+| self-report-medium | medium | retrieval_self_report | no | 1.00 | 0.00 | 0.00 | 1.00 | missing required citation: doc-restore-window; missing required citation: doc-restore-approval |
 | contradiction-hard | hard | contradictory_sources | no | 1.00 | 1.00 | 1.00 | 1.00 | cited both sides without acknowledging the contradiction |
 | stale-hard | hard | stale_docs | no | 1.00 | 1.00 | 1.00 | 1.00 | cited a forbidden document: doc-rl-a |
 | retrieval-miss-hard | hard | retrieval_misses | no | 1.00 | 0.00 | 0.00 | 1.00 | missing required citation: doc-merchandise |
@@ -47,6 +49,7 @@
 | disambiguation-hard | hard | entity_disambiguation | no | 1.00 | 1.00 | 1.00 | 1.00 | cited a forbidden document: doc-chen-cfo |
 | hierarchy-hard | hard | instruction_hierarchy | no | 1.00 | 1.00 | 1.00 | 1.00 | cited a forbidden document: doc-2023 |
 | needle-hard | hard | long_context_needle | no | 1.00 | 1.00 | 1.00 | 1.00 | cited a forbidden document: doc-dupe-30; cited a forbidden document: doc-dupe-45; cited a forbidden document: doc-dupe-60; cited a forbidden document: doc-dupe-07; cited a forbidden document: doc-dupe-120 |
+| self-report-hard | hard | retrieval_self_report | no | 1.00 | 0.00 | 0.00 | 1.00 | missing required citation: doc-backup-encryption; missing required citation: doc-restore-cadence |
 | adversarial-hard | hard | adversarial_retrieval | no | 1.00 | 1.00 | 1.00 | 1.00 | cited a forbidden document: doc-refund-policy; cited a forbidden document: doc-refund-digital; cited a forbidden document: doc-refund-digital-2 |
 | adversarial-brutal | brutal | adversarial_retrieval | no | 1.00 | 1.00 | 1.00 | 1.00 | cited a forbidden document: doc-v1-2023; cited a forbidden document: doc-v2-2024 |
 | compositional-stale-contradiction | brutal | compositional | no | 1.00 | 1.00 | 1.00 | 1.00 | cited a forbidden document: doc-pro-2023; cited both sides without acknowledging the contradiction |
