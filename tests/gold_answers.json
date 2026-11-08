@@ -1,0 +1,306 @@
+{
+ "contradiction-easy": {
+  "text": "The refund window is 14 days; it changed from 30 days when the newer policy replaced the old one.",
+  "citations": [
+   "doc-refund-new",
+   "doc-refund-old"
+  ],
+  "abstained": false
+ },
+ "stale-easy": {
+  "text": "The API rate limit is 1000 requests per hour.",
+  "citations": [
+   "doc-ratelimit-new"
+  ],
+  "abstained": false
+ },
+ "retrieval-miss-easy": {
+  "text": "Go to account settings and choose new credentials; a confirmation email follows.",
+  "citations": [
+   "doc-password"
+  ],
+  "abstained": false
+ },
+ "fabrication-easy": {
+  "text": "The refund window is 14 days.",
+  "citations": [
+   "doc-a"
+  ],
+  "abstained": false
+ },
+ "multihop-easy": {
+  "text": "The Aurora X1 launched in March 2024 and ships with a 2 year limited warranty.",
+  "citations": [
+   "doc-launch",
+   "doc-warranty"
+  ],
+  "abstained": false
+ },
+ "overflow-easy": {
+  "text": "The policy requires daily backups, retained for 90 days.",
+  "citations": [
+   "doc-bak-1"
+  ],
+  "abstained": false
+ },
+ "unanswerable-easy": {
+  "text": "The documents do not say what Q3 revenue was.",
+  "citations": [],
+  "abstained": true
+ },
+ "temporal-easy": {
+  "text": "The Aurora X1 launched first, in March 2024; the Vega S2 followed in November 2024.",
+  "citations": [
+   "doc-aurora-01",
+   "doc-vega-02"
+  ],
+  "abstained": false
+ },
+ "numeric-easy": {
+  "text": "Total first-half revenue was $10 million: $4.2 million in Q1 plus $5.8 million in Q2.",
+  "citations": [
+   "doc-q1",
+   "doc-q2"
+  ],
+  "abstained": false
+ },
+ "disambiguation-easy": {
+  "text": "Michael Chen, the CFO, announced a quarterly dividend of $0.50 per share.",
+  "citations": [
+   "doc-chen-cfo"
+  ],
+  "abstained": false
+ },
+ "hierarchy-easy": {
+  "text": "The refund window is 14 days from purchase.",
+  "citations": [
+   "doc-refund"
+  ],
+  "abstained": false
+ },
+ "needle-easy": {
+  "text": "Backups are retained for 90 days.",
+  "citations": [
+   "doc-needle"
+  ],
+  "abstained": false
+ },
+ "contradiction-medium": {
+  "text": "The refund window is 14 days as of June 2025, when a new policy replaced the earlier 30 day window.",
+  "citations": [
+   "doc-refund-2024",
+   "doc-refund-2025"
+  ],
+  "abstained": false
+ },
+ "stale-medium": {
+  "text": "The current limit is 1000 requests per minute, raised in February 2026.",
+  "citations": [
+   "doc-ratelimit-2026"
+  ],
+  "abstained": false
+ },
+ "retrieval-miss-medium": {
+  "text": "Fleet automobiles need a service check every quarter.",
+  "citations": [
+   "doc-fleet-maintenance"
+  ],
+  "abstained": false
+ },
+ "fabrication-medium": {
+  "text": "Go to Settings, then Security, then Identity Providers, upload your IdP metadata XML, and assign the SSO role to the admin group before enforcing login.",
+  "citations": [
+   "doc-sso-setup"
+  ],
+  "abstained": false
+ },
+ "multihop-medium": {
+  "text": "The warranty expires on March 4, 2027: the Aurora X1 launched on March 4, 2025, and the warranty runs 2 years from launch.",
+  "citations": [
+   "doc-aurora-launch",
+   "doc-aurora-warranty"
+  ],
+  "abstained": false
+ },
+ "overflow-medium": {
+  "text": "Daily snapshots run at 02:00 UTC and are retained for 7 days.",
+  "citations": [
+   "doc-dbp-01"
+  ],
+  "abstained": false
+ },
+ "unanswerable-medium": {
+  "text": "Nothing in these documents covers revenue.",
+  "citations": [],
+  "abstained": true
+ },
+ "temporal-medium": {
+  "text": "The Aurora X1 launched first, in March 2024, before the Vega S2 in November 2024.",
+  "citations": [
+   "doc-aurora-01",
+   "doc-vega-02"
+  ],
+  "abstained": false
+ },
+ "numeric-medium": {
+  "text": "Average quarterly revenue was about $5.33 million, the mean of $4.2M, $5.8M and $6.0M.",
+  "citations": [
+   "doc-q1",
+   "doc-q2",
+   "doc-q3"
+  ],
+  "abstained": false
+ },
+ "disambiguation-medium": {
+  "text": "Michael Chen, the senior engineer, delivered the Hermes migration in Q2.",
+  "citations": [
+   "doc-chen-eng"
+  ],
+  "abstained": false
+ },
+ "hierarchy-medium": {
+  "text": "Acme Cloud guarantees 99.9% uptime.",
+  "citations": [
+   "doc-acme"
+  ],
+  "abstained": false
+ },
+ "needle-medium": {
+  "text": "Backups are kept as archives for 90 days before deletion.",
+  "citations": [
+   "doc-needle"
+  ],
+  "abstained": false
+ },
+ "contradiction-hard": {
+  "text": "The Pro plan costs $59 per month in the August 2024 price list, which conflicts with the $49 in the May 2023 list; the newer price is the likely current one.",
+  "citations": [
+   "doc-pro-2023",
+   "doc-pro-2024"
+  ],
+  "abstained": false
+ },
+ "stale-hard": {
+  "text": "The API rate limit is 1000 requests per hour, raised in November 2025.",
+  "citations": [
+   "doc-rl-b"
+  ],
+  "abstained": false
+ },
+ "retrieval-miss-hard": {
+  "text": "Return the broken item within 14 days of delivery for a full reimbursement.",
+  "citations": [
+   "doc-merchandise"
+  ],
+  "abstained": false
+ },
+ "fabrication-hard": {
+  "text": "Enterprise support responds within 4 hours.",
+  "citations": [
+   "doc-sla"
+  ],
+  "abstained": false
+ },
+ "multihop-hard": {
+  "text": "Full coverage ends in 2027: the X1 launched in 2024, the standard warranty adds 2 years and extended coverage adds 1 more.",
+  "citations": [
+   "doc-x1-launch",
+   "doc-x1-warranty",
+   "doc-extended"
+  ],
+  "abstained": false
+ },
+ "overflow-hard": {
+  "text": "The policy requires daily backups, retained for 90 days.",
+  "citations": [
+   "doc-bak-1"
+  ],
+  "abstained": false
+ },
+ "unanswerable-hard": {
+  "text": "The documents mention coverage and returns but never describe a warranty return process.",
+  "citations": [],
+  "abstained": true
+ },
+ "temporal-hard": {
+  "text": "The Aurora X1 launched first, in March 2023; the Vega S2 launched in November 2024.",
+  "citations": [
+   "doc-aurora-01",
+   "doc-vega-02"
+  ],
+  "abstained": false
+ },
+ "numeric-hard": {
+  "text": "Total H1 revenue was $10 million: Q1 was $4,200K, which is $4.2 million, and Q2 was $5.8 million.",
+  "citations": [
+   "doc-q1",
+   "doc-q2"
+  ],
+  "abstained": false
+ },
+ "disambiguation-hard": {
+  "text": "Michael Chen, the senior engineer, led the Hermes migration.",
+  "citations": [
+   "doc-chen-eng"
+  ],
+  "abstained": false
+ },
+ "hierarchy-hard": {
+  "text": "Under the 2025 policy, the refund window is 14 days.",
+  "citations": [
+   "doc-2025"
+  ],
+  "abstained": false
+ },
+ "needle-hard": {
+  "text": "Archives are preserved for 90 days before deletion.",
+  "citations": [
+   "doc-zz-needle"
+  ],
+  "abstained": false
+ },
+ "adversarial-hard": {
+  "text": "Physical goods can be refunded within 14 days of delivery.",
+  "citations": [
+   "doc-refund-physical"
+  ],
+  "abstained": false
+ },
+ "adversarial-brutal": {
+  "text": "The current refund window is 30 days from purchase, reinstated in September 2025.",
+  "citations": [
+   "doc-v3-2025"
+  ],
+  "abstained": false
+ },
+ "compositional-stale-contradiction": {
+  "text": "The Pro plan is $69 per month; the seat limit changed from 25 seats in 2024 to unlimited seats in 2025.",
+  "citations": [
+   "doc-pro-2024",
+   "doc-pro-2025"
+  ],
+  "abstained": false
+ },
+ "compositional-overflow-multihop": {
+  "text": "The warranty expires in March 2026: the Aurora X1 launched in March 2024 with a 2 year warranty from launch.",
+  "citations": [
+   "doc-launch",
+   "doc-warranty"
+  ],
+  "abstained": false
+ },
+ "compositional-miss-disambiguation": {
+  "text": "Michael Chen, the senior engineer, delivered the Hermes migration in Q2.",
+  "citations": [
+   "doc-chen-eng"
+  ],
+  "abstained": false
+ },
+ "compositional-temporal-stale": {
+  "text": "Data retention is now 90 days, effective January 2025; it changed from the earlier 30 day period.",
+  "citations": [
+   "doc-ret-2025"
+  ],
+  "abstained": false
+ }
+}

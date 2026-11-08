@@ -27,7 +27,7 @@
   "doc-merchandise"
  ],
  "expected": "Zero query-term overlap on the gold doc; distractors share 'refund' and 'damaged' and outrank it.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

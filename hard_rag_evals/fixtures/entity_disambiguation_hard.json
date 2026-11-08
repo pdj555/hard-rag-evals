@@ -24,6 +24,6 @@
   "doc-chen-cfo"
  ],
  "expected": "The CFO doc is stuffed with 'engineer'/'engineering' to win lexical ranking. Only the role appositive disambiguates.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "should_abstain": false
 }

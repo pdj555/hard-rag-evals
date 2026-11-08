@@ -39,7 +39,7 @@ def _build_case(
             for d in f["documents"]
         )
     )
-    pair = f.get("conflict_pair")
+    claims = f.get("conflict_claims")
     return EvalCase(
         id=case_id,
         mode=mode,
@@ -50,7 +50,7 @@ def _build_case(
         must_cite=tuple(f.get("must_cite", [])),
         must_not_cite=tuple(f.get("must_not_cite", [])),
         should_abstain=bool(f.get("should_abstain", False)),
-        conflict_pair=tuple(pair) if pair else None,
+        conflict_claims=tuple(claims) if claims else None,
         expected=f.get("expected", ""),
         difficulty=difficulty,
         numeric_expected=f.get("numeric_expected"),

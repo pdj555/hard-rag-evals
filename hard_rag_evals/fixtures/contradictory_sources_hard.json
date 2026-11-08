@@ -28,10 +28,7 @@
   "doc-pro-2023",
   "doc-pro-2024"
  ],
- "conflict_pair": [
-  "doc-pro-2023",
-  "doc-pro-2024"
- ],
+ "conflict_claims": ["49", "59"],
  "expected": "Neither dated doc says it supersedes the other; the agent must use published dates and flag the conflict. The FAQ is a distractor with high term overlap.",
  "must_not_cite": [],
  "should_abstain": false

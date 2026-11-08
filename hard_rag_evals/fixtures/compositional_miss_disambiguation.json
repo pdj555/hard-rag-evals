@@ -24,6 +24,6 @@
   "doc-chen-cfo"
  ],
  "expected": "Retrieval miss plus disambiguation: the right doc uses 'delivered' for 'ship'; the wrong person's doc matches 'ships' exactly.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "should_abstain": false
 }

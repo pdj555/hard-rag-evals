@@ -24,6 +24,6 @@
   "doc-2023"
  ],
  "expected": "Query-level constraint beats lexical relevance. The 2023 doc matches more terms but is out of scope.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "should_abstain": false
 }

@@ -316,6 +316,6 @@
   "doc-dupe-120"
  ],
  "expected": "Fifty docs; five near-duplicates share the needle's phrasing with different numbers. Find the exact document, not the neighborhood.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "should_abstain": false
 }

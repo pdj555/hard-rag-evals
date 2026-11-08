@@ -189,7 +189,7 @@
   "doc-needle"
  ],
  "expected": "Thirty docs; the needle uses synonyms for every query term. Lexical retrieval cannot see it.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

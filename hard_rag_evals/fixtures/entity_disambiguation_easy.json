@@ -24,6 +24,6 @@
   "doc-chen-eng"
  ],
  "expected": "The role keyword disambiguates. The shared name gives both docs overlap, so naive agents cite the wrong one too.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "should_abstain": false
 }

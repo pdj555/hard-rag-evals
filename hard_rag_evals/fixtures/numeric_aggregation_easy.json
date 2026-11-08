@@ -25,7 +25,7 @@
  "numeric_expected": 10000000,
  "numeric_tolerance": 500000,
  "expected": "4.2 + 5.8 = $10 million. Quoting the inputs is not enough.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

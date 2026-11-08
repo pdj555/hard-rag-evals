@@ -30,6 +30,6 @@
   "doc-chen-cfo"
  ],
  "expected": "The Lin doc shares 'engineer' and 'Hermes' but is a third person entirely.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "should_abstain": false
 }

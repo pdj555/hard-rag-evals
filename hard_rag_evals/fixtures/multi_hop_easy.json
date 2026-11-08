@@ -29,7 +29,7 @@
   "doc-warranty"
  ],
  "expected": "Two hops, no reasoning required. Both docs share query terms.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

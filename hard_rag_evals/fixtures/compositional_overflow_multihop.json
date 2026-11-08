@@ -83,7 +83,7 @@
   "doc-warranty"
  ],
  "expected": "Overflow plus multi-hop: two gold docs for a two-hop question, buried among ten stuffed distractors under a budget of four.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

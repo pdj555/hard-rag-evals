@@ -21,7 +21,7 @@
   "doc-a"
  ],
  "expected": "Tiny corpus; nothing to fabricate from.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }
