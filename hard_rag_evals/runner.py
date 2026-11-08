@@ -4,6 +4,13 @@ Grading is strict and fully deterministic. A case passes only when every
 applicable check holds: required citations present, forbidden citations
 absent, every citation names a real document, abstention matches the
 expected behavior, and contradictions are explicitly acknowledged.
+
+The agent's retrieval report is not taken at its word. Before any score
+is computed, the reported retrieved ids are checked against the corpus
+and the case budget, retrieval recall is computed from the ids that
+verify, and a citation counts only when the cited document is in the
+verified retrieved set. An answer that cites a document it did not
+verifiably retrieve fails, however good the text reads.
 """
 from __future__ import annotations
 
@@ -18,12 +25,28 @@ def grade(case: EvalCase, answer) -> EvalResult:
     notes: list[str] = []
     passed = True
 
+    verified_ids, report_problems = M.verify_retrieved_ids(
+        answer, case.corpus, case.budget
+    )
+    verified = set(verified_ids)
+
     scores = {
         "citation_precision": M.citation_precision(answer, case.corpus),
         "citation_recall": M.citation_recall(answer, case.must_cite),
-        "retrieval_recall": M.retrieval_recall(answer, case.gold_doc_ids),
+        "retrieval_recall": M.verified_retrieval_recall(
+            answer, case.corpus, case.budget, case.gold_doc_ids
+        ),
         "faithfulness": M.faithfulness(answer, case.corpus),
     }
+
+    if report_problems:
+        passed = False
+        notes.extend(report_problems)
+
+    for c in answer.citations:
+        if case.corpus.by_id(c) is not None and c not in verified:
+            passed = False
+            notes.append(f"cited a document that was not verifiably retrieved: {c}")
 
     if case.should_abstain:
         ok = M.abstention_correct(answer, True)
