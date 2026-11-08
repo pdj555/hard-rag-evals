@@ -51,7 +51,7 @@ There is no freshness check, no ordering check on documents, and no meaning chec
 pip install -e .
 python examples/demo.py             # reference and fabricating agents, by tier
 python examples/grader_attacks.py   # the five gamers against the checks
-python -m pytest                    # 125 tests, 86 of them gold answers passing and breaking
+python -m pytest                    # 126 tests, 86 of them gold answers passing and breaking
 ```
 
 ## Adding a case
