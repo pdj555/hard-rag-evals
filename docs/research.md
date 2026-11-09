@@ -1,16 +1,16 @@
 # Research summary
 
-An agent that answers from retrieved documents can fail in ways its answer hides: a citation to a document that does not exist, the stale version quoted, a contradiction buried, an answer where the documents hold nothing. This repo builds one case per failure, grades with hard gates, then attacks the grader itself.
+An agent that answers from retrieved documents can fail in ways its answer hides: a citation to a document that does not exist, the stale version quoted, a contradiction buried, an answer where the documents hold nothing. This repo builds cases around each of these failures, grades them with hard gates, then attacks the grader itself.
 
 ## What was built
 
-14 failure modes, 42 cases. 12 modes come in three tiers, easy, medium, and hard: contradictory sources, stale documents, retrieval misses, citation fabrication, multi hop questions, context overflow, unanswerable questions, temporal reasoning, numeric aggregation, entity disambiguation, instruction hierarchy, and a needle in a long context. Two more modes go further: adversarial retrieval (2 cases) and compositional cases (4) that stack two or three failures in one case. Tier counts: easy 12, medium 12, hard 13, brutal 5. Each case is one JSON fixture: a query, a small corpus of dated documents, a retrieval budget, and the gates for that case written into the fixture.
+14 failure modes, 42 cases. 12 modes come in three tiers, easy, medium, and hard: contradictory sources, stale documents, retrieval misses, citation fabrication, multi hop questions, context overflow, unanswerable questions, temporal reasoning, numeric aggregation, entity disambiguation, instruction hierarchy, and a needle in a long context. Two more modes do not follow that pattern: adversarial retrieval (2 cases) and compositional cases (4) that stack two or three failures in one case. Tier counts: easy 12, medium 12, hard 13, brutal 5. Each case is one JSON fixture: a query, a small corpus of dated documents, a retrieval budget, and the gates for that case written into the fixture.
 
 Gate coverage across the suite: a required citation list on 39 of 42 cases, a forbidden citation list on 16, a pair of conflicting claims on 5, an expected number on 4, an abstention requirement on 3, an order check on 3, forbidden phrases on 2.
 
 ## Every case can be passed
 
-Each case has one hand-written answer in `tests/gold_answers.json`, and all 42 pass. Each gold answer is then broken one way at a time: a required citation dropped, a forbidden or invented citation added, the refusal flipped, a hedge put in place of the comparison, the inputs quoted in place of the computed number, the injected phrase repeated. Every break fails its case, so no gate on any case is decoration.
+Each case has one answer written by hand in `tests/gold_answers.json`, and all 42 pass. Each gold answer is then broken one way at a time: a required citation dropped, a forbidden or invented citation added, the refusal flipped, a hedge put in place of the comparison, the inputs quoted in place of the computed number, the injected phrase repeated. Every break fails its case, so every gate on every case can fail that case.
 
 Writing them found a case no answer could pass. compositional-temporal-stale forbade citing the stale 2023 retention document, and its conflict gate required citing that same document. The conflict gate now checks the two claims stated in the answer, 30 and 90 days, and leaves citations to the citation lists, so the case asks for what its prose always said: cite the current document and say the period changed.
 
@@ -34,12 +34,12 @@ Still beaten:
 
 - The numeric check. NumberSpray appends every number in the retrieved documents, every pairwise sum, and the grand total. The gate needs one number in the text within tolerance of the expected value. The spray hits the expected value on 2 of the 4 numeric cases: one passes outright, numeric-easy, and the other still fails on a forbidden citation in the underlying answer. It cannot hit numeric-medium at all, which expects an average no sum produces. Score: 10 of 42.
 
-Beaten before, held now:
+These were beaten before and hold now:
 
 - The contradiction check. The Hedger cites every retrieved document and appends "However, the sources may conflict." It used to turn contradiction-medium and contradiction-hard into passes, because the check asked for both documents cited and one marker word anywhere. The check now asks for one sentence holding both claims and a marker. The hedge holds neither claim. The Hedger gains nothing and scores 8 of 42.
 - The order check. QueryEcho opens the answer with the question, "Which launched first, the Aurora X1 or the Vega S2?", which names Aurora before Vega without dating either. The check used to compare where the terms of each event first appear anywhere in the answer, and the echo won temporal-easy and temporal-hard. The check now counts an event only where one sentence names all of its terms. QueryEcho gains nothing and scores 9 of 42, the reference score.
 
-Held, against these tricks:
+These hold against these tricks:
 
 - The unknown citation gate. One invented citation fails the case, on all 42 at once for the fabricating variant.
 - The forbidden citation gate. CiteEverything gains nothing and finishes below the reference agent, 8 of 42 against 9. This gate is also what stops the spray from converting a second numeric case.
