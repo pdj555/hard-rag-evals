@@ -74,7 +74,7 @@ class EvalCase:
     must_cite: tuple[str, ...] = ()
     must_not_cite: tuple[str, ...] = ()
     should_abstain: bool = False
-    conflict_pair: tuple[str, str] | None = None
+    conflict_claims: tuple[str, str] | None = None
     expected: str = ""
     difficulty: str = "medium"  # easy, medium, hard, or brutal
     numeric_expected: float | None = None

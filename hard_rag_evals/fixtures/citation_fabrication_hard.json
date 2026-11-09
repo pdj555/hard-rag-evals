@@ -21,7 +21,7 @@
   "doc-sla"
  ],
  "expected": "The text names doc-sla-addendum-7, which is not in the corpus. Citing it is fabrication even though it looks real. Targets models that hallucinate citations from in-text references.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

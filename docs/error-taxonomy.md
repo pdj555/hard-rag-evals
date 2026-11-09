@@ -4,7 +4,7 @@ The 14 failure modes. 12 build one case at easy, medium, and hard. Adversarial r
 
 ## The 12 tiered modes
 
-**contradictory_sources.** Two documents give different answers and neither settles it. The answer has to cite both and name the disagreement. At hard, two pricing archives, $49 in 2023 and $59 in 2024, carry no supersession language at all: only the dates separate them. Gates: conflict pair, must cite both.
+**contradictory_sources.** Two documents give different answers and neither settles it. The answer has to cite both and set the two claims side by side in one sentence with a word that marks the disagreement, such as "changed from 30 to 14 days". At hard, two pricing archives, $49 in 2023 and $59 in 2024, carry no supersession language at all: only the dates separate them. Gates: conflict claims, must cite both.
 
 **stale_docs.** A newer document supersedes an older one, and the answer quotes the old fact. At hard the trap runs the other way: the document with the newest published date is the stale one in content, and an earlier changelog holds the current value. Gates: required and forbidden citations, written per case. There is no freshness check in the grader; these lists are the whole enforcement.
 
@@ -18,7 +18,7 @@ The 14 failure modes. 12 build one case at easy, medium, and hard. Adversarial r
 
 **unanswerable.** The documents hold no answer. The only pass is to refuse. 3 cases, and they are the only 3 the AlwaysAbstain agent ever wins. Gate: the abstain flag.
 
-**temporal_reasoning.** The answer depends on when things happened: which version held at a date, or which event came first. 3 cases carry an order check, which no gaming agent has been aimed at yet.
+**temporal_reasoning.** The answer depends on when things happened: which version held at a date, or which event came first. 3 cases carry an order check. It counts an event as stated only where one sentence names all of its terms, such as the product and its launch month, so restating the question no longer passes it.
 
 **numeric_aggregation.** The answer is a number the documents hold only in pieces: a total, an average. 3 cases, plus multi hop hard, carry an expected number. The check passes when any number in the answer lands within tolerance, which is what NumberSpray exploits: it hits the expected value on 2 of the 4 and cannot produce the average numeric-medium expects.
 
@@ -32,4 +32,4 @@ The 14 failure modes. 12 build one case at easy, medium, and hard. Adversarial r
 
 **adversarial_retrieval.** 2 cases, hard and brutal, built to mislead the retriever itself: keyword stuffed pages rank above the documents that answer. At brutal, 20 documents hold three versions of a refund policy (30 days, then 14, then 30 reinstated in 2025) and a later blog quoting the stale version. The two older versions are forbidden citations, and the right answer is the same number as the oldest document, reachable only by reading the version history in date order.
 
-**compositional.** 4 cases, all brutal, each stacking two or three modes in one case: stale plus contradiction, overflow plus multi hop, retrieval miss plus disambiguation, temporal plus stale. A fail on these cases does not isolate one failure, by design. In the stale plus contradiction case, three pricing documents conflict on seats while agreeing on price, and the 2023 document is a forbidden citation.
+**compositional.** 4 cases, all brutal, each stacking two or three modes in one case: stale plus contradiction, overflow plus multi hop, retrieval miss plus disambiguation, temporal plus stale. A fail on these cases does not isolate one failure, by design. In the stale plus contradiction case, three pricing documents conflict on seats while agreeing on price, and the 2023 document is a forbidden citation. In the temporal plus stale case the stale 2023 document is forbidden while the answer still has to say the period changed from 30 to 90 days; before the conflict gate moved from cited documents to stated claims, that case required citing the forbidden document and no answer could pass it.

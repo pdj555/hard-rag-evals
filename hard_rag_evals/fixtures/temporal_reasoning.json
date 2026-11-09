@@ -40,6 +40,6 @@
   ]
  ],
  "expected": "The rumor doc mentions January 2024; it must not be treated as a launch date.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "should_abstain": false
 }

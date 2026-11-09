@@ -67,6 +67,14 @@ def test_order_fails_when_reversed():
     assert not M.mentions_in_order(ans, ("march 2024", "aurora"), ("november 2024", "vega"))
 
 
+def test_order_needs_each_event_named_in_one_sentence():
+    echo = Answer(
+        text="Which launched first, the Aurora X1 or the Vega S2? "
+        "The Vega S2 launched in November 2024. The Aurora X1 launched in March 2024."
+    )
+    assert not M.mentions_in_order(echo, ("march 2024", "aurora"), ("november 2024", "vega"))
+
+
 def test_order_fails_when_term_missing():
     ans = Answer(text="Aurora launched in March 2024")
     assert not M.mentions_in_order(ans, ("march 2024",), ("november 2024",))

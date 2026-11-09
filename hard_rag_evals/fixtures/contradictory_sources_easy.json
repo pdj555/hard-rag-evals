@@ -22,11 +22,8 @@
   "doc-refund-old",
   "doc-refund-new"
  ],
- "conflict_pair": [
-  "doc-refund-old",
-  "doc-refund-new"
- ],
- "expected": "Cite both; the window changed from 30 to 14 days. The word 'replaces' is in the extractable text, so even an extractive agent can pass.",
+ "conflict_claims": ["30", "14"],
+ "expected": "Cite both and say in one sentence that the window changed from 30 to 14 days. The newer document says 'replaced' next to 30 only, so copying it does not pass.",
  "must_not_cite": [],
  "should_abstain": false
 }

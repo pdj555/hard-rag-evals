@@ -23,10 +23,7 @@
  "must_not_cite": [
   "doc-ret-2023"
  ],
- "conflict_pair": [
-  "doc-ret-2023",
-  "doc-ret-2025"
- ],
+ "conflict_claims": ["30", "90"],
  "expected": "Temporal plus stale: the current doc is short, the stale one long and detailed. Cite the current one and acknowledge the change from 30 to 90 days.",
  "should_abstain": false
 }

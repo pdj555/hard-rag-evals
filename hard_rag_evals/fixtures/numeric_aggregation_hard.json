@@ -34,6 +34,6 @@
  "numeric_expected": 10000000,
  "numeric_tolerance": 500000,
  "expected": "4,200K = $4.2M; 4.2 + 5.8 = $10M. Last year's Q2 is the trap.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "should_abstain": false
 }

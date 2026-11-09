@@ -133,6 +133,6 @@
   "doc-v2-2024"
  ],
  "expected": "Three versions of the truth; only the September 2025 reinstatement is current. The quoting doc is a trap for lazy readers; stuffed docs answer nothing.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "should_abstain": false
 }

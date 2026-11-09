@@ -72,4 +72,17 @@ class NumberSpray(ReferenceAgent):
         return ans
 
 
-GAMERS = (Hedger, CiteEverything, AlwaysAbstain, NumberSpray)
+
+class QueryEcho(ReferenceAgent):
+    """Order check: open the answer by restating the question."""
+
+    name = "query-echo"
+    trick = "open the answer with the question itself"
+
+    def answer(self, query: str, corpus: Corpus, budget: RetrievalBudget) -> Answer:
+        ans = super().answer(query, corpus, budget)
+        ans.text = f"{query} {ans.text}"
+        return ans
+
+
+GAMERS = (Hedger, CiteEverything, AlwaysAbstain, NumberSpray, QueryEcho)

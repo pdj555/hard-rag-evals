@@ -3,7 +3,7 @@
 Grading is strict and fully deterministic. A case passes only when every
 applicable check holds: required citations present, forbidden citations
 absent, every citation names a real document, abstention matches the
-expected behavior, and contradictions are explicitly acknowledged.
+expected behavior, and contradictions are stated claim against claim.
 """
 from __future__ import annotations
 
@@ -50,15 +50,14 @@ def grade(case: EvalCase, answer) -> EvalResult:
             passed = False
             notes.append(f"cited unknown document id: {c}")
 
-    if case.conflict_pair is not None:
-        ok = M.conflict_acknowledged(answer, case.conflict_pair)
+    if case.conflict_claims is not None:
+        ok = M.conflict_acknowledged(answer, case.conflict_claims)
         passed = passed and ok
+        a, b = case.conflict_claims
         notes.append(
             "contradiction acknowledged"
             if ok
-            else "cited both sides without acknowledging the contradiction"
-            if set(case.conflict_pair) <= set(answer.citations)
-            else "did not surface the contradiction"
+            else f"no sentence sets the conflicting claims side by side ({a} vs {b})"
         )
 
     if case.numeric_expected is not None:

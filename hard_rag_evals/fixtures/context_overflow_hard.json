@@ -130,7 +130,7 @@
   "doc-bak-1"
  ],
  "expected": "Twenty docs, budget three, eighteen stuffed with the exact query phrase. Term frequency loses to substance only with better retrieval.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

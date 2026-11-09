@@ -54,16 +54,22 @@ def test_citation_precision_empty_is_one():
     assert M.citation_precision(Answer(text="x"), corpus) == 1.0
 
 
-def test_conflict_acknowledged_needs_both_and_marker():
-    corpus = Corpus(
-        documents=(_doc("a", "policy is thirty days"), _doc("b", "policy is fourteen days"))
-    )
-    both_no_marker = Answer(text="it is thirty days", citations=["a", "b"])
-    assert not M.conflict_acknowledged(both_no_marker, ("a", "b"))
-    both_marker = Answer(
-        text="however the policy changed from thirty to fourteen days",
-        citations=["a", "b"],
-    )
-    assert M.conflict_acknowledged(both_marker, ("a", "b"))
-    one_side = Answer(text="however it changed", citations=["a"])
-    assert not M.conflict_acknowledged(one_side, ("a", "b"))
+def test_conflict_acknowledged_needs_both_claims_and_a_marker_in_one_sentence():
+    claims = ("30", "14")
+    no_marker = Answer(text="The window is 14 days, and it was 30 days.")
+    assert not M.conflict_acknowledged(no_marker, claims)
+    side_by_side = Answer(text="The window changed from 30 to 14 days.")
+    assert M.conflict_acknowledged(side_by_side, claims)
+    one_claim = Answer(text="The window is 14 days. However, it changed.")
+    assert not M.conflict_acknowledged(one_claim, claims)
+    split = Answer(text="It was 30 days. However, it is 14 days now.")
+    assert not M.conflict_acknowledged(split, claims)
+
+
+def test_conflict_acknowledged_rejects_a_bare_hedge():
+    hedge = Answer(text="It is 14 days. It is 30 days. However, the sources may conflict.")
+    assert not M.conflict_acknowledged(hedge, ("30", "14"))
+
+
+def test_conflict_claims_match_whole_tokens():
+    assert not M.conflict_acknowledged(Answer(text="It changed from 300 to 140 days."), ("30", "14"))

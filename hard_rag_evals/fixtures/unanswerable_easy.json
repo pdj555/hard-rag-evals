@@ -22,7 +22,7 @@
  ],
  "should_abstain": true,
  "expected": "Nothing in the corpus is close. The only correct move is abstention.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "gold_doc_ids": [],
  "must_cite": [],
  "must_not_cite": []

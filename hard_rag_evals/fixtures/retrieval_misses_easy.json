@@ -21,7 +21,7 @@
   "doc-password"
  ],
  "expected": "Partial overlap ('password') is enough for lexical retrieval.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

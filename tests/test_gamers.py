@@ -5,7 +5,7 @@ docs/research.md together.
 """
 
 from hard_rag_evals import run_suite
-from hard_rag_evals.gamers import AlwaysAbstain, CiteEverything, Hedger, NumberSpray
+from hard_rag_evals.gamers import AlwaysAbstain, CiteEverything, Hedger, NumberSpray, QueryEcho
 from hard_rag_evals.reference_agent import ReferenceAgent
 
 
@@ -14,8 +14,16 @@ def _gained(agent):
     return {r.case_id for r in run_suite(agent) if r.passed and not honest[r.case_id]}
 
 
-def test_hedger_games_the_contradiction_check():
-    assert _gained(Hedger()) == {"contradiction-medium", "contradiction-hard"}
+def test_hedger_no_longer_games_the_contradiction_check():
+    # Before the check required both claims in one sentence, the hedge sentence
+    # turned contradiction-medium and contradiction-hard into passes.
+    assert _gained(Hedger()) == set()
+
+
+def test_query_echo_no_longer_games_the_order_check():
+    # Before the check required each event in one sentence, restating the
+    # question turned temporal-easy and temporal-hard into passes.
+    assert _gained(QueryEcho()) == set()
 
 
 def test_number_spray_games_the_numeric_check():

@@ -24,6 +24,6 @@
   "doc-ratelimit-old"
  ],
  "expected": "The stale doc shares no query terms, so even lexical retrieval prefers the current doc.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "should_abstain": false
 }

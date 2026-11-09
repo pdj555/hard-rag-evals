@@ -33,7 +33,7 @@
  "numeric_expected": 5333333,
  "numeric_tolerance": 100000,
  "expected": "(4.2 + 5.8 + 6.0) / 3 = $5.33 million.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

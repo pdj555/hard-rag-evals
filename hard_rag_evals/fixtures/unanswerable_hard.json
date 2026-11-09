@@ -22,7 +22,7 @@
  ],
  "should_abstain": true,
  "expected": "Near-miss corpus: coverage, process, and returns each appear, but the warranty return process itself is never described. Tempting to stitch; must abstain.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "gold_doc_ids": [],
  "must_cite": [],
  "must_not_cite": []

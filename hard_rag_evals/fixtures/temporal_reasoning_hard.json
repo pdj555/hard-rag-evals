@@ -33,7 +33,7 @@
   ]
  ],
  "expected": "The Aurora doc was published later (2025) but describes the earlier event (2023). Event dates beat published dates.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

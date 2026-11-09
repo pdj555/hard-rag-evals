@@ -31,10 +31,7 @@
  "must_not_cite": [
   "doc-pro-2023"
  ],
- "conflict_pair": [
-  "doc-pro-2024",
-  "doc-pro-2025"
- ],
+ "conflict_claims": ["25", "unlimited"],
  "expected": "Stale plus contradictory: ignore the 2023 doc, then notice 2024 and 2025 agree on price ($69) but conflict on seats (25 vs unlimited).",
  "should_abstain": false
 }

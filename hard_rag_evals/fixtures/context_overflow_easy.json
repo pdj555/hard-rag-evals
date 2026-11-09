@@ -46,7 +46,7 @@
   "doc-bak-1"
  ],
  "expected": "Six docs, budget four, mild distractors. The substantive docs win on term density.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

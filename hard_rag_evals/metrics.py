@@ -73,16 +73,32 @@ def faithfulness(answer: Answer, corpus: Corpus) -> float:
     return hits / len(answer.citations)
 
 
-def conflict_acknowledged(answer: Answer, pair: tuple[str, str]) -> bool:
-    """True when the answer cites both sides of a contradiction and its text
-    signals the disagreement. Citing both without comment still fails: the
-    user cannot tell which claim to trust."""
-    a, b = pair
-    cited = set(answer.citations)
-    if a not in cited or b not in cited:
-        return False
-    text = answer.text.lower()
-    return any(m in text for m in _CONFLICT_MARKERS)
+_SENTENCE = re.compile(r"(?<=[.!?])\s+")
+
+
+def sentences(text: str) -> list[str]:
+    """The answer split into sentences at ., ! or ? followed by whitespace."""
+    return [s for s in _SENTENCE.split(text.strip()) if s]
+
+
+def conflict_acknowledged(answer: Answer, claims: tuple[str, str]) -> bool:
+    """True when one sentence of the answer names both conflicting claims and a
+    marker word that signals the disagreement.
+
+    A marker word alone is not an acknowledgement: "However, the sources may
+    conflict." flags nothing the reader can act on, and a marker copied out of
+    one document compares nothing. The sentence has to put the two claims side
+    by side, as in "the window changed from 30 to 14 days". Each claim is matched
+    as a whole token, so "14" matches "14 days" and not "140".
+    """
+    wanted = {c.lower() for c in claims}
+    for sentence in sentences(answer.text):
+        lowered = sentence.lower()
+        if wanted <= set(re.findall(r"[a-z0-9]+", lowered)) and any(
+            m in lowered for m in _CONFLICT_MARKERS
+        ):
+            return True
+    return False
 
 
 def abstention_correct(answer: Answer, should_abstain: bool) -> bool:
@@ -121,18 +137,32 @@ def numeric_answer_correct(answer: Answer, expected: float, tolerance: float) ->
     return any(abs(n - expected) <= tolerance for n in extract_numbers(answer.text))
 
 
+def _event_position(text: str, terms: tuple[str, ...]) -> int | None:
+    """Offset of the first sentence that names every term of one event, at the
+    first of those terms; None when no sentence names them all."""
+    offset = 0
+    lowered = text.lower()
+    for sentence in sentences(lowered):
+        start = lowered.index(sentence, offset)
+        if all(t.lower() in sentence for t in terms):
+            return start + min(sentence.index(t.lower()) for t in terms)
+        offset = start + len(sentence)
+    return None
+
+
 def mentions_in_order(
     answer: Answer, first: tuple[str, ...], second: tuple[str, ...]
 ) -> bool:
-    """True when every term of both groups appears and the first group is
-    mentioned before the second."""
-    text = answer.text.lower()
-    terms = [t.lower() for t in first + second]
-    if any(t not in text for t in terms):
-        return False
-    start_first = min(text.index(t.lower()) for t in first)
-    start_second = min(text.index(t.lower()) for t in second)
-    return start_first < start_second
+    """True when the first event is stated before the second.
+
+    An event is stated where one sentence names all of its terms, such as the
+    product and its launch date. Terms scattered across sentences do not count:
+    restating the question puts both product names in the right order without
+    dating either, and an earlier version of this check passed it.
+    """
+    a = _event_position(answer.text, first)
+    b = _event_position(answer.text, second)
+    return a is not None and b is not None and a < b
 
 
 def forbidden_phrase_absent(answer: Answer, phrases: tuple[str, ...]) -> bool:

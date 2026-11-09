@@ -99,7 +99,7 @@
   "doc-needle"
  ],
  "expected": "Fifteen docs; the needle shares query terms and wins on IDF rarity. A competent retriever finds it.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }

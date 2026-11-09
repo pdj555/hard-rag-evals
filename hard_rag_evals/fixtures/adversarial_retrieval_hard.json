@@ -74,6 +74,6 @@
   "doc-refund-digital-2"
  ],
  "expected": "Keyword-stuffed title doc answers nothing; near-duplicate digital docs answer the wrong question. Only the physical-goods doc counts.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "should_abstain": false
 }

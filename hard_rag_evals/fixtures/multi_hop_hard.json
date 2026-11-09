@@ -33,7 +33,7 @@
  "numeric_expected": 2027,
  "numeric_tolerance": 0.5,
  "expected": "Three hops plus arithmetic: 2024 + 2 + 1 = 2027. Citing the inputs is not enough; the answer must contain the computed year.",
- "conflict_pair": null,
+ "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
 }
