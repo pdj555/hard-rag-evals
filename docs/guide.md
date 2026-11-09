@@ -1,6 +1,6 @@
 # Guide
 
-What this repo found is in the [README](../README.md). The experiment, in full, is in the [research summary](research.md). This guide covers how a case is built, how grading runs, and what the scores do and do not decide.
+What this repo found is in the [README](../README.md). The full experiment is in the [research summary](research.md). This guide covers how a case is built, how grading runs, and what the scores do and do not decide.
 
 ## A case
 

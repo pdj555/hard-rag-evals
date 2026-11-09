@@ -28,7 +28,7 @@ The 14 failure modes. 12 build one case at easy, medium, and hard. Adversarial r
 
 **long_context_needle.** One document in a long corpus holds the fact, among near duplicates that hold different values. At hard, 50 documents: the gold document says archives are preserved for 90 days, and five near duplicates saying 30, 45, 60, 07, and 120 days are all forbidden citations.
 
-## The two that go further
+## The two modes that are not tiered
 
 **adversarial_retrieval.** 2 cases, hard and brutal, built to mislead the retriever itself: keyword stuffed pages rank above the documents that answer. At brutal, 20 documents hold three versions of a refund policy (30 days, then 14, then 30 reinstated in 2025) and a later blog quoting the stale version. The two older versions are forbidden citations, and the right answer is the same number as the oldest document, reachable only by reading the version history in date order.
 
