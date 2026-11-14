@@ -80,12 +80,12 @@ MCP tools on the default server:
 
 ```bash
 python scripts/model_run.py --estimate --prereg docs/prereg/model-run-1.json    # no calls, no key
-gh workflow run model-run.yml -f max_usd=10 -f models=claude-haiku-5-5,claude-sonnet-5-5,claude-opus-5-5 -f trials=3
+gh workflow run model-run.yml -f max_usd=20 -f models=claude-haiku-5-5,claude-sonnet-5-5,claude-opus-5-5 -f trials=3
 ```
 
-The second command spends money and is the owner's to start. It is `workflow_dispatch` only and reads the `ANTHROPIC_API_KEY` repository secret. The same run locally is `python scripts/model_run.py --max-usd 10 --out OUT_DIR --prereg docs/prereg/model-run-1.json`.
+The second command spends money and is the owner's to start. It is `workflow_dispatch` only and reads the `ANTHROPIC_API_KEY` repository secret. The same run locally is `python scripts/model_run.py --max-usd 20 --out OUT_DIR --prereg docs/prereg/model-run-1.json`.
 
-The estimate for the three models at 3 trials is $12.88: $0.21 for Haiku 5.5, $4.22 for Sonnet 5.5, $8.44 for Opus 5.5, at list prices. It assumes 2.5 characters per token plus 700 tokens per request for input, 3,000 output tokens per call, and one attempt per case. None of those figures has been checked against the API, because no call has been made. The ceiling, `max_tokens` of output on both attempts of every case, is $65.66. The estimate is above the workflow's default cap of $10; a run that reaches its cap stops, is marked incomplete and makes no claim, so raise `max_usd` or expect Opus 5.5 to be cut short if the estimate holds.
+The estimate for the three models at 3 trials is $12.88: $0.21 for Haiku 5.5, $4.22 for Sonnet 5.5, $8.44 for Opus 5.5, at list prices. It assumes 2.5 characters per token plus 700 tokens per request for input, 3,000 output tokens per call, and one attempt per case. None of those figures has been checked against the API, because no call has been made. The ceiling, `max_tokens` of output on both attempts of every case, is $65.66. The workflow's default cap is $20, above the estimate and below the ceiling; a run that reaches its cap stops, is marked incomplete and makes no claim.
 
 - The cap is checked before every request: a request is sent only if the spend so far plus the most that request can cost fits under `--max-usd`. Spend is measured from the usage the API returns.
 - Each model answers all 42 cases in every trial from the public view, shuffled with seed 2026, with one `submit_answer` tool call. The prompt is `hard_rag_evals/prompts/model_agent_system.txt`; effort is pinned to medium; temperature is not sent.

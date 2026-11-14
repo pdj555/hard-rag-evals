@@ -10,7 +10,7 @@ on:
       max_usd:
         description: "Hard spending cap for the whole run, in US dollars"
         required: true
-        default: "10"
+        default: "20"
       models:
         description: "Model ids, comma separated"
         required: true
