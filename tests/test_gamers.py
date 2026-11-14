@@ -42,7 +42,7 @@ def test_number_spray_no_longer_games_the_numeric_check():
 
 
 def test_spray_contains_the_expected_number_and_still_fails_the_gate():
-    # numeric-hard: 10,000,000 is in the spray, next to six rival figures.
+    # numeric-hard: 10,000,000 is in the spray, next to three rival sums.
     case = next(c for c in ALL_CASES if c.id == "numeric-hard")
     text = NumberSpray().answer(case.query, case.corpus, case.budget).text
     assert any(
