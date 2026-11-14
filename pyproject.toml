@@ -12,6 +12,7 @@ dependencies = []
 [project.optional-dependencies]
 dev = ["pytest>=9", "jsonschema>=4.26", "ruff>=0.17"]
 mcp = ["mcp>=2.3,<3"]
+models = ["anthropic>=2.1.0"]
 
 [project.scripts]
 hard-rag-evals = "hard_rag_evals.cli:main"
@@ -21,7 +22,7 @@ where = ["."]
 include = ["hard_rag_evals*"]
 
 [tool.setuptools.package-data]
-hard_rag_evals = ["fixtures/*.json", "schemas/*.json"]
+hard_rag_evals = ["fixtures/*.json", "schemas/*.json", "prompts/*.txt"]
 
 [tool.ruff]
 target-version = "py313"

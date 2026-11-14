@@ -46,9 +46,13 @@ python examples/grader_attacks.py
 python -m pytest
 ```
 
-The test suite is 338 tests with the `mcp` extra installed. `hard-rag-evals` is also a command: `hard-rag-evals grade answers.jsonl --json` grades answers from any agent, and `hard-rag-evals mcp` serves the cases over MCP and grades one submission of all 42 answers, returning one overall count; exact commands and exit codes are in [AGENTS.md](AGENTS.md). `python scripts/export_dataset.py OUT_DIR` writes the cases, each with its reference answer, as the JSON Lines file published on Hugging Face. The copy on Hugging Face predates the canary and the version fields and has not been exported again.
+The test suite is 366 tests with the `mcp` and `models` extras installed. `hard-rag-evals` is also a command: `hard-rag-evals grade answers.jsonl --json` grades answers from any agent, and `hard-rag-evals mcp` serves the cases over MCP and grades one submission of all 42 answers, returning one overall count; exact commands and exit codes are in [AGENTS.md](AGENTS.md). `python scripts/export_dataset.py OUT_DIR` writes the cases, each with its reference answer, as the JSON Lines file published on Hugging Face. The copy on Hugging Face predates the canary and the version fields and has not been exported again.
 
 Every result, report, and exported row records a grader version, a dataset version, and the shuffle seed. The dataset version is the sha256 of the cases as built at run time: fixture content plus the ids, tiers, modes, and budgets set in code. Two results are comparable only when all three match.
+
+## Running a model
+
+Staged, not run. `python scripts/model_run.py --estimate` prices three Claude models at 3 trials each at $12.88 by an estimate meant to be high and not yet checked against the API, with no call made. The `model-run` workflow makes the run under a hard dollar cap, starts only by hand, and checks the result against [docs/prereg/model-run-1.json](docs/prereg/model-run-1.json); the command is in [AGENTS.md](AGENTS.md).
 
 ## What the grader does not check
 
