@@ -43,7 +43,7 @@ python examples/grader_attacks.py
 python -m pytest
 ```
 
-The test suite is 251 tests with the `mcp` extra installed. `hard-rag-evals` is also a command: `hard-rag-evals grade answers.jsonl --json` grades answers from any agent, and `hard-rag-evals mcp` serves the cases and the grader over MCP; exact commands and exit codes are in [AGENTS.md](AGENTS.md). `python scripts/export_dataset.py OUT_DIR` writes the cases, each with its reference answer, as the JSON Lines file published on Hugging Face. The copy on Hugging Face predates the canary and the version fields and has not been exported again.
+The test suite is 314 tests with the `mcp` extra installed. `hard-rag-evals` is also a command: `hard-rag-evals grade answers.jsonl --json` grades answers from any agent, and `hard-rag-evals mcp` serves the cases over MCP and grades one whole submission, returning counts only; exact commands and exit codes are in [AGENTS.md](AGENTS.md). `python scripts/export_dataset.py OUT_DIR` writes the cases, each with its reference answer, as the JSON Lines file published on Hugging Face. The copy on Hugging Face predates the canary and the version fields and has not been exported again.
 
 Every result, report, and exported row records a grader version and a dataset version, the sha256 of the fixture files. Two results are comparable only when both match.
 
@@ -63,4 +63,6 @@ These limits are in the code, stated here so nobody has to find them.
 
 - No model has been run through this suite. The only agents are the reference agent, the variant that invents citations, and the eight trick agents. All of them are scripted.
 - Every document set is hand built and small. No case has more than 50 documents, and there is no measured human baseline.
+- Reordering each case's documents changes no result: the grader's verdict on every gold answer is the same under 10 permutations, and the reference agent passes 9 of 42 under all 20 seeds. That is true by construction, not a finding. The grader looks documents up by id, and the scripted agents break retrieval ties by id, so order never reaches an answer. The check becomes informative only when a model is run.
+- What an agent under test is shown hides the failure mode, the descriptive case id, and the gates, and the MCP server grades only whole submissions. It does not hide everything. Document ids are part of the published cases and some name the trap, "doc-poisoned", "doc-refund-old". The tier is shown. An agent that can restart the MCP server can compare whole submissions, one case per restart. A score is blind only when the agent under test can reach neither this repository nor the grader.
 - The eight trick agents were written against these checks by the same author. Their scores are pinned by tests, so hardening a check is expected to break the matching test and be recorded.
