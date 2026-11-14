@@ -23,6 +23,7 @@ from hard_rag_evals import (
     summary_by_difficulty,
 )
 from hard_rag_evals.reference_agent import ReferenceAgent
+from hard_rag_evals.stats import clopper_pearson, pass_rate
 
 
 class FabricatingAgent(ReferenceAgent):
@@ -52,7 +53,14 @@ def main() -> None:
         for tier in DIFFICULTY_ORDER:
             p, t = summary_by_difficulty(results)[tier]
             bar = "#" * p + "-" * (t - p)
-            print(f"  {tier:8s} {p:2d}/{t:2d} [{bar}]")
+            lo, hi = clopper_pearson(p, t)
+            print(f"  {tier:8s} {p:2d}/{t:2d} [{bar}]  95% interval {lo:.2f} to {hi:.2f}")
+        overall = pass_rate(results)
+        lo, hi = overall["ci95"]
+        print(
+            f"  {'all':8s} {overall['passed']:2d}/{overall['total']:2d}  "
+            f"95% interval {lo:.2f} to {hi:.2f}"
+        )
         print()
 
 

@@ -8,6 +8,7 @@ expected behavior, and contradictions are stated claim against claim.
 from __future__ import annotations
 
 from . import metrics as M
+from . import stats
 from .failure_modes import ALL_CASES
 from .types import Agent, EvalCase, EvalResult
 
@@ -182,9 +183,22 @@ def summary_by_mode(results: list[EvalResult]) -> dict[str, dict]:
 def render_markdown(agent_name: str, results: list[EvalResult]) -> str:
     passed = sum(1 for r in results if r.passed)
     lines = [f"# Eval report: {agent_name}", "", f"**{passed}/{len(results)} cases passed.**", ""]
-    lines += ["| tier | passed |", "| ---- | ------ |"]
-    for tier, (p, t) in summary_by_difficulty(results).items():
-        lines.append(f"| {tier} | {p}/{t} |")
+    lines += [
+        "Intervals are exact 95% Clopper-Pearson intervals on the pass rate.",
+        "",
+        "| tier | passed | rate | 95% interval |",
+        "| ---- | ------ | ---- | ------------ |",
+    ]
+    rows = [(tier, [r for r in results if r.difficulty == tier]) for tier in DIFFICULTY_ORDER]
+    for tier, tier_results in [*rows, ("all", results)]:
+        if not tier_results:
+            continue
+        rate = stats.pass_rate(tier_results)
+        lo, hi = rate["ci95"]
+        lines.append(
+            f"| {tier} | {rate['passed']}/{rate['total']} | {rate['rate']:.2f} "
+            f"| {lo:.2f} to {hi:.2f} |"
+        )
     lines += [
         "",
         "Failures by gate. A case can fail more than one.",

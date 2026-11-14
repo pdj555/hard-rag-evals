@@ -19,6 +19,8 @@ Each case gives the agent a small set of documents and a question. The agent ans
 - Every case has an answer written by hand that passes it, 42 of 42, in [tests/gold_answers.json](tests/gold_answers.json). Breaking any one of those answers, by dropping a required citation, adding a forbidden or invented one, flipping its refusal, or hedging instead of comparing, fails the case. Writing them found one case no answer could pass, now fixed.
 - Six more agents each add one cheap trick to the reference agent. None gains a case. Appending every number in the documents, every pairwise sum, and the total used to win numeric-easy; it now scores 9 of 42, the reference score, and so does appending one guessed total. Adding "However, the sources may conflict." gains nothing, and neither does opening the answer with the question; each of those used to win 2 cases. Citing every retrieved document scores 8 of 42. Refusing every question scores 3 of 42, which is exactly the 3 cases where the documents hold no answer.
 
+With 42 cases the counts are coarse. The reference agent's 9 of 42 is a pass rate of 0.21 with an exact 95% interval of 0.10 to 0.37, and no trick agent differs from it on a paired exact McNemar test after Holm correction (smallest adjusted p 0.876). The reports print both.
+
 ## How grading works
 
 <picture>

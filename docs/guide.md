@@ -39,6 +39,12 @@ Four scores are computed for every case and never decide a pass:
 
 There is no freshness check, no ordering check on documents, and no meaning check in the grader. When a stale or wrong document fails a case, it fails because the fixture author listed that document as forbidden, or required a different one.
 
+## Uncertainty
+
+`stats.py` puts an interval on every count. Pass rates, per tier and overall, carry an exact 95% Clopper-Pearson interval. Two agents graded on the same cases are compared as a pair: the exact McNemar test on the discordant cases (those one agent passes and the other fails), and a Bonett-Price 95% interval on the difference in pass rate, which is approximate. When several agents are compared to one baseline the p-values are Holm adjusted. `compare()` raises if the two runs do not cover the same cases.
+
+The intervals are wide because the suite is small: 0 of 5 brutal cases still allows a true rate up to 0.52. They describe sampling noise over cases like these and nothing else. The cases were written by hand, not sampled, and every agent here is deterministic, so there is no run-to-run noise to measure.
+
 ## The agents
 
 `reference_agent/agent.py` is the baseline: IDF weighted keyword retrieval inside the budget, then the two sentences per document with the most query overlap, each prefixed with its document id, citing what it copied from. It never abstains.

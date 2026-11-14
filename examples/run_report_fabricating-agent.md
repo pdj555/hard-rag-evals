@@ -2,12 +2,15 @@
 
 **0/42 cases passed.**
 
-| tier | passed |
-| ---- | ------ |
-| easy | 0/12 |
-| medium | 0/12 |
-| hard | 0/13 |
-| brutal | 0/5 |
+Intervals are exact 95% Clopper-Pearson intervals on the pass rate.
+
+| tier | passed | rate | 95% interval |
+| ---- | ------ | ---- | ------------ |
+| easy | 0/12 | 0.00 | 0.00 to 0.26 |
+| medium | 0/12 | 0.00 | 0.00 to 0.26 |
+| hard | 0/13 | 0.00 | 0.00 to 0.25 |
+| brutal | 0/5 | 0.00 | 0.00 to 0.52 |
+| all | 0/42 | 0.00 | 0.00 to 0.08 |
 
 Failures by gate. A case can fail more than one.
 
