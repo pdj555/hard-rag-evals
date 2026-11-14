@@ -4,7 +4,6 @@ Every eval case, agent answer, and result flows through these types.
 Keeping them small and explicit is deliberate: the suite grades behavior,
 not implementation, so the contract between harness and agent stays thin.
 """
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Protocol

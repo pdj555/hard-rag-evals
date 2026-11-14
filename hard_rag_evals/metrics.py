@@ -5,7 +5,6 @@ a citation that exists but supports nothing still fails, and silence on a
 contradiction fails even when the cited facts are individually correct.
 Production use would swap in model graded checks behind the same names.
 """
-from __future__ import annotations
 
 import re
 

@@ -7,7 +7,6 @@ can be satisfied without the capability it is meant to measure.
 Usage: python examples/grader_attacks.py
 """
 
-from __future__ import annotations
 
 import sys
 from pathlib import Path

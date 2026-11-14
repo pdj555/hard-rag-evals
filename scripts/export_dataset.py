@@ -5,7 +5,6 @@ commit, so the published dataset can be rebuilt and diffed against the repo.
 
 Usage: python scripts/export_dataset.py OUT_DIR
 """
-from __future__ import annotations
 
 import json
 import subprocess

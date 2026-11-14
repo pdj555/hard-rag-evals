@@ -7,7 +7,6 @@ current truth. Hard tests whether the agent sees through the tricks;
 brutal gives it three versions of the same fact and a document that
 quotes the wrong one.
 """
-from __future__ import annotations
 
 from ..types import EvalCase, RetrievalBudget
 from . import _build_case

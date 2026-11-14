@@ -29,7 +29,6 @@ One exception: if the reader of a pipe goes away before the output is
 written (`hard-rag-evals list | head -1`), the command exits quietly with
 the code it would have returned.
 """
-from __future__ import annotations
 
 import argparse
 import errno

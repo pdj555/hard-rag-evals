@@ -8,7 +8,6 @@ What the intervals do and do not mean: they treat the cases as a sample from
 the kind of case this suite could hold. They say nothing about questions
 unlike these, and the cases were written by hand, not drawn at random.
 """
-from __future__ import annotations
 
 from dataclasses import dataclass
 from math import comb, sqrt

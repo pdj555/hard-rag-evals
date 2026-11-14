@@ -8,7 +8,6 @@ That naivety is the point. The suite exists to show exactly where this
 baseline breaks, which is the same place most production RAG breaks.
 Beat its score and you have earned the improvement.
 """
-from __future__ import annotations
 
 import re
 

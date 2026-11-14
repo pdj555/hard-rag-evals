@@ -35,7 +35,6 @@ grade_answer says which gate failed and names the documents involved; a few
 hundred calls recover most of the answer key. Scores from a --dev server
 mean nothing.
 """
-from __future__ import annotations
 
 import threading
 from typing import Any

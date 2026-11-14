@@ -5,7 +5,6 @@ reads the corpus more carefully. If a trick raises the score, the check it targe
 be satisfied without the capability it is meant to measure.
 """
 
-from __future__ import annotations
 
 from itertools import combinations
 

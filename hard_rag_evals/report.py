@@ -10,7 +10,6 @@ mode, as in "unanswerable-easy"), the gates and the gold ids, because each
 of those says something about the right answer. The dev view adds the
 descriptive id and the mode, for the person writing or debugging cases.
 """
-from __future__ import annotations
 
 import hashlib
 import json
