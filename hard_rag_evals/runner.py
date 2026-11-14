@@ -12,11 +12,17 @@ from dataclasses import replace
 
 from . import metrics as M
 from . import stats
-from .failure_modes import ALL_CASES
-from .provenance import DATASET_VERSION, GRADER_VERSION
+from .failure_modes import ALL_CASES, DATASET_VERSION
+from .provenance import GRADER_VERSION
 from .types import Agent, Corpus, EvalCase, EvalResult
 
 DIFFICULTY_ORDER = ("easy", "medium", "hard", "brutal")
+
+# The seed every run and every public view shuffles documents with unless told
+# otherwise. Published and fixed so a run can be repeated; recorded in each
+# result. The fixtures list a required document first in most cases, so an
+# agent shown fixture order can score by citing whatever comes first.
+DEFAULT_SHUFFLE_SEED = 2026
 
 
 # The atomic gates, in the order they are checked. Each is binary. A gate
@@ -78,17 +84,12 @@ def grade(case: EvalCase, answer) -> EvalResult:
         )
 
     if case.numeric_expected is not None:
-        ok = M.numeric_answer_correct(
-            answer,
-            case.numeric_expected,
-            case.numeric_tolerance,
-            M.case_source_figures(case.query, case.corpus),
-        )
+        ok = M.numeric_answer_correct(answer, case.numeric_expected, case.numeric_tolerance)
         gates["numeric"] = ok
         notes.append(
-            "committed to the expected number"
+            "computed the expected number"
             if ok
-            else f"did not commit to the expected number {case.numeric_expected:g}"
+            else f"did not state the expected number {case.numeric_expected:g}"
         )
 
     if case.order_check is not None:
@@ -144,31 +145,42 @@ def select_cases(
 def permute_documents(case: EvalCase, seed: int) -> EvalCase:
     """The same case with its documents in a different order.
 
-    Document order carries no meaning in any case, so neither the grader's
-    verdict nor a sound agent's answer should depend on it. The permutation
-    is fixed by the seed and the case id, so a run can be repeated exactly.
+    Fixture order is not neutral. It is the order the author wrote the
+    documents in, and the document that answers the question usually came
+    first: the first document is a required citation in 33 of the 39 cases
+    that require one. Shuffling removes that. The permutation is fixed by the
+    seed and the case id, so a run can be repeated exactly.
     """
     docs = list(case.corpus.documents)
     random.Random(f"{seed}:{case.id}").shuffle(docs)
     return replace(case, corpus=Corpus(documents=tuple(docs)))
 
 
+def present(case: EvalCase, shuffle_seed: int | None = DEFAULT_SHUFFLE_SEED) -> EvalCase:
+    """The case as an agent is shown it: documents shuffled with the seed, or
+    left in fixture order when the seed is None."""
+    return case if shuffle_seed is None else permute_documents(case, shuffle_seed)
+
+
 def run_suite(
     agent: Agent,
     difficulty: str | tuple[str, ...] | None = None,
     modes: str | tuple[str, ...] | None = None,
-    shuffle_seed: int | None = None,
+    shuffle_seed: int | None = DEFAULT_SHUFFLE_SEED,
 ) -> list[EvalResult]:
     """Grade the agent on every case, or on the tiers and modes asked for.
 
-    With shuffle_seed set, each case's documents are permuted with that seed
-    before the agent sees them. None keeps the order written in the fixture.
+    Each case's documents are shuffled with shuffle_seed before the agent sees
+    them, DEFAULT_SHUFFLE_SEED unless another is given. None keeps the order
+    written in the fixture, which leaks: see permute_documents. The seed used
+    is recorded in every result.
     """
     results = []
     for case in select_cases(difficulty, modes):
-        if shuffle_seed is not None:
-            case = permute_documents(case, shuffle_seed)
-        results.append(grade(case, agent.answer(case.query, case.corpus, case.budget)))
+        case = present(case, shuffle_seed)
+        result = grade(case, agent.answer(case.query, case.corpus, case.budget))
+        result.shuffle_seed = shuffle_seed
+        results.append(result)
     return results
 
 
@@ -176,11 +188,11 @@ def order_spread(agent: Agent, seeds: tuple[int, ...] = tuple(range(20))) -> dic
     """How much the agent's result moves when only document order changes.
 
     Returns the pass count in fixture order, the pass count under each seed,
-    their min and max, and the cases whose verdict changed under any seed.
-    An empty flipped list means the agent is order invariant on these seeds,
-    not that it is in general.
+    their min, max and mean, and the cases whose verdict under any seed
+    differs from fixture order. An empty flipped list means the agent is
+    order invariant on these seeds, not that it is in general.
     """
-    base = {r.case_id: r.passed for r in run_suite(agent)}
+    base = {r.case_id: r.passed for r in run_suite(agent, shuffle_seed=None)}
     counts: dict[int, int] = {}
     flipped: set[str] = set()
     for seed in seeds:
@@ -192,8 +204,16 @@ def order_spread(agent: Agent, seeds: tuple[int, ...] = tuple(range(20))) -> dic
         "by_seed": counts,
         "min": min(counts.values()),
         "max": max(counts.values()),
+        "mean": sum(counts.values()) / len(counts),
         "flipped": sorted(flipped),
     }
+
+
+def first_document_is_required(shuffle_seed: int | None = None) -> tuple[int, int]:
+    """(cases whose first document is a required citation, cases that require
+    one), in fixture order or under a seed. The size of the order leak."""
+    cases = [present(c, shuffle_seed) for c in ALL_CASES if c.must_cite]
+    return sum(c.corpus.documents[0].id in c.must_cite for c in cases), len(cases)
 
 
 def summary_by_difficulty(results: list[EvalResult]) -> dict[str, tuple[int, int]]:
@@ -254,6 +274,17 @@ def refusal_summary(results: list[EvalResult]) -> dict[str, dict | None]:
     }
 
 
+def _order_line(results: list[EvalResult]) -> str:
+    seeds = {r.shuffle_seed for r in results}
+    if seeds == {"n/a"}:
+        return "Answers were supplied, so no document order applies."
+    if seeds == {None}:
+        return "Documents in fixture order, which leaks: a required document usually comes first."
+    if len(seeds) == 1:
+        return f"Documents shuffled with seed {seeds.pop()}."
+    return "Documents in mixed orders."
+
+
 def md_cell(text: object) -> str:
     """Text made safe for one markdown table cell or one heading line. Notes
     quote citation ids and the report quotes the agent's name, both of which
@@ -284,7 +315,7 @@ def render_markdown(
         ]
     lines += [
         f"**{passed}/{len(results)} cases passed.** Grader version {GRADER_VERSION}, "
-        f"dataset version {DATASET_VERSION[:12]}.",
+        f"dataset version {DATASET_VERSION[:12]}. {_order_line(results)}",
         "",
     ]
     lines += [

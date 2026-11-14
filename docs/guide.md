@@ -21,12 +21,14 @@ A fixture holds:
 2. Every `must_cite` id is cited, and no `must_not_cite` id is cited.
 3. Every citation names a document in the corpus. One invented id fails the case.
 4. When the case sets conflicting claims, one sentence of the answer names both, each as a whole token, and contains at least one of 12 marker substrings: conflict, contradict, however, disagree, changed, updated, differs, whereas, although, supersede, replaced, inconsistent. A hedge with no claims in it fails, and so does a marker copied from one document next to only one claim. Which documents must be cited is set by `must_cite`, as everywhere else.
-5. When the case sets an expected number, the check reads the amounts in the answer and nothing else. An amount is a number written with a currency sign, with a scale word (thousand, million, billion, K, M, B), or with a value of at least 1,000. A bare small number is not an amount, so "2 quarters", "6 months", list numbering and "[1]" decide nothing, and a percentage never is. The case passes when at least one amount lands within tolerance and every other amount is a source figure: a number in the question, a document's text, or a document's date. An amount written without a scale word also matches a source a thousand, a million, or a billion times larger, so "$4.2 + $5.8 = $10 million" quotes its inputs. Any other amount is a rival and fails the case. If a case's expected value were below 1,000, every number except percentages would be read; no case is like that. Numbers are extracted with K, M, and B scaling, so "$4,200K" reads as 4,200,000.
+5. When the case sets an expected number, at least one number in the answer lands within tolerance. Numbers are extracted with K, M, and B scaling, so "$4,200K" reads as 4,200,000.
 6. When the case sets an order pair, each event is named whole in one sentence, all of its terms together, and the first event is named before the second. When it sets forbidden phrases, none appears.
 
 Every result records the gates that applied to its case and whether each held, under eight names: abstention, required_citation, forbidden_citation, unknown_citation, contradiction, numeric, order, forbidden_phrase. The report counts failures by gate and by failure mode. A case can fail more than one gate, so the gate counts add up to more than the number of failed cases.
 
-Grading is deterministic. Retrieval sorts by score with document id as the tiebreak, and there is no network call or model call anywhere in the package. The only randomness is opt-in and seeded: `run_suite(agent, shuffle_seed=N)` permutes each case's documents before the agent sees them, and `order_spread(agent)` reports the pass count across 20 such seeds and the cases whose verdict changed. Document order carries no meaning in any case. The grader's verdict on every gold answer is the same under 10 permutations, and the reference agent passes 9 of 42 under all 20 seeds, with no case changing. Both follow from the code and are not findings: the grader looks documents up by id, and retrieval breaks ties by id. An agent that just cites the first document does move, and the spread shows it; the check earns its keep when a model is run.
+Grading is deterministic. Retrieval sorts by score with document id as the tiebreak, and there is no network call or model call anywhere in the package.
+
+Document order is the one thing a run changes on purpose. The fixtures list documents in the order they were written, and the document that answers the question usually came first: the first document is a required citation in 33 of the 39 cases that require one. An agent shown that order can score by citing whatever comes first, 19 of 42. So `run_suite`, `hard-rag-evals run` and `show`, and the MCP `get_case` shuffle each case's documents with a fixed seed, `DEFAULT_SHUFFLE_SEED` = 2026, and every result records the seed. `shuffle_seed=N` or `--shuffle-seed N` picks another; `shuffle_seed=None` or `--fixture-order` keeps the fixture's order. `order_spread(agent)` reports an agent's pass count in fixture order and across 20 seeds. The grader itself looks documents up by id, so its verdict on a given answer does not depend on order; a test checks that on every gold answer under 10 permutations.
 
 ## The scores
 
@@ -41,9 +43,9 @@ There is no freshness check, no ordering check on documents, and no meaning chec
 
 ## What an agent under test sees
 
-A case has two views. The public view is an opaque id (`c-` and 12 hex characters, a hash of the descriptive id), the tier, the question, the documents, and the budget. It leaves out the failure mode, the descriptive id, which names the mode, the gates, and the gold ids. `hard-rag-evals list` and `show`, and the MCP tools `list_cases` and `get_case`, give the public view, sorted by public id, because the suite's own order groups cases by mode. `--dev` on any of them adds the descriptive id and the mode.
+A case has two views. The public view is an opaque id (`c-` and 12 hex characters, a hash of the descriptive id), the tier, the question, the documents in shuffled order, and the budget. It leaves out the failure mode, the descriptive id, which names the mode, the gates, and the gold ids. `hard-rag-evals list` and `show`, and the MCP tools `list_cases` and `get_case`, give the public view, sorted by public id, because the suite's own order groups cases by mode. `--dev` on any of them adds the descriptive id and the mode.
 
-Grading has two paths. `hard-rag-evals run` and `grade` are for the person running the eval: the report names every case and every failed gate. Over MCP the default server has no per-case grading. `grade_submission` takes answers for all 42 cases, or for a declared subset of at least 10, and returns passed and total with an interval, overall, and per tier only when all 42 were answered. A server process grades one submission, so two cannot be subtracted to find one case's verdict. `hard-rag-evals mcp --dev` adds `grade_answer`, which returns one case's gates and notes; that is the answer key a probe at a time, and a score from a `--dev` server means nothing.
+Grading has two paths. `hard-rag-evals run` and `grade` are for the person running the eval: the report names every case and every failed gate. Over MCP the default server has no per-case grading. `grade_submission` takes answers for all 42 cases and returns passed and total with an interval, overall and per tier. A submission that leaves any case out is refused. A server process grades one submission, so two cannot be subtracted to find one case's verdict. `hard-rag-evals mcp --dev` adds `grade_answer`, which returns one case's gates and notes; that is the answer key a probe at a time, and a score from a `--dev` server means nothing.
 
 The limits: document ids belong to the published cases and some name the trap; the tier is shown; an agent that can restart the server can still compare whole submissions.
 
@@ -51,7 +53,7 @@ The limits: document ids belong to the published cases and some name the trap; t
 
 Every fixture, the gold answers file, and every row of the exported dataset carry one canary string with a GUID, defined in `provenance.py`. A fixture without it does not load. If a model can complete the string, the suite was in its training data. The canary was added after the cases were first published, so copies taken before it do not carry it.
 
-Every result, report, and exported row also records `GRADER_VERSION` and `DATASET_VERSION`. The grader version is bumped by hand when a change to the grader can alter a verdict or a score. The dataset version is the sha256 of the fixture files, and a test fails when the committed value does not match them. Two results are comparable only when both versions match.
+Every result, report, and exported row also records `GRADER_VERSION` and `DATASET_VERSION`. The grader version is bumped by hand when a change to the grader can alter a verdict or a score. The dataset version is the sha256 of the fixture bytes the package loaded, computed at import, so a result is stamped with the data that was graded. `EXPECTED_DATASET_VERSION` in `provenance.py` is what the docs were written against; a test fails when the two differ, which means the numbers in the docs may be stale. Two results are comparable only when grader version, dataset version, and shuffle seed all match.
 
 ## Refusals
 
@@ -67,17 +69,17 @@ The intervals are wide because the suite is small: 0 of 5 brutal cases still all
 
 `reference_agent/agent.py` is the baseline: IDF weighted keyword retrieval inside the budget, then the two sentences per document with the most query overlap, each prefixed with its document id, citing what it copied from. It never abstains.
 
-`gamers.py` holds eight variants, each the reference agent plus one change: Hedger (cite everything retrieved, append " However, the sources may conflict."), NumberSpray (append every number found, every pairwise sum, and the total), TotalGuess (append one figure, the sum of every number found), MeanGuess (append their mean), SumMinusLargest (append their sum without the largest), CiteEverything (cite everything retrieved, text unchanged), AlwaysAbstain (the same refusal on every case), QueryEcho (open the answer with the question). `tests/test_gamers.py` pins each gamer's exact gains and losses. If a check is hardened, the matching test should fail; update it and the research summary together.
+`gamers.py` holds eight variants, each the reference agent plus one change, and FirstDocument, which reads nothing and cites whatever document is listed first: Hedger (cite everything retrieved, append " However, the sources may conflict."), NumberSpray (append every number found, every pairwise sum, and the total), TotalGuess (append one figure, the sum of every number found), MeanGuess (append their mean), SumMinusLargest (append their sum without the largest), CiteEverything (cite everything retrieved, text unchanged), AlwaysAbstain (the same refusal on every case), QueryEcho (open the answer with the question). `tests/test_gamers.py` pins each gamer's exact gains and losses. If a check is hardened, the matching test should fail; update it and the research summary together.
 
-`examples/demo.py` also runs a fabricating variant: the reference agent plus one invented citation, "doc-does-not-exist-99", on every answer. It scores 0 of 42.
+`gamers.py` also holds Fabricator, the reference agent plus one invented citation, "doc-does-not-exist-99", on every answer. `examples/demo.py` runs it. It scores 0 of 42.
 
 ## Run it
 
 ```bash
 pip install -e .
 python examples/demo.py             # reference and fabricating agents, by tier
-python examples/grader_attacks.py   # the eight gamers against the checks
-python -m pytest                    # 314 tests with the mcp extra, 86 of them gold answers passing and breaking
+python examples/grader_attacks.py   # the gamers against the checks, and the order leak
+python -m pytest                    # 310 tests with the mcp extra, 86 of them gold answers passing and breaking
 ```
 
 ## Adding a case

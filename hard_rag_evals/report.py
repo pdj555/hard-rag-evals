@@ -17,7 +17,8 @@ import json
 from importlib import resources
 
 from . import stats
-from .provenance import CANARY, DATASET_VERSION, GRADER_VERSION
+from .failure_modes import DATASET_VERSION
+from .provenance import CANARY, GRADER_VERSION
 from .runner import (
     DIFFICULTY_ORDER,
     gate_breakdown,
@@ -103,24 +104,23 @@ def case_list_document(cases: list[EvalCase], dev: bool = False) -> dict:
     return {**_envelope("case_list"), "cases": [case_summary(c, dev) for c in ordered]}
 
 
-def case_document(case: EvalCase, dev: bool = False) -> dict:
-    return {**_envelope("case"), "case": public_case(case, dev)}
+def case_document(case: EvalCase, dev: bool = False, shuffle_seed: int | None = None) -> dict:
+    """case is the case as presented, already shuffled or not; shuffle_seed
+    records which: the seed, or None for fixture order."""
+    return {**_envelope("case"), "shuffle_seed": shuffle_seed, "case": public_case(case, dev)}
 
 
 def submission_document(results: list[EvalResult], total_cases: int) -> dict:
     """Aggregate counts for a whole submission and nothing about any one case:
-    how many passed overall, and per tier when every case was answered. Per
-    tier counts are left out of a partial submission because a tier with one
-    answered case would give that case's verdict away."""
-    if not results:
-        raise UsageError("no cases were graded")
-    by_tier = None
-    if len(results) == total_cases:
-        by_tier = {}
-        for tier in DIFFICULTY_ORDER:
-            rows = [r for r in results if r.difficulty == tier]
-            if rows:
-                by_tier[tier] = stats.pass_rate(rows)
+    how many passed overall and per tier. Only a submission that answers
+    every case is graded, so no count covers fewer than a whole tier."""
+    if len(results) != total_cases:
+        raise UsageError(f"a submission must answer all {total_cases} cases")
+    by_tier = {}
+    for tier in DIFFICULTY_ORDER:
+        rows = [r for r in results if r.difficulty == tier]
+        if rows:
+            by_tier[tier] = stats.pass_rate(rows)
     return {
         **_envelope("submission"),
         "graded": len(results),
@@ -150,6 +150,7 @@ def result_dict(result: EvalResult) -> dict:
         "should_abstain": result.should_abstain,
         "grader_version": result.grader_version,
         "dataset_version": result.dataset_version,
+        "shuffle_seed": result.shuffle_seed,
     }
 
 
@@ -198,6 +199,10 @@ def parse_answer(obj: object, where: str) -> tuple[str, Answer]:
             raise UsageError(f"{where}: {key!r} must be a list of strings")
     if not isinstance(obj.get("abstained", False), bool):
         raise UsageError(f"{where}: 'abstained' must be true or false")
+    try:
+        json.dumps(obj, ensure_ascii=False).encode("utf-8")
+    except UnicodeEncodeError:
+        raise UsageError(f"{where}: text holds a character that is not valid Unicode") from None
     return obj["case_id"], Answer(
         text=obj["text"],
         citations=list(obj.get("citations", [])),
@@ -206,18 +211,53 @@ def parse_answer(obj: object, where: str) -> tuple[str, Answer]:
     )
 
 
+def _no_duplicate_keys(pairs: list[tuple[str, object]]) -> dict:
+    keys = [k for k, _ in pairs]
+    repeated = sorted({k for k in keys if keys.count(k) > 1})
+    if repeated:
+        raise UsageError(f"keys given more than once in one object: {repeated}")
+    return dict(pairs)
+
+
+def decode_utf8(raw: bytes, source: str) -> str:
+    """Input bytes as text, strict UTF-8, the same for a file and for stdin."""
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise UsageError(f"{source}: not valid UTF-8 ({exc.reason} at byte {exc.start})") from None
+
+
+def _loads_answer_line(line: str, where: str) -> object:
+    """One line as JSON, with every way a hostile line can go wrong turned
+    into a usage error: bad syntax, nesting deep enough to exhaust the stack,
+    an integer too long to convert, a key repeated inside one object (which
+    json would resolve silently to the last value), and text that is not
+    valid Unicode and so could not be written back out."""
+    try:
+        obj = json.loads(line, object_pairs_hook=_no_duplicate_keys)
+        json.dumps(obj, ensure_ascii=False).encode("utf-8")
+    except UsageError as exc:
+        raise UsageError(f"{where}: {exc}") from None
+    except json.JSONDecodeError as exc:
+        raise UsageError(f"{where}: not valid JSON ({exc.msg})") from None
+    except RecursionError:
+        raise UsageError(f"{where}: JSON nested too deeply") from None
+    except UnicodeEncodeError:
+        raise UsageError(f"{where}: text holds a character that is not valid Unicode") from None
+    except ValueError as exc:
+        raise UsageError(f"{where}: not valid JSON ({exc})") from None
+    return obj
+
+
 def parse_answers_jsonl(text: str, source: str = "answers") -> dict[str, Answer]:
     """Answers keyed by case id, from JSON Lines text. Blank lines are skipped.
     A case answered twice is an error, not a last-one-wins."""
     answers: dict[str, Answer] = {}
-    for number, line in enumerate(text.splitlines(), start=1):
+    for number, line in enumerate(text.split("\n"), start=1):
         if not line.strip():
             continue
         where = f"{source} line {number}"
-        try:
-            obj = json.loads(line)
-        except json.JSONDecodeError as exc:
-            raise UsageError(f"{where}: not valid JSON ({exc.msg})") from None
+        obj = _loads_answer_line(line, where)
         case_id, answer = parse_answer(obj, where)
         if case_id in answers:
             raise UsageError(f"{where}: case {case_id!r} is answered more than once")

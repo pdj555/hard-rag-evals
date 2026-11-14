@@ -26,13 +26,21 @@ The reference agent is a baseline, not a model. It ranks documents by IDF weight
 
 The one hard case the reference agent passes is citation fabrication at hard tier, and it passes all three fabrication tiers for one reason: it only ever cites documents it retrieved. It used to pass contradiction-easy as well, on a sentence copied out of the newer document, "This change replaced the previous 30 day window." That sentence has a marker word and one of the two claims. The check now wants both claims in the sentence, so the pass is gone, and the reference agent went from 10 to 9.
 
+## Document order leaked the key
+
+The fixtures list each case's documents in the order they were written, and the document that answers the question usually came first: the first document is a required citation in 33 of the 39 cases that require one. FirstDocument copies the first document listed and cites it. It retrieves nothing and reads nothing. In fixture order it scores 19 of 42 against the reference agent's 9: 12 cases gained, 2 lost, a difference in pass rate of 0.24 with a 95% interval of 0.06 to 0.39, exact McNemar p 0.013. That is one test chosen after seeing the result, so the p-value is a description, not a confirmation.
+
+Every run and every view an agent is shown now shuffles each case's documents with a fixed seed, 2026, recorded in each result. Over seeds 0 to 19 FirstDocument averages 7.0 of 42, range 4 to 12, and a required document is first in 15 to 25 of 39 cases, mean 18.9. At the default seed it scores 9 and a required document is first in 22. It does not fall to zero because 33 of the 42 cases hold three documents or fewer. The reference agent and its eight variants score the same in fixture order and under all 20 seeds, because retrieval breaks ties by document id; for them shuffling changes nothing.
+
 ## The grader can be gamed too
 
 Eight agents each add one trick to the reference agent. Their results are pinned by tests, so hardening a check breaks the matching test and is recorded here.
 
 Still beaten:
 
-- The numeric check, on two cases. NumberSpray appends every number in the retrieved documents, every pairwise sum, and the grand total, and still wins numeric-easy. The gate used to pass when any number in the text was within tolerance. It now reads amounts only and fails an answer that states a rival amount, one that is neither within tolerance nor in the question or the documents. On numeric-hard that stops the spray: it holds the expected 10,000,000 and fails on 7,300,000, 8,900,000, and 13,100,000 beside it. On numeric-easy it cannot. The case has two inputs, so the spray is the two inputs and their one sum, which is also what a correct answer that shows its working looks like. TotalGuess, which appends only the sum of every number retrieved, wins the same case. MeanGuess appends the mean and wins numeric-medium, where the mean of the three quarters is the answer. SumMinusLargest gains nothing. Scores: NumberSpray, TotalGuess, and MeanGuess 10 of 42 each; SumMinusLargest 9 of 42.
+- The numeric check, on two cases. NumberSpray appends every number in the retrieved documents, every pairwise sum, and the grand total. The gate needs one number in the text within tolerance of the expected value. The spray hits the expected value on 2 of the 4 numeric cases: numeric-easy passes outright, and numeric-hard still fails on a forbidden citation in the underlying answer. TotalGuess, which appends only the sum of every number retrieved, wins numeric-easy too. MeanGuess appends the mean and wins numeric-medium, where the mean of the three quarters is the answer. SumMinusLargest gains nothing. Scores: NumberSpray, TotalGuess, and MeanGuess 10 of 42 each; SumMinusLargest 9 of 42.
+
+A rule to close this was tried and removed, and the result is a null. The rule failed an answer that stated a rival figure: a number outside the tolerance that was not in the question or the documents. Two versions shipped, grader 1.0.0 and 1.1.0. Neither changed a verdict for any agent pinned here: NumberSpray scored 10 of 42 before the rule and 10 of 42 with it, because on numeric-easy the spray is the two inputs and their one sum, the same text as a worked correct answer, and on numeric-hard the spray already failed on a forbidden citation. The cost was real. A blind review wrote 76 correct answers to the numeric cases and the rule failed 28 of them; that count is the review's, and those answers are not in this repository. Grader 1.2.0 is back to any number within tolerance.
 
 These were beaten before and hold now:
 
@@ -52,7 +60,7 @@ The forbidden phrase gate is the one gate with no gaming agent aimed at it.
 - No model has been run through the suite. The repo has no model, API, or network code and zero runtime dependencies. Every score is a score of one scripted baseline and its variants.
 - The corpora are hand built by the suite's author, 1 to 50 short documents per case, with the gates written into the same fixtures. The gold answers are by the same author. No human baseline has been measured.
 - The contradiction check reads tokens, not meaning. "Changed from 14 to 30 days" names both claims and a marker and passes, though it gets the direction backwards. A genuine comparison that uses none of the 12 marker words fails.
-- The numeric tolerance is wide: 500,000 on an expected 10,000,000 is a 5 percent band, and several guesses inside it all pass. The check reads amounts, not sentences: "It was not $10 million" passes, an intermediate result written as an amount fails a correct answer, and a figure written in words is not seen at all. It cannot tell a guessed operation from a computed one, which is how one appended sum wins numeric-easy and one appended mean wins numeric-medium.
+- The numeric tolerance is wide: 500,000 on an expected 10,000,000 is a 5 percent band, and nothing asks the answer to commit to one figure. The check cannot tell a guessed operation from a computed one, which is how one appended sum wins numeric-easy and one appended mean wins numeric-medium.
 - The four scores (citation precision and recall, retrieval recall, faithfulness) never decide a pass, and faithfulness counts a citation as supported when it shares one content word with the answer. Each fixture also carries an "expected" answer in prose that the grader loads and never reads.
 
 ## Next

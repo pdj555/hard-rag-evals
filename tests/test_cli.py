@@ -1,4 +1,5 @@
 """The command line: one JSON document per call, a committed schema, fixed exit codes."""
+import io
 import json
 import subprocess
 import sys
@@ -10,7 +11,7 @@ import pytest
 from hard_rag_evals import CANARY, GRADER_VERSION, cli
 from hard_rag_evals import report as R
 from hard_rag_evals.failure_modes import ALL_CASES
-from hard_rag_evals.runner import GATES
+from hard_rag_evals.runner import DEFAULT_SHUFFLE_SEED, GATES
 
 ROOT = Path(__file__).parent.parent
 SCHEMA = R.load_schema()
@@ -142,17 +143,42 @@ def test_show_gives_the_task_and_not_the_answer_key(capsys):
     assert code == 0 and doc["kind"] == "case"
     case = next(c for c in ALL_CASES if c.id == "stale-medium")
     assert doc["case"]["query"] == case.query
-    assert [d["id"] for d in doc["case"]["documents"]] == [d.id for d in case.corpus.documents]
+    assert sorted(d["id"] for d in doc["case"]["documents"]) == sorted(case.corpus.ids)
     assert case.must_not_cite  # the case has a key worth hiding
     assert set(doc["case"]) == {"id", "difficulty", "query", "n_documents", "budget", "documents"}
 
 
-def test_show_shuffle_seed_reorders_the_documents(capsys):
-    pid = R.public_id("adversarial-brutal")
-    _, plain = run_json(capsys, "show", pid)
-    _, shuffled = run_json(capsys, "show", pid, "--shuffle-seed", "1")
+def test_show_shuffles_documents_by_default_and_fixture_order_is_opt_in(capsys):
+    case = next(c for c in ALL_CASES if c.id == "adversarial-brutal")
+    pid = R.public_id(case.id)
     ids = lambda d: [x["id"] for x in d["case"]["documents"]]  # noqa: E731
-    assert ids(plain) != ids(shuffled) and sorted(ids(plain)) == sorted(ids(shuffled))
+    _, default = run_json(capsys, "show", pid)
+    _, explicit = run_json(capsys, "show", pid, "--shuffle-seed", str(DEFAULT_SHUFFLE_SEED))
+    _, other = run_json(capsys, "show", pid, "--shuffle-seed", "1")
+    _, fixture = run_json(capsys, "show", pid, "--fixture-order")
+    assert default["shuffle_seed"] == DEFAULT_SHUFFLE_SEED and fixture["shuffle_seed"] is None
+    assert ids(fixture) == [d.id for d in case.corpus.documents]
+    assert ids(default) == ids(explicit) != ids(fixture)
+    assert ids(other) not in (ids(default), ids(fixture))
+    assert sorted(ids(default)) == sorted(ids(fixture))
+    code, doc = run_json(capsys, "show", pid, "--fixture-order", "--shuffle-seed", "1")
+    assert code == 2 and "cannot be given together" in doc["error"]["message"]
+    code, out = run(capsys, "show", pid)
+    assert f"documents: shuffled with seed {DEFAULT_SHUFFLE_SEED}" in out
+
+
+def test_first_document_agent_through_the_cli_in_both_orders(capsys):
+    code, shuffled = run_json(capsys, "run", "--agent", "first-document")
+    code, fixture = run_json(capsys, "run", "--agent", "first-document", "--fixture-order")
+    assert (shuffled["summary"]["passed"], fixture["summary"]["passed"]) == (9, 19)
+    assert shuffled["config"]["shuffle_seed"] == DEFAULT_SHUFFLE_SEED
+    assert fixture["config"]["shuffle_seed"] is None
+    assert {r["shuffle_seed"] for r in shuffled["results"]} == {DEFAULT_SHUFFLE_SEED}
+    assert {r["shuffle_seed"] for r in fixture["results"]} == {None}
+    code, out = run(capsys, "run", "--agent", "first-document", "--fixture-order")
+    assert "Documents in fixture order, which leaks" in out
+    code, out = run(capsys, "run", "--agent", "first-document")
+    assert f"Documents shuffled with seed {DEFAULT_SHUFFLE_SEED}." in out
 
 
 # ---- run ----
@@ -174,7 +200,8 @@ def test_run_reference_json_report(capsys):
     assert len(doc["results"]) == 42
     assert all(r["grader_version"] == GRADER_VERSION for r in doc["results"])
     assert all(r["passed"] == (not r["failed_gates"]) for r in doc["results"])
-    assert doc["config"]["source"] == "built_in_agent" and doc["config"]["shuffle_seed"] is None
+    assert doc["config"]["source"] == "built_in_agent"
+    assert doc["config"]["shuffle_seed"] == DEFAULT_SHUFFLE_SEED
 
 
 def test_run_a_gamer_by_name_with_filters_and_seed(capsys):
@@ -193,7 +220,8 @@ def test_run_a_gamer_by_name_with_filters_and_seed(capsys):
 def test_every_built_in_agent_is_runnable_by_name(capsys):
     assert set(cli.AGENTS) == {
         "reference", "hedger", "cite-everything", "always-abstain", "number-spray",
-        "total-guess", "mean-guess", "sum-minus-largest", "query-echo",
+        "total-guess", "mean-guess", "sum-minus-largest", "query-echo", "first-document",
+        "fabricating",
     }
     for name in cli.AGENTS:
         code, doc = run_json(capsys, "run", "--agent", name, "--difficulty", "easy")
@@ -235,9 +263,11 @@ def test_grade_exits_1_when_an_answer_fails(capsys, tmp_path):
 
 def test_grade_reads_stdin(capsys, monkeypatch, tmp_path):
     text = Path(answers_file(tmp_path, gold_rows())).read_text()
-    monkeypatch.setattr("sys.stdin", __import__("io").StringIO(text))
+    monkeypatch.setattr("sys.stdin", io.TextIOWrapper(io.BytesIO(text.encode("utf-8"))))
     code, doc = run_json(capsys, "grade", "-")
     assert code == 0 and doc["summary"]["total"] == 42
+    assert doc["config"]["shuffle_seed"] == "n/a"
+    assert {r["shuffle_seed"] for r in doc["results"]} == {"n/a"}
 
 
 def test_grade_missing_cases_is_a_usage_error_unless_partial_is_allowed(capsys, tmp_path):
@@ -436,3 +466,136 @@ def test_mcp_subcommand_without_the_extra_is_a_usage_error(capsys, monkeypatch):
     monkeypatch.setitem(sys.modules, "hard_rag_evals.mcp_server", None)  # import now fails
     code, out = run(capsys, "mcp")
     assert code == 2
+
+
+# ---- hostile input is a usage error, however it arrives ----
+
+
+def grade_bytes(tmp_path, raw: bytes, via: str):
+    """Exit code, stdout and stderr of grading these bytes, from a file or stdin."""
+    argv = [sys.executable, "-m", "hard_rag_evals", "grade", "--allow-partial", "--json"]
+    if via == "file":
+        path = tmp_path / "in.jsonl"
+        path.write_bytes(raw)
+        proc = subprocess.run([*argv, str(path)], capture_output=True, cwd=tmp_path)
+    else:
+        proc = subprocess.run([*argv, "-"], input=raw, capture_output=True, cwd=tmp_path)
+    return proc.returncode, proc.stdout.decode(), proc.stderr.decode()
+
+
+ROW = b'{"case_id": "stale-easy", "text": "x"'
+HOSTILE = {
+    "deep nesting": b'{"case_id": ' + b"[" * 200000 + b"]" * 200000 + b"}",
+    "huge integer": ROW + b', "citations": [' + b"9" * 5000 + b"]}",
+    "lone surrogate": ROW[:-2] + b'\\ud800"}',
+    "invalid utf-8": ROW[:-2] + b'\xff\xfe"}',
+    "duplicate key": ROW + b', "abstained": false, "abstained": true}',
+    "duplicate case_id key": b'{"case_id": "unanswerable-easy", "case_id": "stale-easy", "text": "x"}',
+}
+
+
+@pytest.mark.parametrize("via", ["file", "stdin"])
+@pytest.mark.parametrize("what", sorted(HOSTILE))
+def test_hostile_input_exits_2_with_one_error_document_and_no_traceback(tmp_path, what, via):
+    code, out, err = grade_bytes(tmp_path, HOSTILE[what] + b"\n", via)
+    assert code == 2, (what, via, err[-300:])
+    assert "Traceback" not in err
+    doc = json.loads(out)
+    VALIDATOR.validate(doc)
+    assert doc["kind"] == "error" and doc["error"]["code"] == "usage"
+
+
+def test_file_and_stdin_are_decoded_the_same_way(tmp_path):
+    good = json.dumps({"case_id": "stale-easy", **GOLD["stale-easy"], "text": "1000 requests — per hour"},
+                      ensure_ascii=False).encode("utf-8") + b"\n"
+    latin = good.replace("—".encode("utf-8"), "—".encode("cp1252"))
+    for raw, expected in ((good, 0), (latin, 2)):
+        from_file = grade_bytes(tmp_path, raw, "file")
+        from_stdin = grade_bytes(tmp_path, raw, "stdin")
+        assert from_file[0] == from_stdin[0] == expected
+        a, b = json.loads(from_file[1]), json.loads(from_stdin[1])
+        if expected == 0:
+            assert a["results"] == b["results"]
+        else:
+            assert "not valid UTF-8" in a["error"]["message"] and "not valid UTF-8" in b["error"]["message"]
+
+
+def test_duplicate_keys_in_one_answer_are_named(capsys, tmp_path):
+    path = tmp_path / "dup.jsonl"
+    path.write_text('{"case_id": "stale-easy", "text": "x", "abstained": false, "abstained": true}\n')
+    code, doc = run_json(capsys, "grade", str(path), "--allow-partial")
+    assert code == 2
+    assert "keys given more than once in one object: ['abstained']" in doc["error"]["message"]
+
+
+def test_flags_cannot_be_abbreviated(capsys):
+    for argv in (
+        ["list", "--de"],
+        ["list", "--dev", "--mo", "compositional"],
+        ["run", "--ag", "reference"],
+        ["run", "--agent", "reference", "--fixture"],
+        ["grade", "x.jsonl", "--allow"],
+        ["mcp", "--d"],
+    ):
+        code, out = run(capsys, *argv)
+        assert code == 2, argv
+
+
+# ---- output that cannot be written ----
+
+
+def shell(command, tmp_path):
+    exe = f"{sys.executable} -m hard_rag_evals"
+    proc = subprocess.run(["sh", "-c", command.replace("CMD", exe)], capture_output=True, text=True, cwd=tmp_path)
+    return proc.returncode, proc.stderr
+
+
+@pytest.mark.skipif(not Path("/dev/full").exists(), reason="needs /dev/full")
+@pytest.mark.parametrize(
+    "command",
+    [
+        "CMD list > /dev/full",
+        "CMD run --agent reference --json > /dev/full",
+        "CMD run --agent always-abstain --mode unanswerable > /dev/full",
+        "CMD schema > /dev/full",
+        "CMD show no-such-case --json > /dev/full",
+    ],
+)
+def test_no_space_left_exits_3_without_a_traceback(tmp_path, command):
+    code, err = shell(command, tmp_path)
+    assert code == 3, err
+    assert "Traceback" not in err
+    assert "could not write output" in err
+
+
+@pytest.mark.parametrize(
+    "command", ["CMD list >&-", "CMD run --agent reference --json >&-", "CMD schema >&-"]
+)
+def test_closed_stdout_descriptor_exits_3_without_a_traceback(tmp_path, command):
+    code, err = shell(command, tmp_path)
+    assert code == 3, err
+    assert "Traceback" not in err
+
+
+def test_closed_stdout_and_stderr_together_still_exit_3(tmp_path):
+    code, err = shell("CMD list >&- 2>&-", tmp_path)
+    assert code == 3
+
+
+def test_output_failure_in_process(monkeypatch, capsys):
+    class Full:
+        def write(self, text):
+            raise OSError(28, "No space left on device")
+
+        def flush(self):
+            pass
+
+        def fileno(self):
+            raise io.UnsupportedOperation("no descriptor")
+
+    for argv, code in ((["list"], 3), (["run", "--agent", "reference", "--json"], 3)):
+        monkeypatch.setattr(sys, "stdout", Full())
+        assert cli.main(argv) == code
+    monkeypatch.undo()
+    err = capsys.readouterr().err
+    assert "could not write output" in err and "Traceback" not in err

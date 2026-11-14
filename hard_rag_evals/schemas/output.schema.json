@@ -295,7 +295,8 @@
         "abstained",
         "should_abstain",
         "grader_version",
-        "dataset_version"
+        "dataset_version",
+        "shuffle_seed"
       ],
       "properties": {
         "case_id": {
@@ -394,6 +395,20 @@
           "description": "Opaque public id of a case: a stable hash of its descriptive id.",
           "type": "string",
           "pattern": "^c-[0-9a-f]{12}$"
+        },
+        "shuffle_seed": {
+          "description": "Seed the documents were shuffled with before the agent saw them; null for fixture order; \"n/a\" when the answers were supplied from outside and no order was presented.",
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "const": "n/a"
+            }
+          ]
         }
       }
     },
@@ -477,7 +492,8 @@
         "grader_version",
         "dataset_version",
         "canary",
-        "case"
+        "case",
+        "shuffle_seed"
       ],
       "properties": {
         "kind": {
@@ -501,6 +517,13 @@
           "description": "sha256 over the case fixture files. Results are comparable only when this and grader_version both match.",
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
+        },
+        "shuffle_seed": {
+          "description": "Seed the documents were shuffled with before the agent saw them; null for fixture order.",
+          "type": [
+            "integer",
+            "null"
+          ]
         }
       }
     },
@@ -539,6 +562,7 @@
           ],
           "properties": {
             "code": {
+              "description": "usage: the caller's input. internal: a bug in this package.",
               "enum": [
                 "usage",
                 "internal"
@@ -638,9 +662,17 @@
               ]
             },
             "shuffle_seed": {
-              "type": [
-                "integer",
-                "null"
+              "description": "Seed the documents were shuffled with before the agent saw them; null for fixture order; \"n/a\" when the answers were supplied from outside and no order was presented.",
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                },
+                {
+                  "const": "n/a"
+                }
               ]
             },
             "missing_case_ids": {
@@ -784,7 +816,7 @@
       }
     },
     "submission": {
-      "description": "Aggregate result of grade_submission over MCP. Holds no per-case field of any kind.",
+      "description": "Aggregate result of grade_submission over MCP, which grades only a submission that answers every case. Holds no per-case field of any kind.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -830,26 +862,19 @@
           "$ref": "#/$defs/rate"
         },
         "by_tier": {
-          "description": "Per tier counts; null unless every case was answered.",
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "object",
-              "propertyNames": {
-                "enum": [
-                  "easy",
-                  "medium",
-                  "hard",
-                  "brutal"
-                ]
-              },
-              "additionalProperties": {
-                "$ref": "#/$defs/rate"
-              }
-            }
-          ]
+          "description": "Per tier counts.",
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "easy",
+              "medium",
+              "hard",
+              "brutal"
+            ]
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/rate"
+          }
         }
       }
     }

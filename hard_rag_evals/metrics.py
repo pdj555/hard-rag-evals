@@ -8,7 +8,6 @@ Production use would swap in model graded checks behind the same names.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 
 from .retrieval import tokenize
 from .types import Answer, Corpus
@@ -114,115 +113,35 @@ _SCALE = {
     "b": 1e9,
     "billion": 1e9,
 }
-@dataclass(frozen=True)
-class Figure:
-    """One number as written in a text."""
-
-    value: float  # with the scale word applied
-    currency: bool  # written with a currency sign: $10
-    scaled: bool  # written with a scale word: 10 million, 4,200K, 5.8M
-    percent: bool  # followed by % or "percent"
-
-    def is_amount(self, floor: float = 1000.0) -> bool:
-        """An amount is a number written as a quantity of something: with a
-        currency sign, with a scale word, or at least 1,000. A bare small
-        number, the 2 in "2 quarters", the 6 in "6 months", list numbering,
-        a citation marker like [1], is not one, and a percentage never is."""
-        if self.percent:
-            return False
-        return self.currency or self.scaled or self.value >= floor
-
-
-_FIGURE = re.compile(
-    r"(?<![\w.])([$€£¥]\s?)?(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?"
-    r"\s*(thousand|million|billion|k|m|b)?\b(\s?%|\s+percent\b)?",
+_NUMBER = re.compile(
+    r"(?<![\w.])(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?\s*(thousand|million|billion|k|m|b)?\b",
     re.IGNORECASE,
 )
-
-
-def extract_figures(text: str) -> list[Figure]:
-    """Every number in the text, with how it was written."""
-    out = []
-    for currency, whole, frac, scale, percent in _FIGURE.findall(text):
-        value = float(whole.replace(",", "") + (frac or ""))
-        if scale:
-            value *= _SCALE[scale.lower()]
-        out.append(Figure(value, bool(currency), bool(scale), bool(percent)))
-    return out
 
 
 def extract_numbers(text: str) -> list[float]:
     """Every number in the text, with K/M/B and thousand/million/billion
     applied, so "$4,200K" and "$4.2 million" both read as 4200000."""
-    return [f.value for f in extract_figures(text)]
+    out: list[float] = []
+    for whole, frac, scale in _NUMBER.findall(text):
+        value = float(whole.replace(",", "") + (frac or ""))
+        if scale:
+            value *= _SCALE[scale.lower()]
+        out.append(value)
+    return out
 
 
-def _same_figure(a: float, b: float) -> bool:
-    return abs(a - b) <= 1e-9 * max(1.0, abs(a), abs(b))
+def numeric_answer_correct(answer: Answer, expected: float, tolerance: float) -> bool:
+    """True when some number in the answer is the expected result. Quoting
+    the inputs without combining them fails, because none of them is it.
 
-
-def _is_source(figure: Figure, source_figures: tuple[float, ...]) -> bool:
-    """True when the figure is one the case supplies. A figure written without
-    a scale word also matches a source a thousand, a million or a billion
-    times larger, so the "$4.2" in "$4.2 + $5.8 = $10 million" counts as the
-    $4.2 million the document states."""
-    scales = (1.0,) if figure.scaled else (1.0, 1e3, 1e6, 1e9)
-    return any(_same_figure(figure.value * k, s) for k in scales for s in source_figures)
-
-
-def numeric_answer_correct(
-    answer: Answer,
-    expected: float,
-    tolerance: float,
-    source_figures: tuple[float, ...] = (),
-) -> bool:
-    """True when the answer states the expected amount and no rival amount.
-
-    Only amounts are read (see Figure.is_amount): a number with a currency
-    sign, a number with a scale word, or a number of at least 1,000. Bare
-    small numbers and percentages are ignored, so list numbering, "2
-    quarters", "6 months" and "[1]" decide nothing.
-
-    Each amount in the answer is one of three things:
-    - a hit, within tolerance of the expected value;
-    - a source figure, equal to a number in the question, a document's text
-      or a document's date (source_figures), compared after scale words are
-      applied, and for an amount written without a scale word also at a
-      thousand, a million and a billion times its value;
-    - a rival, anything else.
-
-    The check passes when there is at least one hit and no rival. Quoting the
-    inputs without combining them fails: no hit. Listing sums the documents do
-    not state fails: every sum but the right one is a rival.
-
-    When the expected value itself is below 1,000 there is no amount to look
-    for, so every number that is not a percentage is read. No case in the
-    suite is like that.
-
-    What this cannot see is listed in the README: negation, several guesses
-    that all sit inside the tolerance, figures written in words, and a spray
-    whose only derived figure is the answer.
+    Any number within tolerance passes, so an answer that lists many figures
+    passes if one of them is right. A stricter rule, failing an answer that
+    states a rival figure, was tried and removed: it changed no verdict for
+    any agent in this repository and failed correct answers. See
+    docs/research.md.
     """
-    floor = 1000.0 if abs(expected) >= 1000.0 else 0.0
-    hit = False
-    for figure in extract_figures(answer.text):
-        if not figure.is_amount(floor):
-            continue
-        if abs(figure.value - expected) <= tolerance:
-            hit = True
-        elif not _is_source(figure, source_figures):
-            return False
-    return hit
-
-
-def case_source_figures(query: str, corpus: Corpus) -> tuple[float, ...]:
-    """Every number the case supplies: in the question, and in each document's
-    text and published date. These are the figures an answer may quote without
-    asserting them."""
-    out = extract_numbers(query)
-    for d in corpus.documents:
-        out += extract_numbers(d.text) + extract_numbers(d.published)
-    return tuple(dict.fromkeys(out))
+    return any(abs(n - expected) <= tolerance for n in extract_numbers(answer.text))
 
 
 def _event_position(text: str, terms: tuple[str, ...]) -> int | None:

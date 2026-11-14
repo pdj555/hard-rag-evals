@@ -143,6 +143,35 @@ class QueryEcho(ReferenceAgent):
         return ans
 
 
+class FirstDocument:
+    """Document order: copy whatever document is listed first and cite it.
+
+    Not a variant of the reference agent: it does not retrieve or read. It
+    scores only because the fixtures list a required document first.
+    """
+
+    name = "first-document"
+    trick = "copy the first document listed and cite it"
+
+    def answer(self, query: str, corpus: Corpus, budget: RetrievalBudget) -> Answer:
+        first = corpus.documents[0]
+        return Answer(text=first.text, citations=[first.id], retrieved_ids=[first.id])
+
+
+class Fabricator(ReferenceAgent):
+    """The reference agent plus one citation to a document that does not
+    exist, on every answer. Not a trick: it shows the unknown citation gate
+    failing an answer whose text is otherwise unchanged."""
+
+    name = "fabricating-agent"
+    trick = "add one invented citation to every answer"
+
+    def answer(self, query: str, corpus: Corpus, budget: RetrievalBudget) -> Answer:
+        ans = super().answer(query, corpus, budget)
+        ans.citations = ans.citations + ["doc-does-not-exist-99"]
+        return ans
+
+
 GAMERS = (
     Hedger,
     CiteEverything,
@@ -152,4 +181,5 @@ GAMERS = (
     MeanGuess,
     SumMinusLargest,
     QueryEcho,
+    FirstDocument,
 )

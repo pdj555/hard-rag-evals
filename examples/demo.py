@@ -14,43 +14,27 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from hard_rag_evals import (
+    DEFAULT_SHUFFLE_SEED,
     DIFFICULTY_ORDER,
-    Answer,
-    Corpus,
-    RetrievalBudget,
     render_markdown,
     run_suite,
     summary_by_difficulty,
 )
+from hard_rag_evals.gamers import Fabricator
 from hard_rag_evals.reference_agent import ReferenceAgent
 from hard_rag_evals.runner import order_spread
 from hard_rag_evals.stats import clopper_pearson, pass_rate
 
 
-class FabricatingAgent(ReferenceAgent):
-    """Wraps the reference agent and appends a citation to a document
-    that does not exist. Demonstrates that the fabrication check fires
-    even when the answer text is otherwise fine."""
-
-    name = "fabricating-agent"
-
-    def answer(
-        self, query: str, corpus: Corpus, budget: RetrievalBudget
-    ) -> Answer:
-        ans = super().answer(query, corpus, budget)
-        ans.citations = ans.citations + ["doc-does-not-exist-99"]
-        return ans
-
-
 def main() -> None:
-    for agent in (ReferenceAgent(), FabricatingAgent()):
+    for agent in (ReferenceAgent(), Fabricator()):
         results = run_suite(agent)
         report = render_markdown(agent.name, results)
         out = Path(__file__).parent / f"run_report_{agent.name}.md"
         out.write_text(report)
         print(f"wrote {out}")
 
-        print(f"\n{agent.name} tier progression:")
+        print(f"\n{agent.name} tier progression, documents shuffled with seed {DEFAULT_SHUFFLE_SEED}:")
         for tier in DIFFICULTY_ORDER:
             p, t = summary_by_difficulty(results)[tier]
             bar = "#" * p + "-" * (t - p)
@@ -64,9 +48,9 @@ def main() -> None:
         )
         spread = order_spread(agent)
         print(
-            f"  documents reordered, {len(spread['by_seed'])} seeds: "
-            f"{spread['min']} to {spread['max']} passed, "
-            f"{len(spread['flipped'])} cases changed verdict"
+            f"  fixture order: {spread['fixture_order']} passed. "
+            f"{len(spread['by_seed'])} other seeds: {spread['min']} to {spread['max']} passed, "
+            f"{len(spread['flipped'])} cases changed verdict against fixture order"
         )
         print()
 

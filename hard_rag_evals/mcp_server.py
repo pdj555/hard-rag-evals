@@ -8,10 +8,13 @@ that the agent cannot read the answer key out of it:
 - list_cases and get_case give the public view: opaque case ids, the tier,
   the question, the documents and the budget. No failure mode, no
   descriptive id, no gates.
-- grade_submission takes the answers for every case, or for a declared
-  subset of at least MIN_SUBMISSION cases, and returns aggregate counts
-  only: passed and total overall, and per tier when every case was
-  answered. Nothing about any single case comes back.
+- get_case lists a case's documents in a shuffled order, fixed by a
+  published seed. Fixture order would leak: it usually puts a required
+  document first.
+- grade_submission takes the answers for all 42 cases and returns aggregate
+  counts only: passed and total, overall and per tier. A submission that
+  leaves any case out is refused, so no count ever covers a chosen few
+  cases. Nothing about any single case comes back.
 - A server process grades one submission. A second call is refused. Without
   that, two submissions that differ in one answer would give that case's
   verdict by subtraction.
@@ -38,11 +41,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 from . import report as R
 from .failure_modes import ALL_CASES
 from .provenance import GRADER_VERSION
-from .runner import DIFFICULTY_ORDER, grade, select_cases
-
-# The smallest declared subset grade_submission will grade. One aggregate
-# over a handful of cases says too much about each of them.
-MIN_SUBMISSION = 10
+from .runner import DEFAULT_SHUFFLE_SEED, DIFFICULTY_ORDER, grade, present, select_cases
 
 
 def build_server(dev: bool = False) -> MCPServer:
@@ -85,23 +84,20 @@ def build_server(dev: bool = False) -> MCPServer:
         """One case as the agent under test sees it: the question, every
         document with its id, source and published date, and the retrieval
         budget. Does not include what the grader checks."""
-        return R.case_document(find(case_id), dev=dev)
+        case = present(find(case_id), DEFAULT_SHUFFLE_SEED)
+        return R.case_document(case, dev=dev, shuffle_seed=DEFAULT_SHUFFLE_SEED)
 
     @server.tool()
-    def grade_submission(
-        answers: list[dict[str, Any]], case_ids: list[str] | None = None
-    ) -> dict[str, Any]:
+    def grade_submission(answers: list[dict[str, Any]]) -> dict[str, Any]:
         """Grade a whole submission and return aggregate counts only: passed
-        and total with a 95% interval, overall, and per tier when every case
-        is answered. Nothing about any single case is returned.
+        and total with a 95% interval, overall and per tier. Nothing about
+        any single case is returned.
 
-        answers: one object per case with case_id (from list_cases), text,
-        and optionally citations (document ids), abstained (true when the
-        documents do not hold the answer) and retrieved_ids.
-
-        case_ids: leave out to submit every case. To submit a subset, list
-        the ids being submitted, at least 10; answers must cover exactly
-        those. This can be called once per server."""
+        answers: one object for every case, all 42, with case_id (from
+        list_cases), text, and optionally citations (document ids), abstained
+        (true when the documents do not hold the answer) and retrieved_ids.
+        A submission that leaves a case out is refused. This can be called
+        once per server."""
         if not dev and graded["submissions"]:
             raise ToolError(
                 "this server has already graded a submission; it grades one, so that two "
@@ -117,20 +113,10 @@ def build_server(dev: bool = False) -> MCPServer:
             if case.id in by_case:
                 raise ToolError(f"case {given_id!r} is answered more than once")
             by_case[case.id] = answer
-        if case_ids is None:
-            wanted = {c.id for c in ALL_CASES}
-        else:
-            wanted = {find(i).id for i in case_ids}
-            if len(wanted) < MIN_SUBMISSION:
-                raise ToolError(
-                    f"a declared subset must hold at least {MIN_SUBMISSION} cases, "
-                    f"got {len(wanted)}"
-                )
-        if set(by_case) != wanted:
+        if len(by_case) != len(ALL_CASES):
             raise ToolError(
-                f"answers cover {len(by_case)} cases and the submission is for {len(wanted)}: "
-                f"{len(wanted - set(by_case))} have no answer and "
-                f"{len(set(by_case) - wanted)} were not declared"
+                f"a submission must answer all {len(ALL_CASES)} cases; "
+                f"{len(ALL_CASES) - len(by_case)} have no answer"
             )
         graded["submissions"] += 1
         results = [grade(c, by_case[c.id]) for c in ALL_CASES if c.id in by_case]

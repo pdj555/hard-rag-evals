@@ -19,7 +19,8 @@ from hard_rag_evals import CANARY, DATASET_VERSION, GRADER_VERSION  # noqa: E402
 from hard_rag_evals import report as R  # noqa: E402
 from hard_rag_evals.cli import MODES  # noqa: E402
 from hard_rag_evals.failure_modes import ALL_CASES  # noqa: E402
-from hard_rag_evals.mcp_server import MIN_SUBMISSION, build_server  # noqa: E402
+from hard_rag_evals.mcp_server import build_server  # noqa: E402
+from hard_rag_evals.runner import DEFAULT_SHUFFLE_SEED, permute_documents  # noqa: E402
 
 GOLD = json.loads((Path(__file__).parent / "gold_answers.json").read_text())
 GOLD.pop("_canary")
@@ -198,34 +199,42 @@ def test_a_refused_submission_does_not_use_up_the_one_allowed():
     assert bad.is_error and not good.is_error
 
 
-def test_a_single_case_cannot_be_graded_through_a_subset():
-    one = list(GOLD)[:1]
-    few = list(GOLD)[: MIN_SUBMISSION - 1]
+def test_only_a_submission_for_all_42_cases_is_graded():
+    ids = list(GOLD)
 
     async def go(c):
-        return [
-            await c.call_tool("grade_submission", {"answers": gold_answers(ids), "case_ids": [PID[i] for i in ids]})
-            for ids in (one, few)
-        ] + [await c.call_tool("grade_submission", {"answers": gold_answers(one)})]
-
-    for refused in session(go):
-        assert refused.is_error and refused.structured_content is None
-    assert MIN_SUBMISSION == 10
-
-
-def test_a_declared_subset_gets_the_overall_count_only():
-    ids = list(GOLD)[:12]
-
-    async def go(c):
-        return await c.call_tool(
-            "grade_submission", {"answers": gold_answers(ids), "case_ids": [PID[i] for i in ids]}
+        tools = await c.list_tools()
+        schema = next(t.input_schema for t in tools.tools if t.name == "grade_submission")
+        attempts = [
+            await c.call_tool("grade_submission", {"answers": gold_answers(ids[:n])})
+            for n in (1, 10, 12, 41)
+        ]
+        declared = await c.call_tool(
+            "grade_submission",
+            {"answers": gold_answers(ids[:12]), "case_ids": [PID[i] for i in ids[:12]]},
         )
+        return schema, attempts, declared
 
-    doc = session(go).structured_content
-    VALIDATOR.validate(doc)
-    assert (doc["graded"], doc["total_cases"]) == (12, 42)
-    assert doc["summary"]["total"] == 12
-    assert doc["by_tier"] is None  # a tier with one answered case would name its verdict
+    schema, attempts, declared = session(go)
+    assert set(schema["properties"]) == {"answers"}  # no way to declare a subset
+    for refused in attempts:
+        assert refused.is_error and refused.structured_content is None
+        assert "must answer all 42 cases" in refused.content[0].text
+    assert declared.is_error and declared.structured_content is None
+
+
+def test_get_case_presents_documents_shuffled_with_the_published_seed():
+    async def go(c):
+        return [await c.call_tool("get_case", {"case_id": PID[case.id]}) for case in ALL_CASES]
+
+    first_is_required = 0
+    for case, result in zip(ALL_CASES, session(go)):
+        doc = result.structured_content
+        assert doc["shuffle_seed"] == DEFAULT_SHUFFLE_SEED
+        ids = [d["id"] for d in doc["case"]["documents"]]
+        assert ids == [d.id for d in permute_documents(case, DEFAULT_SHUFFLE_SEED).corpus.documents]
+        first_is_required += ids[0] in case.must_cite
+    assert first_is_required == 22  # 33 in fixture order
 
 
 @pytest.mark.parametrize(
@@ -237,6 +246,7 @@ def test_a_declared_subset_gets_the_overall_count_only():
         (lambda a: a[0].update(citation=["x"]), "unknown keys"),
         (lambda a: a[0].pop("text"), "'text' is required"),
         (lambda a: a.pop(), "1 have no answer"),
+        (lambda a: a[0].update(text="\ud800"), "not valid Unicode"),
     ],
 )
 def test_grade_submission_rejects_malformed_submissions(mutate, complaint):

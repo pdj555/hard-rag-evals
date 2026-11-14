@@ -2,7 +2,7 @@
 import pytest
 
 from hard_rag_evals import run_suite
-from hard_rag_evals.gamers import GAMERS, AlwaysAbstain
+from hard_rag_evals.gamers import GAMERS, AlwaysAbstain, Fabricator, FirstDocument
 from hard_rag_evals.reference_agent import ReferenceAgent
 from hard_rag_evals.runner import render_markdown
 from hard_rag_evals.stats import (
@@ -105,27 +105,52 @@ def test_compare_refuses_runs_over_different_cases():
         compare(reference, run_suite(ReferenceAgent(), difficulty="easy"))
 
 
-def test_no_gamer_differs_from_the_reference_after_correction():
-    reference = run_suite(ReferenceAgent())
-    table = compare_many(reference, {g.name: run_suite(g()) for g in GAMERS})
-    assert len(table) == len(GAMERS)
-    for name, c in table.items():
-        assert c.p_holm is not None and c.p_holm >= c.p_value, name
-        assert c.ci95[0] < 0 < c.ci95[1], name
-    assert table["always-abstain"].p_value == pytest.approx(0.14599609375)
-    assert table["always-abstain"].p_holm == pytest.approx(min(1.0, len(GAMERS) * 0.14599609375))
-    text = render_comparison_markdown("the reference agent", table)
-    assert "| always-abstain | 3 | 9 | -0.143 |" in text
-
-
 def test_the_paired_test_has_little_power_at_this_size():
     # What "no significant difference" can and cannot mean here. Alone, an
     # agent needs 6 discordant cases all in one direction to reach p < 0.05.
     assert mcnemar_exact(5, 0) > 0.05 > mcnemar_exact(6, 0)
-    # Across the 8 trick agents, Holm asks the smallest p to beat 0.05 / 8,
-    # which takes 9. No trick agent here gains more than 1 case.
-    assert mcnemar_exact(8, 0) > 0.05 / len(GAMERS) > mcnemar_exact(9, 0)
-    assert len(GAMERS) == 8
+    # Across 10 comparisons, Holm asks the smallest p to beat 0.05 / 10,
+    # which takes 9.
+    assert mcnemar_exact(8, 0) > 0.05 / 10 > mcnemar_exact(9, 0)
+
+
+def test_the_comparison_table_printed_by_grader_attacks():
+    reference = run_suite(ReferenceAgent())
+    agents = (*GAMERS, Fabricator)
+    table = compare_many(reference, {a.name: run_suite(a()) for a in agents})
+    assert len(table) == 10
+    counts = {name: (len(c.gained), len(c.lost)) for name, c in table.items()}
+    assert counts == {
+        "hedger": (0, 1),
+        "cite-everything": (0, 1),
+        "always-abstain": (3, 9),
+        "number-spray": (1, 0),
+        "total-guess": (1, 0),
+        "mean-guess": (1, 0),
+        "sum-minus-largest": (0, 0),
+        "query-echo": (0, 0),
+        "first-document": (6, 6),
+        "fabricating-agent": (0, 9),
+    }
+    # The one difference that survives correction: inventing a citation.
+    fab = table["fabricating-agent"]
+    assert fab.p_value == pytest.approx(2 * 0.5**9)
+    assert fab.p_holm == pytest.approx(10 * 2 * 0.5**9) and fab.p_holm < 0.05
+    assert fab.ci95[1] < 0
+    assert table["always-abstain"].p_value == pytest.approx(0.14599609375)
+    assert all(c.p_holm == 1.0 for name, c in table.items() if name != "fabricating-agent")
+    text = render_comparison_markdown("the reference agent", table)
+    assert "Holm p corrects for 10 comparisons" in text
+    assert "| always-abstain | 3 | 9 | -0.143 | -0.298 to +0.025 | 0.146 | 1.000 |" in text
+    assert "| fabricating-agent | 0 | 9 | -0.214 | -0.339 to -0.070 | 0.004 | 0.039 |" in text
+
+
+def test_first_document_against_the_reference_in_fixture_order():
+    reference = run_suite(ReferenceAgent(), shuffle_seed=None)
+    c = compare(reference, run_suite(FirstDocument(), shuffle_seed=None))
+    assert (len(c.gained), len(c.lost)) == (12, 2)
+    assert c.p_value == pytest.approx(0.012939453125)
+    assert c.ci95 == pytest.approx((0.0622, 0.3923), abs=1e-4)
 
 
 def test_report_carries_intervals_per_tier_and_overall():

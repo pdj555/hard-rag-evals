@@ -102,7 +102,11 @@ class EvalResult:
     abstained: bool = False
     should_abstain: bool = False
     grader_version: str = ""  # set by runner.grade to provenance.GRADER_VERSION
-    dataset_version: str = ""  # set by runner.grade to provenance.DATASET_VERSION
+    dataset_version: str = ""  # set by runner.grade: the hash of the fixtures loaded
+    # The seed the documents were shuffled with before the agent saw them;
+    # None for fixture order; "n/a" when the answer was supplied from outside
+    # and graded directly, so no order was presented by this package.
+    shuffle_seed: int | str | None = "n/a"
 
     @property
     def failed_gates(self) -> list[str]:

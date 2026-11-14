@@ -1,5 +1,6 @@
-"""Document order carries no meaning: the grader must not read it, and the
-suite reports how much an agent's score moves when only the order changes."""
+"""Document order must not decide a score. The grader does not read it, runs
+shuffle it by default because fixture order leaks, and the suite reports how
+much an agent's score moves when only the order changes."""
 import json
 from pathlib import Path
 
@@ -7,9 +8,16 @@ import pytest
 
 from hard_rag_evals import Answer
 from hard_rag_evals.failure_modes import ALL_CASES
-from hard_rag_evals.gamers import GAMERS
+from hard_rag_evals.gamers import GAMERS, FirstDocument
 from hard_rag_evals.reference_agent import ReferenceAgent
-from hard_rag_evals.runner import grade, order_spread, permute_documents, run_suite
+from hard_rag_evals.runner import (
+    DEFAULT_SHUFFLE_SEED,
+    first_document_is_required,
+    grade,
+    order_spread,
+    permute_documents,
+    run_suite,
+)
 
 GOLD = json.loads((Path(__file__).parent / "gold_answers.json").read_text())
 GOLD.pop("_canary")
@@ -50,45 +58,69 @@ def test_gold_verdict_is_unchanged_under_permutation(case):
         assert shuffled.scores == base.scores, seed
 
 
-def test_run_suite_shuffle_seed_permutes_what_the_agent_sees():
-    seen = {}
+class Recorder:
+    name = "recorder"
 
-    class Recorder:
-        name = "recorder"
+    def __init__(self):
+        self.seen = {}
 
-        def answer(self, query, corpus, budget):
-            seen[query] = [d.id for d in corpus.documents]
-            return Answer(text="x")
-
-    run_suite(Recorder(), shuffle_seed=1)
-    shuffled = dict(seen)
-    run_suite(Recorder())
-    assert shuffled != seen
-    assert {q: sorted(v) for q, v in shuffled.items()} == {q: sorted(v) for q, v in seen.items()}
+    def answer(self, query, corpus, budget):
+        self.seen[query] = [d.id for d in corpus.documents]
+        return Answer(text="x")
 
 
-def test_reference_agent_and_gamers_are_order_invariant_on_twenty_seeds():
-    # Reported, not assumed: retrieval breaks ties by document id, so the
-    # order in the fixture never reaches the answer. Pinned here so a change
-    # that lets order leak in shows up.
+def _seen(**kw):
+    recorder = Recorder()
+    results = run_suite(recorder, **kw)
+    return recorder.seen, results
+
+
+def test_run_suite_shuffles_by_default_and_records_the_seed():
+    default, results = _seen()
+    explicit, _ = _seen(shuffle_seed=DEFAULT_SHUFFLE_SEED)
+    fixture, fixture_results = _seen(shuffle_seed=None)
+    other, other_results = _seen(shuffle_seed=1)
+    assert default == explicit
+    assert default != fixture and other != fixture and other != default
+    assert {q: sorted(v) for q, v in default.items()} == {q: sorted(v) for q, v in fixture.items()}
+    assert {r.shuffle_seed for r in results} == {DEFAULT_SHUFFLE_SEED} == {2026}
+    assert {r.shuffle_seed for r in fixture_results} == {None}
+    assert {r.shuffle_seed for r in other_results} == {1}
+    # what the agent is shown in fixture order is the fixture
+    assert fixture == {c.query: [d.id for d in c.corpus.documents] for c in ALL_CASES}
+
+
+def test_an_answer_graded_directly_records_that_no_order_was_presented():
+    assert grade(ALL_CASES[0], Answer(text="x")).shuffle_seed == "n/a"
+
+
+def test_fixture_order_puts_a_required_document_first():
+    # The leak. 33 of the 39 cases that require a citation list a required
+    # document first. Shuffled, it is first about half as often.
+    assert first_document_is_required(None) == (33, 39)
+    assert first_document_is_required(DEFAULT_SHUFFLE_SEED) == (22, 39)
+    shuffled = [first_document_is_required(seed)[0] for seed in range(20)]
+    assert (min(shuffled), max(shuffled)) == (15, 25)
+    assert sum(shuffled) / 20 == pytest.approx(18.85)
+
+
+def test_first_document_agent_wins_on_fixture_order_and_not_when_shuffled():
+    spread = order_spread(FirstDocument())
+    assert spread["fixture_order"] == 19
+    assert (spread["min"], spread["max"]) == (4, 12)
+    assert spread["mean"] == pytest.approx(7.0)
+    assert len(spread["flipped"]) >= 10
+    assert sum(r.passed for r in run_suite(FirstDocument())) == 9  # the default seed
+
+
+def test_reference_agent_and_its_variants_do_not_move_with_order():
+    # True by construction, pinned so a change that lets order leak in shows
+    # up: retrieval breaks ties by document id, so order never reaches these
+    # agents' answers.
     spread = order_spread(ReferenceAgent())
     assert spread["fixture_order"] == 9
     assert set(spread["by_seed"]) == set(range(20))
     assert (spread["min"], spread["max"], spread["flipped"]) == (9, 9, [])
     for gamer in GAMERS:
-        assert order_spread(gamer(), seeds=tuple(range(5)))["flipped"] == [], gamer.name
-
-
-def test_order_spread_reports_an_order_sensitive_agent():
-    class FirstDocument:
-        """Cites whatever document comes first. Its score is an accident of order."""
-
-        name = "first-document"
-
-        def answer(self, query, corpus, budget):
-            first = corpus.documents[0]
-            return Answer(text=first.text, citations=[first.id], retrieved_ids=[first.id])
-
-    spread = order_spread(FirstDocument())
-    assert spread["flipped"]
-    assert spread["min"] < spread["max"]
+        if gamer is not FirstDocument:
+            assert order_spread(gamer(), seeds=tuple(range(5)))["flipped"] == [], gamer.name

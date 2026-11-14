@@ -9,7 +9,7 @@ import pytest
 
 from hard_rag_evals import CANARY, DATASET_VERSION, GRADER_VERSION, Answer, failure_modes
 from hard_rag_evals.failure_modes import ALL_CASES
-from hard_rag_evals.provenance import CANARY_GUID, compute_dataset_version
+from hard_rag_evals.provenance import CANARY_GUID, EXPECTED_DATASET_VERSION, dataset_version
 from hard_rag_evals.reference_agent import ReferenceAgent
 from hard_rag_evals.runner import grade, render_markdown, run_suite
 
@@ -72,26 +72,43 @@ def test_every_result_records_the_grader_version():
     assert f"Grader version {GRADER_VERSION}, dataset version {DATASET_VERSION[:12]}." in report
 
 
-def test_committed_dataset_version_is_the_hash_of_the_fixtures():
+def test_dataset_version_is_computed_from_the_fixture_bytes_that_were_loaded():
+    loaded = failure_modes._LOADED
+    assert len(loaded) == 42
+    fixtures = resources.files("hard_rag_evals").joinpath("fixtures")
+    for name, raw in loaded.items():
+        assert fixtures.joinpath(name).read_bytes() == raw
     assert re.fullmatch(r"[0-9a-f]{64}", DATASET_VERSION)
-    assert DATASET_VERSION == compute_dataset_version()
+    assert DATASET_VERSION == failure_modes.DATASET_VERSION == dataset_version(loaded)
 
 
-def test_dataset_version_moves_when_any_fixture_byte_or_name_changes(monkeypatch, tmp_path):
-    from hard_rag_evals import provenance
+def test_dataset_version_moves_with_any_byte_or_name_and_ignores_line_endings():
+    base = {"a.json": b'{"x": 1}\n', "b.json": b"{}"}
+    version = dataset_version(base)
+    assert dataset_version(dict(reversed(base.items()))) == version
+    assert dataset_version({**base, "a.json": b'{"x": 2}\n'}) != version
+    assert dataset_version({"a.json": base["a.json"], "c.json": b"{}"}) != version
+    assert dataset_version({**base, "a.json": b'{"x": 1}\r\n'}) == version
 
-    (tmp_path / "fixtures").mkdir()
-    (tmp_path / "fixtures" / "a.json").write_text("{}")
-    (tmp_path / "fixtures" / "notes.txt").write_text("not a fixture")
-    monkeypatch.setattr(provenance.resources, "files", lambda _: tmp_path)
-    first = provenance.compute_dataset_version()
-    (tmp_path / "fixtures" / "notes.txt").write_text("still not a fixture")
-    assert provenance.compute_dataset_version() == first
-    (tmp_path / "fixtures" / "a.json").write_text("{ }")
-    second = provenance.compute_dataset_version()
-    assert second != first
-    (tmp_path / "fixtures" / "a.json").rename(tmp_path / "fixtures" / "b.json")
-    assert provenance.compute_dataset_version() not in (first, second)
+
+def test_a_changed_fixture_changes_what_results_are_stamped_with(monkeypatch, tmp_path):
+    # Not a constant: load a different fixture and the computed version differs.
+    fixtures = resources.files("hard_rag_evals").joinpath("fixtures")
+    raw = fixtures.joinpath("stale_docs.json").read_bytes()
+    (tmp_path / "stale_docs.json").write_bytes(raw.replace(b"1000", b"1001"))
+    monkeypatch.setattr(failure_modes, "_FIXTURE_DIR", tmp_path)
+    monkeypatch.setattr(failure_modes, "_LOADED", dict(failure_modes._LOADED))
+    failure_modes._load_fixture("stale_docs")
+    assert failure_modes._LOADED["stale_docs.json"] != raw
+    assert dataset_version(failure_modes._LOADED) != DATASET_VERSION
+
+
+def test_docs_were_written_against_this_dataset_version():
+    assert DATASET_VERSION == EXPECTED_DATASET_VERSION, (
+        "a fixture changed: the numbers in README.md and docs/ may be stale. Re-run "
+        "examples/demo.py and examples/grader_attacks.py, update the docs, then set "
+        f"EXPECTED_DATASET_VERSION in provenance.py to {DATASET_VERSION}"
+    )
 
 
 def test_every_result_and_document_records_the_dataset_version():

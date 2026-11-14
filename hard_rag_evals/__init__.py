@@ -1,6 +1,8 @@
 """hard-rag-evals: failure mode evals for agentic RAG."""
-from .provenance import CANARY, DATASET_VERSION, GRADER_VERSION
+from .failure_modes import DATASET_VERSION
+from .provenance import CANARY, GRADER_VERSION
 from .runner import (
+    DEFAULT_SHUFFLE_SEED,
     DIFFICULTY_ORDER,
     GATES,
     gate_breakdown,
@@ -16,6 +18,7 @@ from .runner import (
 from .types import Agent, Answer, Corpus, Document, EvalCase, EvalResult, RetrievalBudget
 
 __all__ = [
+    "DEFAULT_SHUFFLE_SEED",
     "CANARY",
     "DATASET_VERSION",
     "GRADER_VERSION",
