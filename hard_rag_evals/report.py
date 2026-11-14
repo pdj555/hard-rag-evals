@@ -12,7 +12,7 @@ import json
 from importlib import resources
 
 from . import stats
-from .provenance import CANARY, GRADER_VERSION
+from .provenance import CANARY, DATASET_VERSION, GRADER_VERSION
 from .runner import (
     DIFFICULTY_ORDER,
     gate_breakdown,
@@ -42,6 +42,7 @@ def _envelope(kind: str) -> dict:
         "kind": kind,
         "schema_version": SCHEMA_VERSION,
         "grader_version": GRADER_VERSION,
+        "dataset_version": DATASET_VERSION,
         "canary": CANARY,
     }
 
@@ -92,6 +93,7 @@ def result_dict(result: EvalResult) -> dict:
         "abstained": result.abstained,
         "should_abstain": result.should_abstain,
         "grader_version": result.grader_version,
+        "dataset_version": result.dataset_version,
     }
 
 

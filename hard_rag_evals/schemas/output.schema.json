@@ -262,7 +262,8 @@
         "notes",
         "abstained",
         "should_abstain",
-        "grader_version"
+        "grader_version",
+        "dataset_version"
       ],
       "properties": {
         "case_id": {
@@ -351,6 +352,11 @@
         "grader_version": {
           "type": "string",
           "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "dataset_version": {
+          "description": "sha256 over the case fixture files. Results are comparable only when this and grader_version both match.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
         }
       }
     },
@@ -393,6 +399,7 @@
         "kind",
         "schema_version",
         "grader_version",
+        "dataset_version",
         "canary",
         "cases"
       ],
@@ -416,6 +423,11 @@
           "items": {
             "$ref": "#/$defs/case_summary"
           }
+        },
+        "dataset_version": {
+          "description": "sha256 over the case fixture files. Results are comparable only when this and grader_version both match.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
         }
       }
     },
@@ -426,6 +438,7 @@
         "kind",
         "schema_version",
         "grader_version",
+        "dataset_version",
         "canary",
         "case"
       ],
@@ -446,6 +459,11 @@
         },
         "case": {
           "$ref": "#/$defs/public_case"
+        },
+        "dataset_version": {
+          "description": "sha256 over the case fixture files. Results are comparable only when this and grader_version both match.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
         }
       }
     },
@@ -456,6 +474,7 @@
         "kind",
         "schema_version",
         "grader_version",
+        "dataset_version",
         "canary",
         "error"
       ],
@@ -489,6 +508,11 @@
               "type": "string"
             }
           }
+        },
+        "dataset_version": {
+          "description": "sha256 over the case fixture files. Results are comparable only when this and grader_version both match.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
         }
       }
     },
@@ -499,6 +523,7 @@
         "kind",
         "schema_version",
         "grader_version",
+        "dataset_version",
         "canary",
         "agent",
         "config",
@@ -704,6 +729,11 @@
           "items": {
             "$ref": "#/$defs/result"
           }
+        },
+        "dataset_version": {
+          "description": "sha256 over the case fixture files. Results are comparable only when this and grader_version both match.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
         }
       }
     }

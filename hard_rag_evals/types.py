@@ -102,6 +102,7 @@ class EvalResult:
     abstained: bool = False
     should_abstain: bool = False
     grader_version: str = ""  # set by runner.grade to provenance.GRADER_VERSION
+    dataset_version: str = ""  # set by runner.grade to provenance.DATASET_VERSION
 
     @property
     def failed_gates(self) -> list[str]:

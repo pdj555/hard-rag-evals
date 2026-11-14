@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from hard_rag_evals.failure_modes import ALL_CASES  # noqa: E402
-from hard_rag_evals.provenance import CANARY, GRADER_VERSION  # noqa: E402
+from hard_rag_evals.provenance import CANARY, DATASET_VERSION, GRADER_VERSION  # noqa: E402
 
 
 def rows() -> list[dict]:
@@ -32,6 +32,7 @@ def rows() -> list[dict]:
         if row["canary"] != CANARY:
             raise ValueError(f"case {case.id} does not carry the canary")
         row["grader_version"] = GRADER_VERSION
+        row["dataset_version"] = DATASET_VERSION
         out.append(row)
     return out
 
@@ -46,7 +47,7 @@ def main(out_dir: str) -> None:
     ).stdout.strip()
     print(
         f"wrote {len(lines)} cases to {out / 'cases.jsonl'} from commit {commit or 'unknown'}, "
-        f"grader version {GRADER_VERSION}"
+        f"grader version {GRADER_VERSION}, dataset version {DATASET_VERSION}"
     )
 
 

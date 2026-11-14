@@ -43,7 +43,7 @@ There is no freshness check, no ordering check on documents, and no meaning chec
 
 Every fixture, the gold answers file, and every row of the exported dataset carry one canary string with a GUID, defined in `provenance.py`. A fixture without it does not load. If a model can complete the string, the suite was in its training data. The canary was added after the cases were first published, so copies taken before it do not carry it.
 
-Every result and every exported row also records `GRADER_VERSION`. It is bumped when a change to the grader can alter a verdict or a score, and two results are comparable only when it matches.
+Every result, report, and exported row also records `GRADER_VERSION` and `DATASET_VERSION`. The grader version is bumped by hand when a change to the grader can alter a verdict or a score. The dataset version is the sha256 of the fixture files, and a test fails when the committed value does not match them. Two results are comparable only when both versions match.
 
 ## Refusals
 

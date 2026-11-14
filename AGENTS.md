@@ -63,6 +63,7 @@ MCP tools: `list_cases(difficulty?, mode?)`, `get_case(case_id)`, `grade_answer(
 
 - The grader decides a pass in `runner.grade()`, from the gates in `runner.GATES`. Scores are reported and never decide a pass.
 - A change that can alter any verdict or score bumps `GRADER_VERSION` in `hard_rag_evals/provenance.py`. Never change `CANARY_GUID`.
+- A change to any fixture changes `DATASET_VERSION`. `tests/test_provenance.py` fails until the constant in `provenance.py` is set to the value the failure prints. Published cases are not edited to close a grader hole; fix the grader.
 - Every fixture carries the canary under `"canary"`; a fixture without it does not load.
 - `show`, `get_case` and `report.public_case` must never expose a case's gates, gold ids or expected answer.
 - `tests/test_gamers.py`, `tests/test_gates.py` and `tests/test_stats.py` pin exact counts. If a change moves one, update the pin and the number in `README.md` and `docs/` in the same commit, from what the code prints.

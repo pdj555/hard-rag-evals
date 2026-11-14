@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from hard_rag_evals import CANARY, GRADER_VERSION, Answer, failure_modes
+from hard_rag_evals import CANARY, DATASET_VERSION, GRADER_VERSION, Answer, failure_modes
 from hard_rag_evals.failure_modes import ALL_CASES
-from hard_rag_evals.provenance import CANARY_GUID
+from hard_rag_evals.provenance import CANARY_GUID, compute_dataset_version
 from hard_rag_evals.reference_agent import ReferenceAgent
 from hard_rag_evals.runner import grade, render_markdown, run_suite
 
@@ -54,6 +54,7 @@ def test_export_carries_the_canary_and_grader_version_on_every_row(tmp_path, cap
     rows = export.rows()
     assert len(rows) == 42
     assert all(r["canary"] == CANARY and r["grader_version"] == GRADER_VERSION for r in rows)
+    assert all(r["dataset_version"] == DATASET_VERSION for r in rows)
     export.main(str(tmp_path))
     lines = (tmp_path / "cases.jsonl").read_text().splitlines()
     assert len(lines) == 42
@@ -67,4 +68,37 @@ def test_every_result_records_the_grader_version():
     results = run_suite(ReferenceAgent())
     assert all(r.grader_version == GRADER_VERSION for r in results)
     assert grade(ALL_CASES[0], Answer(text="x")).grader_version == GRADER_VERSION
-    assert f"Grader version {GRADER_VERSION}." in render_markdown("reference-agent", results)
+    report = render_markdown("reference-agent", results)
+    assert f"Grader version {GRADER_VERSION}, dataset version {DATASET_VERSION[:12]}." in report
+
+
+def test_committed_dataset_version_is_the_hash_of_the_fixtures():
+    assert re.fullmatch(r"[0-9a-f]{64}", DATASET_VERSION)
+    assert DATASET_VERSION == compute_dataset_version()
+
+
+def test_dataset_version_moves_when_any_fixture_byte_or_name_changes(monkeypatch, tmp_path):
+    from hard_rag_evals import provenance
+
+    (tmp_path / "fixtures").mkdir()
+    (tmp_path / "fixtures" / "a.json").write_text("{}")
+    (tmp_path / "fixtures" / "notes.txt").write_text("not a fixture")
+    monkeypatch.setattr(provenance.resources, "files", lambda _: tmp_path)
+    first = provenance.compute_dataset_version()
+    (tmp_path / "fixtures" / "notes.txt").write_text("still not a fixture")
+    assert provenance.compute_dataset_version() == first
+    (tmp_path / "fixtures" / "a.json").write_text("{ }")
+    second = provenance.compute_dataset_version()
+    assert second != first
+    (tmp_path / "fixtures" / "a.json").rename(tmp_path / "fixtures" / "b.json")
+    assert provenance.compute_dataset_version() not in (first, second)
+
+
+def test_every_result_and_document_records_the_dataset_version():
+    from hard_rag_evals import report as R
+
+    results = run_suite(ReferenceAgent())
+    assert all(r.dataset_version == DATASET_VERSION for r in results)
+    document = R.report_document("reference-agent", results, {})
+    assert document["dataset_version"] == DATASET_VERSION
+    assert all(r["dataset_version"] == DATASET_VERSION for r in document["results"])
