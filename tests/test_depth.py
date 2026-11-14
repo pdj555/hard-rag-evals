@@ -91,12 +91,6 @@ def test_grade_numeric_rival_figure_fails_the_case():
     assert not grade(case, Answer(text="the total is 10 or 12 or 14")).passed
 
 
-def test_numeric_easy_cannot_be_passed_by_summing_everything():
-    case = next(c for c in ALL_CASES if c.id == "numeric-easy")
-    everything = sum(n for d in case.corpus.documents for n in M.extract_numbers(d.text))
-    assert abs(everything - case.numeric_expected) > case.numeric_tolerance
-
-
 # ---- mentions_in_order ----
 
 

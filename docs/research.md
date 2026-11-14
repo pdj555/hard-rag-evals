@@ -28,11 +28,14 @@ The one hard case the reference agent passes is citation fabrication at hard tie
 
 ## The grader can be gamed too
 
-Six agents each add one trick to the reference agent. Their results are pinned by tests, so hardening a check breaks the matching test and is recorded here. None of the six gains a case now.
+Eight agents each add one trick to the reference agent. Their results are pinned by tests, so hardening a check breaks the matching test and is recorded here.
+
+Still beaten:
+
+- The numeric check, on two cases. NumberSpray appends every number in the retrieved documents, every pairwise sum, and the grand total, and still wins numeric-easy. The gate used to pass when any number in the text was within tolerance. It now reads amounts only and fails an answer that states a rival amount, one that is neither within tolerance nor in the question or the documents. On numeric-hard that stops the spray: it holds the expected 10,000,000 and fails on 7,300,000, 8,900,000, and 13,100,000 beside it. On numeric-easy it cannot. The case has two inputs, so the spray is the two inputs and their one sum, which is also what a correct answer that shows its working looks like. TotalGuess, which appends only the sum of every number retrieved, wins the same case. MeanGuess appends the mean and wins numeric-medium, where the mean of the three quarters is the answer. SumMinusLargest gains nothing. Scores: NumberSpray, TotalGuess, and MeanGuess 10 of 42 each; SumMinusLargest 9 of 42.
 
 These were beaten before and hold now:
 
-- The numeric check. NumberSpray appends every number in the retrieved documents, every pairwise sum, and the grand total. The gate used to need one number in the text within tolerance of the expected value, and the spray won numeric-easy. The gate now wants the answer to commit: a figure within tolerance, and no other figure that the question and the documents do not supply. On numeric-hard the spray still contains the expected 10,000,000 and now fails the gate on the three other sums listed with it, 7.3, 8.9 and 13.1 million. On numeric-easy the old corpus held only the two inputs, so the spray was a single figure, the right one, and the new rule alone did not stop it. The case now carries a third document, full-year guidance of $21 million, that is not part of the sum. With it the spray lists rivals and fails, and so does TotalGuess, which appends only the sum of every number retrieved. Both score 9 of 42, the reference score.
 - The contradiction check. The Hedger cites every retrieved document and appends "However, the sources may conflict." It used to turn contradiction-medium and contradiction-hard into passes, because the check asked for both documents cited and one marker word anywhere. The check now asks for one sentence holding both claims and a marker. The hedge holds neither claim. The Hedger gains nothing and scores 8 of 42.
 - The order check. QueryEcho opens the answer with the question, "Which launched first, the Aurora X1 or the Vega S2?", which names Aurora before Vega without dating either. The check used to compare where the terms of each event first appear anywhere in the answer, and the echo won temporal-easy and temporal-hard. The check now counts an event only where one sentence names all of its terms. QueryEcho gains nothing and scores 9 of 42, the reference score.
 
@@ -49,7 +52,7 @@ The forbidden phrase gate is the one gate with no gaming agent aimed at it.
 - No model has been run through the suite. The repo has no model, API, or network code and zero runtime dependencies. Every score is a score of one scripted baseline and its variants.
 - The corpora are hand built by the suite's author, 1 to 50 short documents per case, with the gates written into the same fixtures. The gold answers are by the same author. No human baseline has been measured.
 - The contradiction check reads tokens, not meaning. "Changed from 14 to 30 days" names both claims and a marker and passes, though it gets the direction backwards. A genuine comparison that uses none of the 12 marker words fails.
-- The numeric tolerance is wide: 500,000 on an expected 10,000,000 is a 5 percent band. The commit rule reads digits, not meaning: an intermediate result written in digits counts as a rival figure and fails a correct answer, and a wrong figure written in words is not seen at all.
+- The numeric tolerance is wide: 500,000 on an expected 10,000,000 is a 5 percent band, and several guesses inside it all pass. The check reads amounts, not sentences: "It was not $10 million" passes, an intermediate result written as an amount fails a correct answer, and a figure written in words is not seen at all. It cannot tell a guessed operation from a computed one, which is how one appended sum wins numeric-easy and one appended mean wins numeric-medium.
 - The four scores (citation precision and recall, retrieval recall, faithfulness) never decide a pass, and faithfulness counts a citation as supported when it shares one content word with the answer. Each fixture also carries an "expected" answer in prose that the grader loads and never reads.
 
 ## Next

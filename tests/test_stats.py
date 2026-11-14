@@ -113,9 +113,19 @@ def test_no_gamer_differs_from_the_reference_after_correction():
         assert c.p_holm is not None and c.p_holm >= c.p_value, name
         assert c.ci95[0] < 0 < c.ci95[1], name
     assert table["always-abstain"].p_value == pytest.approx(0.14599609375)
-    assert table["always-abstain"].p_holm == pytest.approx(min(1.0, 6 * 0.14599609375))
+    assert table["always-abstain"].p_holm == pytest.approx(min(1.0, len(GAMERS) * 0.14599609375))
     text = render_comparison_markdown("the reference agent", table)
     assert "| always-abstain | 3 | 9 | -0.143 |" in text
+
+
+def test_the_paired_test_has_little_power_at_this_size():
+    # What "no significant difference" can and cannot mean here. Alone, an
+    # agent needs 6 discordant cases all in one direction to reach p < 0.05.
+    assert mcnemar_exact(5, 0) > 0.05 > mcnemar_exact(6, 0)
+    # Across the 8 trick agents, Holm asks the smallest p to beat 0.05 / 8,
+    # which takes 9. No trick agent here gains more than 1 case.
+    assert mcnemar_exact(8, 0) > 0.05 / len(GAMERS) > mcnemar_exact(9, 0)
+    assert len(GAMERS) == 8
 
 
 def test_report_carries_intervals_per_tier_and_overall():

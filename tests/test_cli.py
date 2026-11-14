@@ -143,7 +143,7 @@ def test_run_a_gamer_by_name_with_filters_and_seed(capsys):
 def test_every_built_in_agent_is_runnable_by_name(capsys):
     assert set(cli.AGENTS) == {
         "reference", "hedger", "cite-everything", "always-abstain", "number-spray",
-        "total-guess", "query-echo",
+        "total-guess", "mean-guess", "sum-minus-largest", "query-echo",
     }
     for name in cli.AGENTS:
         code, doc = run_json(capsys, "run", "--agent", name, "--difficulty", "easy")

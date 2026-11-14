@@ -21,7 +21,7 @@ A fixture holds:
 2. Every `must_cite` id is cited, and no `must_not_cite` id is cited.
 3. Every citation names a document in the corpus. One invented id fails the case.
 4. When the case sets conflicting claims, one sentence of the answer names both, each as a whole token, and contains at least one of 12 marker substrings: conflict, contradict, however, disagree, changed, updated, differs, whereas, although, supersede, replaced, inconsistent. A hedge with no claims in it fails, and so does a marker copied from one document next to only one claim. Which documents must be cited is set by `must_cite`, as everywhere else.
-5. When the case sets an expected number, the answer commits to it: at least one number in the answer lands within tolerance, and every other number in the answer is one the case supplies, in the question, a document's text, or a document's date. A number that is neither is a rival figure and fails the case, so a list of every possible sum fails. Numbers are extracted with K, M, and B scaling, so "$4,200K" reads as 4,200,000.
+5. When the case sets an expected number, the check reads the amounts in the answer and nothing else. An amount is a number written with a currency sign, with a scale word (thousand, million, billion, K, M, B), or with a value of at least 1,000. A bare small number is not an amount, so "2 quarters", "6 months", list numbering and "[1]" decide nothing, and a percentage never is. The case passes when at least one amount lands within tolerance and every other amount is a source figure: a number in the question, a document's text, or a document's date. An amount written without a scale word also matches a source a thousand, a million, or a billion times larger, so "$4.2 + $5.8 = $10 million" quotes its inputs. Any other amount is a rival and fails the case. If a case's expected value were below 1,000, every number except percentages would be read; no case is like that. Numbers are extracted with K, M, and B scaling, so "$4,200K" reads as 4,200,000.
 6. When the case sets an order pair, each event is named whole in one sentence, all of its terms together, and the first event is named before the second. When it sets forbidden phrases, none appears.
 
 Every result records the gates that applied to its case and whether each held, under eight names: abstention, required_citation, forbidden_citation, unknown_citation, contradiction, numeric, order, forbidden_phrase. The report counts failures by gate and by failure mode. A case can fail more than one gate, so the gate counts add up to more than the number of failed cases.
@@ -59,7 +59,7 @@ The intervals are wide because the suite is small: 0 of 5 brutal cases still all
 
 `reference_agent/agent.py` is the baseline: IDF weighted keyword retrieval inside the budget, then the two sentences per document with the most query overlap, each prefixed with its document id, citing what it copied from. It never abstains.
 
-`gamers.py` holds six variants, each the reference agent plus one change: Hedger (cite everything retrieved, append " However, the sources may conflict."), NumberSpray (append every number found, every pairwise sum, and the total), TotalGuess (append one figure, the sum of every number found), CiteEverything (cite everything retrieved, text unchanged), AlwaysAbstain (the same refusal on every case), QueryEcho (open the answer with the question). `tests/test_gamers.py` pins each gamer's exact gains and losses. If a check is hardened, the matching test should fail; update it and the research summary together.
+`gamers.py` holds eight variants, each the reference agent plus one change: Hedger (cite everything retrieved, append " However, the sources may conflict."), NumberSpray (append every number found, every pairwise sum, and the total), TotalGuess (append one figure, the sum of every number found), MeanGuess (append their mean), SumMinusLargest (append their sum without the largest), CiteEverything (cite everything retrieved, text unchanged), AlwaysAbstain (the same refusal on every case), QueryEcho (open the answer with the question). `tests/test_gamers.py` pins each gamer's exact gains and losses. If a check is hardened, the matching test should fail; update it and the research summary together.
 
 `examples/demo.py` also runs a fabricating variant: the reference agent plus one invented citation, "doc-does-not-exist-99", on every answer. It scores 0 of 42.
 
@@ -68,7 +68,7 @@ The intervals are wide because the suite is small: 0 of 5 brutal cases still all
 ```bash
 pip install -e .
 python examples/demo.py             # reference and fabricating agents, by tier
-python examples/grader_attacks.py   # the six gamers against the checks
+python examples/grader_attacks.py   # the eight gamers against the checks
 python -m pytest                    # 251 tests with the mcp extra, 86 of them gold answers passing and breaking
 ```
 

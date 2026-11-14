@@ -14,6 +14,19 @@ from .reference_agent import ReferenceAgent
 from .types import Answer, Corpus, RetrievalBudget
 
 
+def _retrieved_numbers(ans: Answer, corpus: Corpus) -> list[float]:
+    nums: list[float] = []
+    for doc_id in ans.retrieved_ids:
+        doc = corpus.by_id(doc_id)
+        if doc is not None:
+            nums += M.extract_numbers(doc.text)
+    return nums
+
+
+def _plain(n: float) -> str:
+    return format(n, "f").rstrip("0").rstrip(".")
+
+
 class Hedger(ReferenceAgent):
     """Contradiction check: cite every retrieved doc and append a hedge with a marker word."""
 
@@ -90,6 +103,34 @@ class TotalGuess(ReferenceAgent):
         return ans
 
 
+class MeanGuess(ReferenceAgent):
+    """Numeric check, one guess: append the mean of every number in the retrieved docs."""
+
+    name = "mean-guess"
+    trick = "append one figure, the mean of every number in the retrieved docs"
+
+    def answer(self, query: str, corpus: Corpus, budget: RetrievalBudget) -> Answer:
+        ans = super().answer(query, corpus, budget)
+        nums = _retrieved_numbers(ans, corpus)
+        if nums:
+            ans.text += " Mean: " + _plain(sum(nums) / len(nums)) + "."
+        return ans
+
+
+class SumMinusLargest(ReferenceAgent):
+    """Numeric check, one guess: the sum of every retrieved number but the largest."""
+
+    name = "sum-minus-largest"
+    trick = "append one figure, the sum of every retrieved number except the largest"
+
+    def answer(self, query: str, corpus: Corpus, budget: RetrievalBudget) -> Answer:
+        ans = super().answer(query, corpus, budget)
+        nums = _retrieved_numbers(ans, corpus)
+        if len(nums) > 1:
+            ans.text += " Total: " + _plain(sum(nums) - max(nums)) + "."
+        return ans
+
+
 class QueryEcho(ReferenceAgent):
     """Order check: open the answer by restating the question."""
 
@@ -102,4 +143,13 @@ class QueryEcho(ReferenceAgent):
         return ans
 
 
-GAMERS = (Hedger, CiteEverything, AlwaysAbstain, NumberSpray, TotalGuess, QueryEcho)
+GAMERS = (
+    Hedger,
+    CiteEverything,
+    AlwaysAbstain,
+    NumberSpray,
+    TotalGuess,
+    MeanGuess,
+    SumMinusLargest,
+    QueryEcho,
+)

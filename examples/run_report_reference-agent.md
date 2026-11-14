@@ -1,6 +1,6 @@
 # Eval report: reference-agent
 
-**9/42 cases passed.** Grader version 1.0.0.
+**9/42 cases passed.** Grader version 1.1.0.
 
 Intervals are exact 95% Clopper-Pearson intervals on the pass rate.
 
