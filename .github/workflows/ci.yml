@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
-      - run: python -m pip install -e '.[dev,mcp]'
+      - run: python -m pip install -e '.[dev,mcp,models]'
       - run: python -m ruff check .
       - run: python -m pytest
 

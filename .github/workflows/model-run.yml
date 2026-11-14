@@ -1,0 +1,84 @@
+name: model-run
+
+# Runs scripts/model_run.py against real models. It spends money, so it starts
+# only by hand (Actions tab or `gh workflow run model-run.yml`), which needs
+# write access to this repository. It never runs on a push or a pull request,
+# so a fork can neither start it nor reach the ANTHROPIC_API_KEY secret.
+on:
+  workflow_dispatch:
+    inputs:
+      max_usd:
+        description: "Hard spending cap for the whole run, in US dollars"
+        required: true
+        default: "10"
+      models:
+        description: "Model ids, comma separated"
+        required: true
+        default: "claude-haiku-5-5,claude-sonnet-5-5,claude-opus-5-5"
+      trials:
+        description: "Times each model answers every case"
+        required: true
+        default: "3"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: model-run
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - run: python -m pip install -e '.[models]'
+      - name: Price the run (no calls)
+        env:
+          MAX_USD: ${{ inputs.max_usd }}
+          MODELS: ${{ inputs.models }}
+          TRIALS: ${{ inputs.trials }}
+        run: |
+          python scripts/model_run.py --estimate \
+            --models "$MODELS" --trials "$TRIALS" --max-usd "$MAX_USD" \
+            --prereg docs/prereg/model-run-1.json --out "$RUNNER_TEMP/model-run" | tee estimate.txt
+          if grep -q "ABOVE THE CAP" estimate.txt; then
+            echo "::warning::The estimate is above max_usd. The run will stop at the cap, be marked incomplete, and make no claim."
+          fi
+      - name: Check the API key is configured
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::The ANTHROPIC_API_KEY repository secret is not set. Add it under Settings > Secrets and variables > Actions, then start the workflow again. Nothing was spent."
+            exit 1
+          fi
+      - name: Run the models
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MAX_USD: ${{ inputs.max_usd }}
+          MODELS: ${{ inputs.models }}
+          TRIALS: ${{ inputs.trials }}
+        run: |
+          python scripts/model_run.py \
+            --models "$MODELS" --trials "$TRIALS" --max-usd "$MAX_USD" \
+            --prereg docs/prereg/model-run-1.json --out "$RUNNER_TEMP/model-run"
+      # Answers, per-case reports, call logs and the summary, kept 90 days.
+      # The repository holds no run output; numbers reach the docs by hand,
+      # in a pull request.
+      - name: Keep the run
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: model-run-${{ github.run_id }}
+          path: ${{ runner.temp }}/model-run
+          if-no-files-found: ignore
+      - name: Show the summary
+        if: always()
+        run: |
+          [ -f "$RUNNER_TEMP/model-run/summary.md" ] || { echo "no summary was written"; exit 0; }
+          cat "$RUNNER_TEMP/model-run/summary.md" >> "$GITHUB_STEP_SUMMARY"
