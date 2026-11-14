@@ -13,6 +13,7 @@ from dataclasses import replace
 from . import metrics as M
 from . import stats
 from .failure_modes import ALL_CASES
+from .provenance import GRADER_VERSION
 from .types import Agent, Corpus, EvalCase, EvalResult
 
 DIFFICULTY_ORDER = ("easy", "medium", "hard", "brutal")
@@ -114,6 +115,7 @@ def grade(case: EvalCase, answer) -> EvalResult:
         gates=gates,
         abstained=bool(answer.abstained),
         should_abstain=case.should_abstain,
+        grader_version=GRADER_VERSION,
     )
 
 
@@ -253,7 +255,12 @@ def refusal_summary(results: list[EvalResult]) -> dict[str, dict | None]:
 
 def render_markdown(agent_name: str, results: list[EvalResult]) -> str:
     passed = sum(1 for r in results if r.passed)
-    lines = [f"# Eval report: {agent_name}", "", f"**{passed}/{len(results)} cases passed.**", ""]
+    lines = [
+        f"# Eval report: {agent_name}",
+        "",
+        f"**{passed}/{len(results)} cases passed.** Grader version {GRADER_VERSION}.",
+        "",
+    ]
     lines += [
         "Intervals are exact 95% Clopper-Pearson intervals on the pass rate.",
         "",

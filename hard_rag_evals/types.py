@@ -81,6 +81,7 @@ class EvalCase:
     numeric_tolerance: float = 0.0
     order_check: tuple[tuple[str, ...], tuple[str, ...]] | None = None
     forbidden_phrases: tuple[str, ...] = ()
+    canary: str = ""  # the contamination canary its fixture carries
 
 
 @dataclass
@@ -100,6 +101,7 @@ class EvalResult:
     # counted separately from answering an unanswerable one.
     abstained: bool = False
     should_abstain: bool = False
+    grader_version: str = ""  # set by runner.grade to provenance.GRADER_VERSION
 
     @property
     def failed_gates(self) -> list[str]:

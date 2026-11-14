@@ -1,6 +1,6 @@
 # Eval report: fabricating-agent
 
-**0/42 cases passed.**
+**0/42 cases passed.** Grader version 1.0.0.
 
 Intervals are exact 95% Clopper-Pearson intervals on the pass rate.
 

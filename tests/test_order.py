@@ -12,6 +12,7 @@ from hard_rag_evals.reference_agent import ReferenceAgent
 from hard_rag_evals.runner import grade, order_spread, permute_documents, run_suite
 
 GOLD = json.loads((Path(__file__).parent / "gold_answers.json").read_text())
+GOLD.pop("_canary")
 SEEDS = tuple(range(10))
 
 

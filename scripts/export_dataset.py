@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from hard_rag_evals.failure_modes import ALL_CASES  # noqa: E402
+from hard_rag_evals.provenance import CANARY, GRADER_VERSION  # noqa: E402
 
 
 def rows() -> list[dict]:
@@ -26,6 +27,11 @@ def rows() -> list[dict]:
         row = asdict(case)
         row["corpus"] = {"documents": [asdict(d) for d in case.corpus.documents]}
         row["reference_answer"] = gold[case.id]
+        # Every row carries the canary and the grader version on its own, so a
+        # single line lifted out of the file can still be traced and filtered.
+        if row["canary"] != CANARY:
+            raise ValueError(f"case {case.id} does not carry the canary")
+        row["grader_version"] = GRADER_VERSION
         out.append(row)
     return out
 
@@ -38,7 +44,10 @@ def main(out_dir: str) -> None:
     commit = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True
     ).stdout.strip()
-    print(f"wrote {len(lines)} cases to {out / 'cases.jsonl'} from commit {commit or 'unknown'}")
+    print(
+        f"wrote {len(lines)} cases to {out / 'cases.jsonl'} from commit {commit or 'unknown'}, "
+        f"grader version {GRADER_VERSION}"
+    )
 
 
 if __name__ == "__main__":

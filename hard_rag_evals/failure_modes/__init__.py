@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 from importlib import resources
 
+from ..provenance import CANARY
 from ..types import Corpus, Document, EvalCase, RetrievalBudget
 
 _FIXTURE_DIR = resources.files(__package__).joinpath("../fixtures")
@@ -17,7 +18,13 @@ _FIXTURE_DIR = resources.files(__package__).joinpath("../fixtures")
 
 def _load_fixture(name: str) -> dict:
     path = _FIXTURE_DIR.joinpath(f"{name}.json")
-    return json.loads(path.read_text())
+    fixture = json.loads(path.read_text())
+    if fixture.get("canary") != CANARY:
+        raise ValueError(
+            f"fixture {name}.json does not carry the contamination canary; "
+            "every case fixture must hold it under the key 'canary'"
+        )
+    return fixture
 
 
 def _build_case(
@@ -61,6 +68,7 @@ def _build_case(
             else None
         ),
         forbidden_phrases=tuple(f.get("forbidden_phrases", [])),
+        canary=f["canary"],
     )
 
 

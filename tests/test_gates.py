@@ -26,6 +26,7 @@ REFERENCE_FAILED_BY_GATE = {
     "forbidden_phrase": 1,
 }
 GOLD = json.loads((Path(__file__).parent / "gold_answers.json").read_text())
+GOLD.pop("_canary")
 
 
 def _case(**kw):

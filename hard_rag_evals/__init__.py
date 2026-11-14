@@ -1,4 +1,5 @@
 """hard-rag-evals: failure mode evals for agentic RAG."""
+from .provenance import CANARY, GRADER_VERSION
 from .runner import (
     DIFFICULTY_ORDER,
     GATES,
@@ -15,6 +16,8 @@ from .runner import (
 from .types import Agent, Answer, Corpus, Document, EvalCase, EvalResult, RetrievalBudget
 
 __all__ = [
+    "CANARY",
+    "GRADER_VERSION",
     "DIFFICULTY_ORDER",
     "GATES",
     "Agent",

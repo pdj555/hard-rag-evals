@@ -39,6 +39,12 @@ Four scores are computed for every case and never decide a pass:
 
 There is no freshness check, no ordering check on documents, and no meaning check in the grader. When a stale or wrong document fails a case, it fails because the fixture author listed that document as forbidden, or required a different one.
 
+## Provenance
+
+Every fixture, the gold answers file, and every row of the exported dataset carry one canary string with a GUID, defined in `provenance.py`. A fixture without it does not load. If a model can complete the string, the suite was in its training data. The canary was added after the cases were first published, so copies taken before it do not carry it.
+
+Every result and every exported row also records `GRADER_VERSION`. It is bumped when a change to the grader can alter a verdict or a score, and two results are comparable only when it matches.
+
 ## Refusals
 
 The abstention gate fails in two directions, and the report counts them apart. Over-refusal is the share of the 39 answerable cases the agent refused. Correct abstention is the share of the 3 unanswerable cases it refused. The reference agent never refuses: 0 of 39 and 0 of 3. AlwaysAbstain is 39 of 39 and 3 of 3. With only 3 unanswerable cases the second rate is weak evidence: 0 of 3 has a 95% interval of 0.00 to 0.71.
