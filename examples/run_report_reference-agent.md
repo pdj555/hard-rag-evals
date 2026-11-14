@@ -1,6 +1,6 @@
 # Eval report: reference-agent
 
-**9/42 cases passed.** Grader version 1.3.0, dataset version 343cfc03b4b0. Documents shuffled with seed 2026.
+**9/42 cases passed.** Grader version 1.4.0, dataset version 343cfc03b4b0. Documents shuffled with seed 2026.
 
 Intervals are exact 95% Clopper-Pearson intervals on the pass rate.
 
@@ -26,6 +26,7 @@ Failures by gate. A case can fail more than one.
 | required_citation | 6 | 39 |
 | forbidden_citation | 15 | 16 |
 | unknown_citation | 0 | 42 |
+| unretrieved_citation | 0 | 42 |
 | contradiction | 5 | 5 |
 | numeric | 4 | 4 |
 | order | 2 | 3 |

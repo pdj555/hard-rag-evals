@@ -19,6 +19,11 @@ def test_export_has_every_case_with_a_passing_reference_answer():
     assert [r["id"] for r in rows] == [c.id for c in ALL_CASES]
     for row in rows:
         ref = row["reference_answer"]
-        answer = Answer(text=ref["text"], citations=list(ref["citations"]), abstained=ref["abstained"])
+        answer = Answer(
+            text=ref["text"],
+            citations=list(ref["citations"]),
+            retrieved_ids=list(ref["retrieved_ids"]),
+            abstained=ref["abstained"],
+        )
         assert grade(cases[row["id"]], answer).passed, row["id"]
         assert {d["id"] for d in row["corpus"]["documents"]} == cases[row["id"]].corpus.ids

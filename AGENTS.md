@@ -37,7 +37,7 @@ hard-rag-evals mcp                                 # MCP server on stdio, for an
 hard-rag-evals --version                           # package, grader and dataset versions
 ```
 
-`python -m hard_rag_evals` is the same command. Built-in agents for `run --agent`: `reference`, `fabricating`, `hedger`, `cite-everything`, `always-abstain`, `number-spray`, `total-guess`, `mean-guess`, `sum-minus-largest`, `query-echo`, `first-document`, `overlap-document`, `greatest-id-document`, `newest-document`, `shortest-document`.
+`python -m hard_rag_evals` is the same command. Built-in agents for `run --agent`: `reference`, `fabricating`, `hedger`, `cite-everything`, `always-abstain`, `number-spray`, `total-guess`, `mean-guess`, `sum-minus-largest`, `query-echo`, `budget-smuggler`, `first-document`, `overlap-document`, `greatest-id-document`, `newest-document`, `shortest-document`.
 
 `run` and `show` shuffle each case's documents with seed 2026 and record the seed. `--shuffle-seed N` picks another. `--fixture-order` keeps the order in the fixture, which lists a required document first in 33 of 39 cases; use it only to reproduce that leak. Flags cannot be abbreviated.
 
@@ -49,7 +49,7 @@ Answers file for `grade`: JSON Lines in UTF-8, one object per case. A file and s
 {"case_id": "c-03854abeb347", "text": "Start a return in the warranty portal.", "citations": ["doc-id"], "abstained": false}
 ```
 
-`case_id` and `text` are required. `citations`, `abstained` and `retrieved_ids` are optional. Any other key is an error, and so is a key given twice in one object. Every case must be answered unless `--allow-partial` is passed; a partial report says "N of 42 cases graded", lists the cases not graded, and exits 1 even when everything graded passed. The same holds for `run` with `--difficulty` or `--mode`. Exit 0 means the whole suite passed. `-` reads stdin.
+`case_id` and `text` are required. `citations`, `abstained` and `retrieved_ids` are optional, but every citation of a document in the case must also be listed in `retrieved_ids`, or the case fails. Any other key is an error, and so is a key given twice in one object. Every case must be answered unless `--allow-partial` is passed; a partial report says "N of 42 cases graded", lists the cases not graded, and exits 1 even when everything graded passed. The same holds for `run` with `--difficulty` or `--mode`. Exit 0 means the whole suite passed. `-` reads stdin.
 
 Exit codes:
 
@@ -78,7 +78,7 @@ MCP tools on the default server:
 
 ## Rules for changes
 
-- The grader decides a pass in `runner.grade()`, from the gates in `runner.GATES`. The budget gate reads `retrieved_ids`: report every document your agent read there, or your result on the 11 budget-bound cases is not comparable to anyone's. Scores are reported and never decide a pass.
+- The grader decides a pass in `runner.grade()`, from the gates in `runner.GATES`. The budget gate reads `retrieved_ids`: report every document your agent read there, or your result on the 11 budget-bound cases is not comparable to anyone's. The unretrieved citation gate fails a citation that is not in `retrieved_ids`. Scores are reported and never decide a pass.
 - A change that can alter any verdict or score bumps `GRADER_VERSION` in `hard_rag_evals/provenance.py`. Never change `CANARY_GUID`.
 - `DATASET_VERSION` is computed at import from the cases as built: fixture content plus the ids, tiers, modes and budgets set in `failure_modes/*.py`. A change to any of them changes it, and `tests/test_provenance.py` fails until the docs are brought up to date and `EXPECTED_DATASET_VERSION` in `provenance.py` is set to the new value. Published cases are not edited to close a grader hole; fix the grader or the harness.
 - Never show an agent documents in fixture order by default. `run_suite`, `show` and `get_case` shuffle; keep it that way.

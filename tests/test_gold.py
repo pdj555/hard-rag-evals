@@ -3,8 +3,8 @@
 tests/gold_answers.json holds one hand-written answer per case. Each must pass
 its case. Then each gold answer is broken one way at a time, and each break must
 fail: a case that still passes after losing a required citation, gaining a
-forbidden or invented one, or flipping its abstention has a gate that decides
-nothing.
+forbidden or invented one, leaving a cited document out of retrieved_ids, or
+flipping its abstention has a gate that decides nothing.
 """
 import json
 from dataclasses import replace
@@ -23,11 +23,24 @@ CASES = {c.id: c for c in ALL_CASES}
 
 def _gold(case_id: str) -> Answer:
     g = GOLD[case_id]
-    return Answer(text=g["text"], citations=list(g["citations"]), abstained=g["abstained"])
+    return Answer(
+        text=g["text"],
+        citations=list(g["citations"]),
+        retrieved_ids=list(g["retrieved_ids"]),
+        abstained=g["abstained"],
+    )
 
 
 def test_one_gold_answer_per_case():
     assert set(GOLD) == set(CASES)
+
+
+def test_gold_answers_report_retrieving_what_they_cite():
+    # Each gold answer reports exactly the documents it cites as retrieved: the
+    # least it could have read. A gold answer that listed nothing would fail
+    # the unretrieved citation gate on every case that cites a document.
+    for case_id, g in GOLD.items():
+        assert g["retrieved_ids"] == g["citations"], case_id
 
 
 @pytest.mark.parametrize("case_id", sorted(CASES))
@@ -46,6 +59,9 @@ def test_breaking_the_gold_answer_fails(case_id):
         broken.append((f"cite {doc_id}", replace(gold, citations=gold.citations + [doc_id])))
     broken.append(("invent a citation", replace(gold, citations=gold.citations + ["doc-not-in-corpus"])))
     broken.append(("flip abstention", replace(gold, abstained=not gold.abstained)))
+    for doc_id in gold.citations:
+        unreported = [d for d in gold.retrieved_ids if d != doc_id]
+        broken.append((f"leave {doc_id} out of retrieved_ids", replace(gold, retrieved_ids=unreported)))
     if case.conflict_claims is not None:
         hedged = "The sources may conflict. " + " ".join(case.conflict_claims)
         broken.append(("hedge instead of comparing", replace(gold, text=hedged)))
