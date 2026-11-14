@@ -81,6 +81,7 @@ class EvalCase:
     numeric_tolerance: float = 0.0
     order_check: tuple[tuple[str, ...], tuple[str, ...]] | None = None
     forbidden_phrases: tuple[str, ...] = ()
+    canary: str = ""  # the contamination canary its fixture carries
 
 
 @dataclass
@@ -91,3 +92,22 @@ class EvalResult:
     scores: dict[str, float]
     notes: list[str]
     difficulty: str = "medium"
+    # One entry per gate that applies to the case, True when it held. A case
+    # passes exactly when every entry is True. Gate names are in runner.GATES.
+    gates: dict[str, bool] = field(default_factory=dict)
+
+    # What the agent did and what the case wanted, kept apart from the
+    # abstention gate so refusing an answerable question (over-refusal) can be
+    # counted separately from answering an unanswerable one.
+    abstained: bool = False
+    should_abstain: bool = False
+    grader_version: str = ""  # set by runner.grade to provenance.GRADER_VERSION
+    dataset_version: str = ""  # set by runner.grade: the hash of the fixtures loaded
+    # The seed the documents were shuffled with before the agent saw them;
+    # None for fixture order; "n/a" when the answer was supplied from outside
+    # and graded directly, so no order was presented by this package.
+    shuffle_seed: int | str | None = "n/a"
+
+    @property
+    def failed_gates(self) -> list[str]:
+        return [g for g, ok in self.gates.items() if not ok]

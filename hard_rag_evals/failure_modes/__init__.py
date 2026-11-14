@@ -8,8 +8,10 @@ their system still has.
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from importlib import resources
 
+from ..provenance import CANARY, dataset_version
 from ..types import Corpus, Document, EvalCase, RetrievalBudget
 
 _FIXTURE_DIR = resources.files(__package__).joinpath("../fixtures")
@@ -17,7 +19,13 @@ _FIXTURE_DIR = resources.files(__package__).joinpath("../fixtures")
 
 def _load_fixture(name: str) -> dict:
     path = _FIXTURE_DIR.joinpath(f"{name}.json")
-    return json.loads(path.read_text())
+    fixture = json.loads(path.read_bytes().decode("utf-8"))
+    if fixture.get("canary") != CANARY:
+        raise ValueError(
+            f"fixture {name}.json does not carry the contamination canary; "
+            "every case fixture must hold it under the key 'canary'"
+        )
+    return fixture
 
 
 def _build_case(
@@ -61,6 +69,7 @@ def _build_case(
             else None
         ),
         forbidden_phrases=tuple(f.get("forbidden_phrases", [])),
+        canary=f["canary"],
     )
 
 
@@ -105,3 +114,8 @@ ALL_CASES: list[EvalCase] = (
     + adversarial.build_all()
     + compositional.build_all()
 )
+
+# The hash of these cases as built: fixture content plus the ids, tiers, modes
+# and budgets set in the builders. Every result, report and exported row
+# carries it beside the grader version.
+DATASET_VERSION = dataset_version([asdict(c) for c in ALL_CASES])
