@@ -171,6 +171,11 @@ def compare_many(
     }
 
 
+def _cell(text: object) -> str:
+    flat = " ".join(str(text).split())
+    return flat.replace("\\", "\\\\").replace("|", "\\|")
+
+
 def render_comparison_markdown(
     baseline_name: str, comparisons: dict[str, PairedComparison]
 ) -> str:
@@ -186,7 +191,7 @@ def render_comparison_markdown(
         lo, hi = c.ci95
         holm_p = "" if c.p_holm is None else f"{c.p_holm:.3f}"
         lines.append(
-            f"| {name} | {len(c.gained)} | {len(c.lost)} | {c.difference:+.3f} "
+            f"| {_cell(name)} | {len(c.gained)} | {len(c.lost)} | {c.difference:+.3f} "
             f"| {lo:+.3f} to {hi:+.3f} | {c.p_value:.3f} | {holm_p} |"
         )
     return "\n".join(lines) + "\n"

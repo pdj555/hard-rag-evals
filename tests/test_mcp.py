@@ -1,6 +1,11 @@
-"""The MCP server, driven in-process through the SDK's own client."""
+"""The MCP server, driven in-process through the SDK's own client.
+
+The default server is for an agent under test. These tests pin what it must
+not give away: no per-case grading, no failure modes, no descriptive ids.
+"""
 import asyncio
 import json
+import sys
 from pathlib import Path
 
 import jsonschema
@@ -8,123 +13,304 @@ import pytest
 
 pytest.importorskip("mcp", reason="needs the mcp extra: pip install -e '.[mcp]'")
 
-from mcp import Client  # noqa: E402
+from mcp import Client, StdioServerParameters  # noqa: E402
 
-from hard_rag_evals import CANARY, GRADER_VERSION  # noqa: E402
+from hard_rag_evals import CANARY, DATASET_VERSION, GRADER_VERSION  # noqa: E402
 from hard_rag_evals import report as R  # noqa: E402
+from hard_rag_evals.cli import MODES  # noqa: E402
 from hard_rag_evals.failure_modes import ALL_CASES  # noqa: E402
-from hard_rag_evals.mcp_server import build_server  # noqa: E402
+from hard_rag_evals.mcp_server import MIN_SUBMISSION, build_server  # noqa: E402
 
 GOLD = json.loads((Path(__file__).parent / "gold_answers.json").read_text())
+GOLD.pop("_canary")
 SCHEMA = R.load_schema()
 VALIDATOR = jsonschema.Draft202012Validator(SCHEMA)
 RESULT = jsonschema.Draft202012Validator({**SCHEMA["$defs"]["result"], "$defs": SCHEMA["$defs"]})
+PID = {c.id: R.public_id(c.id) for c in ALL_CASES}
+PER_CASE_KEYS = {
+    "results", "result", "case_id", "public_id", "id", "mode", "gates", "failed_gates",
+    "should_abstain", "abstained", "notes", "scores", "citation_recall", "citation_precision",
+    "retrieval_recall", "faithfulness", "passed_cases", "failed_cases", "cases",
+}
 
 
-def session(coro_fn):
+def session(coro_fn, dev=False):
     async def go():
-        async with Client(build_server()) as client:
+        async with Client(build_server(dev=dev)) as client:
             return await coro_fn(client)
 
     return asyncio.run(go())
 
 
-def test_server_offers_the_three_tools():
+def gold_answers(ids=None, key=PID):
+    return [{"case_id": key[cid], **GOLD[cid]} for cid in (ids or GOLD)]
+
+
+def all_keys(obj):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            yield k
+            yield from all_keys(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            yield from all_keys(v)
+
+
+def leaks(text):
+    """Mode names, descriptive ids and public ids found in a blob of output."""
+    spaced = text.lower().replace("_", " ")
+    return (
+        [m for m in MODES if m in text or m.replace("_", " ") in spaced]
+        + [c.id for c in ALL_CASES if c.id in text]
+    )
+
+
+# ---- what the default server offers ----
+
+
+def test_default_server_has_no_per_case_grading_tool():
     tools = session(lambda c: c.list_tools()).tools
-    assert sorted(t.name for t in tools) == ["get_case", "grade_answer", "list_cases"]
-    grade = next(t for t in tools if t.name == "grade_answer")
-    assert set(grade.input_schema["required"]) == {"case_id", "text"}
+    assert sorted(t.name for t in tools) == ["get_case", "grade_submission", "list_cases"]
     assert all(t.description for t in tools)
 
+    async def go(c):
+        return await c.call_tool("grade_answer", {"case_id": PID["stale-easy"], "text": "x"})
 
-def test_list_cases():
+    try:
+        refused = session(go)
+    except Exception:
+        return  # the SDK raises for a tool that does not exist
+    assert refused.is_error
+
+
+def test_public_tools_carry_no_mode_and_no_descriptive_id():
+    async def go(c):
+        listed = await c.call_tool("list_cases", {})
+        cases = [await c.call_tool("get_case", {"case_id": pid}) for pid in PID.values()]
+        tools = await c.list_tools()
+        return listed, cases, tools
+
+    listed, cases, tools = session(go)
+    doc = listed.structured_content
+    VALIDATOR.validate(doc)
+    assert doc["canary"] == CANARY
+    ids = [c["id"] for c in doc["cases"]]
+    assert ids == sorted(PID.values())  # public order, not the suite's order by mode
+    assert all(set(c) == {"id", "difficulty", "query", "n_documents", "budget"} for c in doc["cases"])
+    blob = json.dumps(doc)
+    for result in cases:
+        VALIDATOR.validate(result.structured_content)
+        assert "mode" not in result.structured_content["case"]
+        blob += json.dumps(result.structured_content) + result.content[0].text
+    blob += json.dumps([t.model_dump(mode="json") for t in tools.tools])
+    assert leaks(blob) == []
+    for hidden in ("must_cite", "must_not_cite", "gold_doc_ids", "conflict_claims", "should_abstain"):
+        assert hidden not in blob
+
+
+def test_get_case_returns_the_task():
     async def go(c):
         return (
-            await c.call_tool("list_cases", {}),
+            await c.call_tool("get_case", {"case_id": PID["stale-medium"]}),
+            await c.call_tool("get_case", {"case_id": "stale-medium"}),
+            await c.call_tool("get_case", {"case_id": "c-000000000000"}),
             await c.call_tool("list_cases", {"difficulty": "brutal"}),
             await c.call_tool("list_cases", {"difficulty": "impossible"}),
-            await c.call_tool("list_cases", {"mode": "no_such_mode"}),
+            await c.call_tool("list_cases", {"mode": "unanswerable"}),
         )
 
-    everything, brutal, bad_tier, bad_mode = session(go)
-    doc = everything.structured_content
-    VALIDATOR.validate(doc)
-    assert [c["id"] for c in doc["cases"]] == [c.id for c in ALL_CASES]
-    assert doc["canary"] == CANARY
+    found, descriptive, missing, brutal, bad_tier, by_mode = session(go)
+    case = next(c for c in ALL_CASES if c.id == "stale-medium")
+    doc = found.structured_content["case"]
+    assert doc["id"] == PID["stale-medium"] and doc["query"] == case.query
+    assert {d["id"] for d in doc["documents"]} == case.corpus.ids
+    # a descriptive id is not accepted: answering to it would confirm a guess at the mode
+    assert descriptive.is_error and missing.is_error
     assert len(brutal.structured_content["cases"]) == 5
     assert bad_tier.is_error and "unknown difficulty" in bad_tier.content[0].text
-    assert bad_mode.is_error and "no case has mode" in bad_mode.content[0].text
+    # there is no mode filter to probe with
+    assert by_mode.is_error or len(by_mode.structured_content["cases"]) == 42
 
 
-def test_get_case_returns_the_task_without_the_answer_key():
+# ---- grade_submission ----
+
+
+def test_grade_submission_returns_aggregates_and_no_per_case_field():
     async def go(c):
-        return (
-            await c.call_tool("get_case", {"case_id": "stale-medium"}),
-            await c.call_tool("get_case", {"case_id": "no-such-case"}),
+        return await c.call_tool("grade_submission", {"answers": gold_answers()})
+
+    result = session(go)
+    assert not result.is_error
+    doc = result.structured_content
+    VALIDATOR.validate(doc)
+    assert set(doc) == {
+        "kind", "schema_version", "grader_version", "dataset_version", "canary",
+        "graded", "total_cases", "summary", "by_tier",
+    }
+    assert doc["kind"] == "submission"
+    assert (doc["graded"], doc["total_cases"]) == (42, 42)
+    assert (doc["summary"]["passed"], doc["summary"]["total"]) == (42, 42)
+    assert {t: (v["passed"], v["total"]) for t, v in doc["by_tier"].items()} == {
+        "easy": (12, 12), "medium": (12, 12), "hard": (13, 13), "brutal": (5, 5),
+    }
+    assert doc["grader_version"] == GRADER_VERSION and doc["dataset_version"] == DATASET_VERSION
+    assert not set(all_keys(doc)) & PER_CASE_KEYS
+    blob = json.dumps(doc) + result.content[0].text
+    assert leaks(blob) == [] and not any(pid in blob for pid in PID.values())
+
+
+def test_grade_submission_counts_failures_without_saying_which():
+    answers = gold_answers()
+    for a in answers[:7]:
+        a["citations"] = ["doc-not-in-corpus"]
+
+    async def go(c):
+        return await c.call_tool("grade_submission", {"answers": answers})
+
+    doc = session(go).structured_content
+    assert (doc["summary"]["passed"], doc["summary"]["total"]) == (35, 42)
+    assert not set(all_keys(doc)) & PER_CASE_KEYS
+    assert "doc-not-in-corpus" not in json.dumps(doc)
+
+
+def test_a_server_grades_one_submission_so_two_cannot_be_differenced():
+    flipped = gold_answers()
+    flipped[0]["abstained"] = not flipped[0]["abstained"]
+
+    async def go(c):
+        first = await c.call_tool("grade_submission", {"answers": gold_answers()})
+        second = await c.call_tool("grade_submission", {"answers": flipped})
+        return first, second
+
+    first, second = session(go)
+    assert not first.is_error
+    assert second.is_error and "already graded a submission" in second.content[0].text
+    assert second.structured_content is None
+
+
+def test_a_refused_submission_does_not_use_up_the_one_allowed():
+    async def go(c):
+        bad = await c.call_tool("grade_submission", {"answers": gold_answers()[:5]})
+        good = await c.call_tool("grade_submission", {"answers": gold_answers()})
+        return bad, good
+
+    bad, good = session(go)
+    assert bad.is_error and not good.is_error
+
+
+def test_a_single_case_cannot_be_graded_through_a_subset():
+    one = list(GOLD)[:1]
+    few = list(GOLD)[: MIN_SUBMISSION - 1]
+
+    async def go(c):
+        return [
+            await c.call_tool("grade_submission", {"answers": gold_answers(ids), "case_ids": [PID[i] for i in ids]})
+            for ids in (one, few)
+        ] + [await c.call_tool("grade_submission", {"answers": gold_answers(one)})]
+
+    for refused in session(go):
+        assert refused.is_error and refused.structured_content is None
+    assert MIN_SUBMISSION == 10
+
+
+def test_a_declared_subset_gets_the_overall_count_only():
+    ids = list(GOLD)[:12]
+
+    async def go(c):
+        return await c.call_tool(
+            "grade_submission", {"answers": gold_answers(ids), "case_ids": [PID[i] for i in ids]}
         )
 
-    found, missing = session(go)
-    doc = found.structured_content
+    doc = session(go).structured_content
     VALIDATOR.validate(doc)
-    case = next(c for c in ALL_CASES if c.id == "stale-medium")
-    assert doc["case"]["query"] == case.query
-    assert {d["id"] for d in doc["case"]["documents"]} == case.corpus.ids
-    for hidden in ("must_cite", "must_not_cite", "gold_doc_ids", "conflict_claims"):
-        assert hidden not in json.dumps(doc)
-    assert missing.is_error and "unknown case 'no-such-case'" in missing.content[0].text
+    assert (doc["graded"], doc["total_cases"]) == (12, 42)
+    assert doc["summary"]["total"] == 12
+    assert doc["by_tier"] is None  # a tier with one answered case would name its verdict
 
 
-def test_grade_answer_agrees_with_the_grader_on_every_gold_answer():
+@pytest.mark.parametrize(
+    "mutate,complaint",
+    [
+        (lambda a: a[0].update(case_id="stale-easy"), "unknown case"),
+        (lambda a: a[0].update(case_id="c-000000000000"), "unknown case"),
+        (lambda a: a.append(dict(a[0])), "answered more than once"),
+        (lambda a: a[0].update(citation=["x"]), "unknown keys"),
+        (lambda a: a[0].pop("text"), "'text' is required"),
+        (lambda a: a.pop(), "1 have no answer"),
+    ],
+)
+def test_grade_submission_rejects_malformed_submissions(mutate, complaint):
+    answers = gold_answers()
+    mutate(answers)
+
     async def go(c):
-        out = {}
-        for case in ALL_CASES:
-            g = GOLD[case.id]
-            out[case.id] = await c.call_tool(
-                "grade_answer",
-                {"case_id": case.id, "text": g["text"], "citations": g["citations"],
-                 "abstained": g["abstained"]},
-            )
-        return out
+        return await c.call_tool("grade_submission", {"answers": answers})
 
-    for case_id, result in session(go).items():
-        assert not result.is_error, case_id
-        RESULT.validate(result.structured_content)
-        assert result.structured_content["passed"], case_id
-        assert result.structured_content["grader_version"] == GRADER_VERSION
+    refused = session(go)
+    assert refused.is_error and complaint in refused.content[0].text
 
 
-def test_grade_answer_fails_a_bad_answer_and_withholds_notes_by_default():
+# ---- --dev ----
+
+
+def test_dev_server_adds_per_case_grading_and_says_what_it_costs():
     async def go(c):
+        tools = await c.list_tools()
         bad = {"case_id": "stale-medium", "text": "The limit is 100.", "citations": ["doc-ratelimit-2023"]}
         return (
+            tools,
             await c.call_tool("grade_answer", bad),
-            await c.call_tool("grade_answer", {**bad, "explain": True}),
-            await c.call_tool("grade_answer", {"case_id": "stale-medium"}),
-            await c.call_tool("grade_answer", {"case_id": "nope", "text": "x"}),
+            await c.call_tool("grade_answer", {"case_id": PID["stale-easy"], **GOLD["stale-easy"]}),
+            await c.call_tool("list_cases", {}),
+            await c.call_tool("grade_submission", {"answers": gold_answers(key={k: k for k in GOLD})}),
+            await c.call_tool("grade_submission", {"answers": gold_answers()}),
         )
 
-    quiet, explained, no_text, no_case = session(go)
-    q, e = quiet.structured_content, explained.structured_content
-    assert not q["passed"] and "forbidden_citation" in q["failed_gates"]
-    assert q["failed_gates"] == e["failed_gates"] and q["gates"] == e["gates"]
-    # the document names stay out unless asked for
-    assert "doc-ratelimit" not in json.dumps(q)
-    assert any("doc-ratelimit-2023" in n for n in e["notes"])
-    assert no_text.is_error and no_case.is_error
+    tools, bad, good, listed, first, second = session(go, dev=True)
+    assert sorted(t.name for t in tools.tools) == ["get_case", "grade_answer", "grade_submission", "list_cases"]
+    description = next(t.description for t in tools.tools if t.name == "grade_answer")
+    assert "DEV ONLY" in description and "means nothing" in description
+    RESULT.validate(bad.structured_content)
+    assert "forbidden_citation" in bad.structured_content["failed_gates"]
+    assert any("doc-ratelimit-2023" in n for n in bad.structured_content["notes"])
+    assert good.structured_content["passed"]
+    VALIDATOR.validate(listed.structured_content)
+    assert [c["case_id"] for c in listed.structured_content["cases"]] == [c.id for c in ALL_CASES]
+    assert listed.structured_content["cases"][0]["mode"] == ALL_CASES[0].mode
+    assert not first.is_error and not second.is_error  # no one-submission limit in dev
 
 
-def test_mcp_subcommand_serves_over_stdio():
-    import sys
+def test_dev_grade_answer_agrees_with_the_grader_on_every_gold_answer():
+    async def go(c):
+        return {
+            cid: await c.call_tool("grade_answer", {"case_id": cid, **GOLD[cid]}) for cid in GOLD
+        }
 
-    from mcp import StdioServerParameters
+    for case_id, result in session(go, dev=True).items():
+        assert not result.is_error, case_id
+        assert result.structured_content["passed"], case_id
 
+
+# ---- over real stdio ----
+
+
+def stdio(*flags):
     async def go():
-        params = StdioServerParameters(command=sys.executable, args=["-m", "hard_rag_evals", "mcp"])
+        params = StdioServerParameters(command=sys.executable, args=["-m", "hard_rag_evals", "mcp", *flags])
         async with Client(params) as client:
             tools = await client.list_tools()
             listed = await client.call_tool("list_cases", {"difficulty": "easy"})
-            return [t.name for t in tools.tools], listed.structured_content
+            return sorted(t.name for t in tools.tools), listed.structured_content
 
-    names, doc = asyncio.run(go())
-    assert sorted(names) == ["get_case", "grade_answer", "list_cases"]
-    assert len(doc["cases"]) == 12
+    return asyncio.run(go())
+
+
+def test_mcp_subcommand_serves_the_public_server_over_stdio():
+    names, doc = stdio()
+    assert names == ["get_case", "grade_submission", "list_cases"]
+    assert len(doc["cases"]) == 12 and "mode" not in doc["cases"][0]
+
+
+def test_mcp_subcommand_dev_flag_is_what_adds_grade_answer():
+    names, doc = stdio("--dev")
+    assert "grade_answer" in names and "mode" in doc["cases"][0]

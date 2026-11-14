@@ -254,11 +254,35 @@ def refusal_summary(results: list[EvalResult]) -> dict[str, dict | None]:
     }
 
 
-def render_markdown(agent_name: str, results: list[EvalResult]) -> str:
+def md_cell(text: object) -> str:
+    """Text made safe for one markdown table cell or one heading line. Notes
+    quote citation ids and the report quotes the agent's name, both of which
+    the agent under test controls: a pipe would add a column and a newline
+    would end the table, either of which can make a report say something the
+    grader did not."""
+    flat = " ".join(str(text).split())
+    return flat.replace("\\", "\\\\").replace("|", "\\|")
+
+
+def render_markdown(
+    agent_name: str,
+    results: list[EvalResult],
+    missing: list[str] | None = None,
+) -> str:
+    """The report as markdown. missing lists the cases a partial run left
+    ungraded; when it is not empty the report says so before any number."""
     passed = sum(1 for r in results if r.passed)
-    lines = [
-        f"# Eval report: {agent_name}",
-        "",
+    lines = [f"# Eval report: {md_cell(agent_name)}", ""]
+    if missing:
+        total = len(results) + len(missing)
+        lines += [
+            f"**Partial run: {len(results)} of {total} cases graded.** Every count below "
+            f"covers only those {len(results)}. Not graded: "
+            + ", ".join(md_cell(m) for m in missing)
+            + ".",
+            "",
+        ]
+    lines += [
         f"**{passed}/{len(results)} cases passed.** Grader version {GRADER_VERSION}, "
         f"dataset version {DATASET_VERSION[:12]}.",
         "",
@@ -307,7 +331,7 @@ def render_markdown(agent_name: str, results: list[EvalResult]) -> str:
     ]
     for mode, row in summary_by_mode(results).items():
         failed = ", ".join(f"{g} {n}" for g, n in row["failed_gates"].items()) or "none"
-        lines.append(f"| {mode} | {row['passed']}/{row['total']} | {failed} |")
+        lines.append(f"| {md_cell(mode)} | {row['passed']}/{row['total']} | {failed} |")
     lines += [
         "",
         "| case | tier | mode | pass | failed gates | cit_prec | cit_rec | ret_rec | faithful | notes |",
@@ -317,10 +341,11 @@ def render_markdown(agent_name: str, results: list[EvalResult]) -> str:
     for r in sorted(results, key=lambda r: order.get(r.difficulty, len(order))):
         s = r.scores
         lines.append(
-            f"| {r.case_id} | {r.difficulty} | {r.mode} | {'yes' if r.passed else 'no'} "
+            f"| {md_cell(r.case_id)} | {r.difficulty} | {md_cell(r.mode)} "
+            f"| {'yes' if r.passed else 'no'} "
             f"| {', '.join(r.failed_gates) or 'none'} "
             f"| {s['citation_precision']:.2f} | {s['citation_recall']:.2f} "
             f"| {s['retrieval_recall']:.2f} | {s['faithfulness']:.2f} "
-            f"| {'; '.join(r.notes)} |"
+            f"| {md_cell('; '.join(r.notes))} |"
         )
     return "\n".join(lines) + "\n"

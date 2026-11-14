@@ -26,7 +26,7 @@ A fixture holds:
 
 Every result records the gates that applied to its case and whether each held, under eight names: abstention, required_citation, forbidden_citation, unknown_citation, contradiction, numeric, order, forbidden_phrase. The report counts failures by gate and by failure mode. A case can fail more than one gate, so the gate counts add up to more than the number of failed cases.
 
-Grading is deterministic. Retrieval sorts by score with document id as the tiebreak, and there is no network call or model call anywhere in the package. The only randomness is opt-in and seeded: `run_suite(agent, shuffle_seed=N)` permutes each case's documents before the agent sees them, and `order_spread(agent)` reports the pass count across 20 such seeds and the cases whose verdict changed. Document order carries no meaning in any case. The grader's verdict on every gold answer is the same under 10 permutations, and the reference agent passes 9 of 42 under all 20 seeds, with no case changing; an agent that just cites the first document does move, and the spread shows it.
+Grading is deterministic. Retrieval sorts by score with document id as the tiebreak, and there is no network call or model call anywhere in the package. The only randomness is opt-in and seeded: `run_suite(agent, shuffle_seed=N)` permutes each case's documents before the agent sees them, and `order_spread(agent)` reports the pass count across 20 such seeds and the cases whose verdict changed. Document order carries no meaning in any case. The grader's verdict on every gold answer is the same under 10 permutations, and the reference agent passes 9 of 42 under all 20 seeds, with no case changing. Both follow from the code and are not findings: the grader looks documents up by id, and retrieval breaks ties by id. An agent that just cites the first document does move, and the spread shows it; the check earns its keep when a model is run.
 
 ## The scores
 
@@ -38,6 +38,14 @@ Four scores are computed for every case and never decide a pass:
 - Faithfulness: a cited document counts as supported when it shares at least one content word with the answer text. Treat this score as weak evidence; it is a word overlap count, not a check of meaning.
 
 There is no freshness check, no ordering check on documents, and no meaning check in the grader. When a stale or wrong document fails a case, it fails because the fixture author listed that document as forbidden, or required a different one.
+
+## What an agent under test sees
+
+A case has two views. The public view is an opaque id (`c-` and 12 hex characters, a hash of the descriptive id), the tier, the question, the documents, and the budget. It leaves out the failure mode, the descriptive id, which names the mode, the gates, and the gold ids. `hard-rag-evals list` and `show`, and the MCP tools `list_cases` and `get_case`, give the public view, sorted by public id, because the suite's own order groups cases by mode. `--dev` on any of them adds the descriptive id and the mode.
+
+Grading has two paths. `hard-rag-evals run` and `grade` are for the person running the eval: the report names every case and every failed gate. Over MCP the default server has no per-case grading. `grade_submission` takes answers for all 42 cases, or for a declared subset of at least 10, and returns passed and total with an interval, overall, and per tier only when all 42 were answered. A server process grades one submission, so two cannot be subtracted to find one case's verdict. `hard-rag-evals mcp --dev` adds `grade_answer`, which returns one case's gates and notes; that is the answer key a probe at a time, and a score from a `--dev` server means nothing.
+
+The limits: document ids belong to the published cases and some name the trap; the tier is shown; an agent that can restart the server can still compare whole submissions.
 
 ## Provenance
 
@@ -69,7 +77,7 @@ The intervals are wide because the suite is small: 0 of 5 brutal cases still all
 pip install -e .
 python examples/demo.py             # reference and fabricating agents, by tier
 python examples/grader_attacks.py   # the eight gamers against the checks
-python -m pytest                    # 251 tests with the mcp extra, 86 of them gold answers passing and breaking
+python -m pytest                    # 314 tests with the mcp extra, 86 of them gold answers passing and breaking
 ```
 
 ## Adding a case

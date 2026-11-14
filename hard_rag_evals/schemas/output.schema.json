@@ -15,6 +15,9 @@
     },
     {
       "$ref": "#/$defs/error"
+    },
+    {
+      "$ref": "#/$defs/submission"
     }
   ],
   "$defs": {
@@ -116,7 +119,6 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "mode",
         "difficulty",
         "query",
         "n_documents",
@@ -124,9 +126,12 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "description": "Opaque public id of a case: a stable hash of its descriptive id.",
+          "type": "string",
+          "pattern": "^c-[0-9a-f]{12}$"
         },
         "mode": {
+          "description": "Failure mode. Present only in the dev view.",
           "type": "string"
         },
         "difficulty": {
@@ -161,16 +166,27 @@
               "minimum": 1
             }
           }
+        },
+        "case_id": {
+          "description": "Descriptive case id. It names the failure mode, so it is present only in the dev view.",
+          "type": "string"
         }
+      },
+      "dependentRequired": {
+        "case_id": [
+          "mode"
+        ],
+        "mode": [
+          "case_id"
+        ]
       }
     },
     "public_case": {
-      "description": "A case as an agent under test sees it. Gates and gold document ids are left out on purpose.",
+      "description": "A case as an agent under test sees it: opaque id, tier, question, documents, budget. The failure mode and the descriptive id appear only in the dev view. Gates and gold document ids are never included.",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "id",
-        "mode",
         "difficulty",
         "query",
         "n_documents",
@@ -179,9 +195,12 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "description": "Opaque public id of a case: a stable hash of its descriptive id.",
+          "type": "string",
+          "pattern": "^c-[0-9a-f]{12}$"
         },
         "mode": {
+          "description": "Failure mode. Present only in the dev view.",
           "type": "string"
         },
         "difficulty": {
@@ -245,7 +264,19 @@
               }
             }
           }
+        },
+        "case_id": {
+          "description": "Descriptive case id. It names the failure mode, so it is present only in the dev view.",
+          "type": "string"
         }
+      },
+      "dependentRequired": {
+        "case_id": [
+          "mode"
+        ],
+        "mode": [
+          "case_id"
+        ]
       }
     },
     "result": {
@@ -253,6 +284,7 @@
       "additionalProperties": false,
       "required": [
         "case_id",
+        "public_id",
         "mode",
         "difficulty",
         "passed",
@@ -357,6 +389,11 @@
           "description": "sha256 over the case fixture files. Results are comparable only when this and grader_version both match.",
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
+        },
+        "public_id": {
+          "description": "Opaque public id of a case: a stable hash of its descriptive id.",
+          "type": "string",
+          "pattern": "^c-[0-9a-f]{12}$"
         }
       }
     },
@@ -408,7 +445,7 @@
           "const": "case_list"
         },
         "schema_version": {
-          "const": "1"
+          "const": "2"
         },
         "grader_version": {
           "type": "string",
@@ -447,7 +484,7 @@
           "const": "case"
         },
         "schema_version": {
-          "const": "1"
+          "const": "2"
         },
         "grader_version": {
           "type": "string",
@@ -483,7 +520,7 @@
           "const": "error"
         },
         "schema_version": {
-          "const": "1"
+          "const": "2"
         },
         "grader_version": {
           "type": "string",
@@ -502,7 +539,10 @@
           ],
           "properties": {
             "code": {
-              "const": "usage"
+              "enum": [
+                "usage",
+                "internal"
+              ]
             },
             "message": {
               "type": "string"
@@ -535,7 +575,7 @@
           "const": "report"
         },
         "schema_version": {
-          "const": "1"
+          "const": "2"
         },
         "grader_version": {
           "type": "string",
@@ -556,7 +596,8 @@
             "difficulty",
             "modes",
             "shuffle_seed",
-            "missing_case_ids"
+            "missing_case_ids",
+            "total_cases"
           ],
           "properties": {
             "source": {
@@ -608,6 +649,11 @@
               "items": {
                 "type": "string"
               }
+            },
+            "total_cases": {
+              "description": "Cases in the selection that was run or graded against.",
+              "type": "integer",
+              "minimum": 1
             }
           }
         },
@@ -734,6 +780,76 @@
           "description": "sha256 over the case fixture files. Results are comparable only when this and grader_version both match.",
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "submission": {
+      "description": "Aggregate result of grade_submission over MCP. Holds no per-case field of any kind.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schema_version",
+        "grader_version",
+        "dataset_version",
+        "canary",
+        "graded",
+        "total_cases",
+        "summary",
+        "by_tier"
+      ],
+      "properties": {
+        "kind": {
+          "const": "submission"
+        },
+        "schema_version": {
+          "const": "2"
+        },
+        "grader_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "dataset_version": {
+          "description": "sha256 over the case fixture files. Results are comparable only when this and grader_version both match.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "canary": {
+          "type": "string",
+          "pattern": "canary GUID [0-9a-f-]{36}$"
+        },
+        "graded": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "total_cases": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "summary": {
+          "$ref": "#/$defs/rate"
+        },
+        "by_tier": {
+          "description": "Per tier counts; null unless every case was answered.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "enum": [
+                  "easy",
+                  "medium",
+                  "hard",
+                  "brutal"
+                ]
+              },
+              "additionalProperties": {
+                "$ref": "#/$defs/rate"
+              }
+            }
+          ]
         }
       }
     }
