@@ -54,6 +54,49 @@ def test_numeric_answer_correct_quoting_inputs_fails():
     assert not M.numeric_answer_correct(ans, 10000000, 500000)
 
 
+def test_numeric_answer_may_quote_its_inputs_next_to_the_result():
+    ans = Answer(text="Total was $10 million: $4.2 million in Q1 plus $5.8 million in Q2.")
+    assert M.numeric_answer_correct(ans, 10000000, 500000, (4200000.0, 5800000.0))
+
+
+def test_numeric_answer_with_a_rival_figure_fails():
+    # The expected figure is there, and so is a second figure the documents
+    # do not supply. The answer has not picked.
+    ans = Answer(text="The total is $10 million, or $13.1 million.")
+    assert not M.numeric_answer_correct(ans, 10000000, 500000, (4200000.0, 5800000.0))
+
+
+def test_numeric_spray_of_every_sum_fails():
+    ans = Answer(text="Figures: 4200000, 5800000, 3100000, 10000000, 7300000, 8900000, 13100000.")
+    sources = (4200000.0, 5800000.0, 3100000.0)
+    assert not M.numeric_answer_correct(ans, 10000000, 500000, sources)
+
+
+def test_case_source_figures_cover_question_text_and_dates():
+    corpus = Corpus(
+        documents=(Document(id="a", text="Q1 was $4.2M.", source="t", published="2025-04-01"),)
+    )
+    assert set(M.case_source_figures("What about the 3 quarters?", corpus)) == {
+        3.0,
+        4200000.0,
+        2025.0,
+        4.0,
+        1.0,
+    }
+
+
+def test_grade_numeric_rival_figure_fails_the_case():
+    case = _case(numeric_expected=10.0, numeric_tolerance=0.5)
+    assert grade(case, Answer(text="the total is 10")).passed
+    assert not grade(case, Answer(text="the total is 10 or 12 or 14")).passed
+
+
+def test_numeric_easy_cannot_be_passed_by_summing_everything():
+    case = next(c for c in ALL_CASES if c.id == "numeric-easy")
+    everything = sum(n for d in case.corpus.documents for n in M.extract_numbers(d.text))
+    assert abs(everything - case.numeric_expected) > case.numeric_tolerance
+
+
 # ---- mentions_in_order ----
 
 

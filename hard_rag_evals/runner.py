@@ -61,12 +61,17 @@ def grade(case: EvalCase, answer) -> EvalResult:
         )
 
     if case.numeric_expected is not None:
-        ok = M.numeric_answer_correct(answer, case.numeric_expected, case.numeric_tolerance)
+        ok = M.numeric_answer_correct(
+            answer,
+            case.numeric_expected,
+            case.numeric_tolerance,
+            M.case_source_figures(case.query, case.corpus),
+        )
         passed = passed and ok
         notes.append(
-            "computed the expected number"
+            "committed to the expected number"
             if ok
-            else f"did not state the expected number {case.numeric_expected:g}"
+            else f"did not commit to the expected number {case.numeric_expected:g}"
         )
 
     if case.order_check is not None:

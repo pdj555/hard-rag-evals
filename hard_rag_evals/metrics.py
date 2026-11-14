@@ -131,10 +131,49 @@ def extract_numbers(text: str) -> list[float]:
     return out
 
 
-def numeric_answer_correct(answer: Answer, expected: float, tolerance: float) -> bool:
-    """True when some number in the answer is the expected result. Quoting
-    the inputs without combining them fails, because none of them is it."""
-    return any(abs(n - expected) <= tolerance for n in extract_numbers(answer.text))
+def _same_figure(a: float, b: float) -> bool:
+    return abs(a - b) <= 1e-9 * max(1.0, abs(a), abs(b))
+
+
+def numeric_answer_correct(
+    answer: Answer,
+    expected: float,
+    tolerance: float,
+    source_figures: tuple[float, ...] = (),
+) -> bool:
+    """True when the answer commits to the expected figure and to no other.
+
+    Every number in the answer is one of three things. A hit is within
+    tolerance of the expected value. A source figure equals a number the case
+    itself supplies (passed in as source_figures: the numbers in the documents,
+    their dates, and the question), so quoting the inputs next to the result is
+    free. Anything else is a figure the answer asserts on its own, a rival.
+
+    The check passes when there is at least one hit and no rival. Quoting the
+    inputs without combining them fails, because none of them is a hit. Listing
+    every sum the inputs can make fails too, because every sum but one is a
+    rival: the answer has to pick.
+
+    The cost is stated in the README: an intermediate result written as a
+    digit, "2024 + 2 = 2026, plus 1 is 2027", is a rival and fails.
+    """
+    hit = False
+    for n in extract_numbers(answer.text):
+        if abs(n - expected) <= tolerance:
+            hit = True
+        elif not any(_same_figure(n, s) for s in source_figures):
+            return False
+    return hit
+
+
+def case_source_figures(query: str, corpus: Corpus) -> tuple[float, ...]:
+    """Every number the case supplies: in the question, and in each document's
+    text and published date. These are the figures an answer may quote without
+    asserting them."""
+    out = extract_numbers(query)
+    for d in corpus.documents:
+        out += extract_numbers(d.text) + extract_numbers(d.published)
+    return tuple(dict.fromkeys(out))
 
 
 def _event_position(text: str, terms: tuple[str, ...]) -> int | None:

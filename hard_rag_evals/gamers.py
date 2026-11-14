@@ -72,6 +72,23 @@ class NumberSpray(ReferenceAgent):
         return ans
 
 
+class TotalGuess(ReferenceAgent):
+    """Numeric check, one guess: append the sum of every number in the retrieved docs."""
+
+    name = "total-guess"
+    trick = "append one figure, the sum of every number in the retrieved docs"
+
+    def answer(self, query: str, corpus: Corpus, budget: RetrievalBudget) -> Answer:
+        ans = super().answer(query, corpus, budget)
+        nums: list[float] = []
+        for doc_id in ans.retrieved_ids:
+            doc = corpus.by_id(doc_id)
+            if doc is not None:
+                nums += M.extract_numbers(doc.text)
+        if nums:
+            ans.text += " Total: " + format(sum(nums), "f").rstrip("0").rstrip(".") + "."
+        return ans
+
 
 class QueryEcho(ReferenceAgent):
     """Order check: open the answer by restating the question."""
@@ -85,4 +102,4 @@ class QueryEcho(ReferenceAgent):
         return ans
 
 
-GAMERS = (Hedger, CiteEverything, AlwaysAbstain, NumberSpray, QueryEcho)
+GAMERS = (Hedger, CiteEverything, AlwaysAbstain, NumberSpray, TotalGuess, QueryEcho)

@@ -12,6 +12,12 @@
    "text": "Q2 revenue was $5.8 million.",
    "source": "Earnings",
    "published": "2025-07-01"
+  },
+  {
+   "id": "doc-guidance",
+   "text": "Full-year revenue guidance is $21 million.",
+   "source": "Earnings",
+   "published": "2025-01-15"
   }
  ],
  "gold_doc_ids": [
@@ -24,7 +30,7 @@
  ],
  "numeric_expected": 10000000,
  "numeric_tolerance": 500000,
- "expected": "4.2 + 5.8 = $10 million. Quoting the inputs is not enough.",
+ "expected": "4.2 + 5.8 = $10 million. Quoting the inputs is not enough, and the full-year guidance figure is not part of the sum.",
  "conflict_claims": null,
  "must_not_cite": [],
  "should_abstain": false
