@@ -1,8 +1,7 @@
 """Unit tests for retrieval and metrics."""
-from hard_rag_evals import Corpus, Document
+from hard_rag_evals import Answer, Corpus, Document, RetrievalBudget
 from hard_rag_evals import metrics as M
-from hard_rag_evals import Answer, RetrievalBudget
-from hard_rag_evals.retrieval import retrieve, score, tokenize, _idf
+from hard_rag_evals.retrieval import retrieve, tokenize
 
 
 def _doc(id, text):

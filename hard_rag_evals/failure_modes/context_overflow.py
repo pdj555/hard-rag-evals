@@ -7,7 +7,6 @@ outrank noise.
 Tiers: easy shows the behavior in its simplest form, medium is the
 original case, hard pushes it to where production systems break.
 """
-from __future__ import annotations
 
 from ..types import EvalCase, RetrievalBudget
 from . import _build_case

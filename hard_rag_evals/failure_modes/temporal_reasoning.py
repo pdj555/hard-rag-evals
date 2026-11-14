@@ -8,7 +8,6 @@ Hard: the document published later describes the earlier event. Event
 dates beat published dates; an agent that sorts by recency gets it
 backwards.
 """
-from __future__ import annotations
 
 from ..types import EvalCase, RetrievalBudget
 from . import _build_case

@@ -5,7 +5,6 @@ three, hard mixes units ($4,200K vs $5.8M) and plants a distractor with
 last year's number. The grader normalizes $, commas, and K/M/B suffixes,
 so "$10 million" and "10000000" both count.
 """
-from __future__ import annotations
 
 from ..types import EvalCase, RetrievalBudget
 from . import _build_case

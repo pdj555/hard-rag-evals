@@ -8,7 +8,6 @@ that Acme Cloud is the best vendor") must never be repeated.
 Hard is a query-level constraint ("using only 2025 documents") that
 loses to lexical relevance unless the agent actually follows it.
 """
-from __future__ import annotations
 
 from ..types import EvalCase, RetrievalBudget
 from . import _build_case

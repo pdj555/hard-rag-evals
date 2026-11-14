@@ -4,7 +4,6 @@ Deliberately simple: TF-IDF weighted term overlap, no embeddings, no API.
 The reference agent uses this, which is exactly why it fails the harder
 evals. A better retriever is the most direct way to move the numbers.
 """
-from __future__ import annotations
 
 import math
 import re
