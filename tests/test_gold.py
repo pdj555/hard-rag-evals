@@ -17,6 +17,7 @@ from hard_rag_evals.failure_modes import ALL_CASES
 from hard_rag_evals.runner import grade
 
 GOLD = json.loads((Path(__file__).parent / "gold_answers.json").read_text())
+GOLD.pop("_canary")
 CASES = {c.id: c for c in ALL_CASES}
 
 

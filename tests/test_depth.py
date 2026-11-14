@@ -54,6 +54,24 @@ def test_numeric_answer_correct_quoting_inputs_fails():
     assert not M.numeric_answer_correct(ans, 10000000, 500000)
 
 
+def test_numeric_gate_passes_ordinary_correct_answers():
+    for text in (
+        "4.2 + 5.8 = $10 million.",
+        "Revenue for the first 6 months was $10 million.",
+        "Total revenue across the 2 quarters was $10 million.",
+        "1. Q1: $4.2 million. 2. Q2: $5.8 million. Total: $10 million.",
+        "First-half revenue was $10 million [1][2].",
+    ):
+        assert M.numeric_answer_correct(Answer(text=text), 10000000, 500000), text
+
+
+def test_numeric_gate_passes_a_list_of_figures_that_holds_the_right_one():
+    # The stated hole: any number within tolerance passes, however many others
+    # sit beside it. A rule that failed rival figures was tried and removed.
+    spray = Answer(text="Figures: 4200000, 5800000, 3100000, 10000000, 7300000, 8900000, 13100000.")
+    assert M.numeric_answer_correct(spray, 10000000, 500000)
+
+
 # ---- mentions_in_order ----
 
 
