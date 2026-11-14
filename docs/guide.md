@@ -24,6 +24,8 @@ A fixture holds:
 5. When the case sets an expected number, the answer commits to it: at least one number in the answer lands within tolerance, and every other number in the answer is one the case supplies, in the question, a document's text, or a document's date. A number that is neither is a rival figure and fails the case, so a list of every possible sum fails. Numbers are extracted with K, M, and B scaling, so "$4,200K" reads as 4,200,000.
 6. When the case sets an order pair, each event is named whole in one sentence, all of its terms together, and the first event is named before the second. When it sets forbidden phrases, none appears.
 
+Every result records the gates that applied to its case and whether each held, under eight names: abstention, required_citation, forbidden_citation, unknown_citation, contradiction, numeric, order, forbidden_phrase. The report counts failures by gate and by failure mode. A case can fail more than one gate, so the gate counts add up to more than the number of failed cases.
+
 Grading is deterministic. Retrieval sorts by score with document id as the tiebreak, and there is no randomness, network call, or model call anywhere in the package.
 
 ## The scores

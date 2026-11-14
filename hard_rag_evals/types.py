@@ -91,3 +91,10 @@ class EvalResult:
     scores: dict[str, float]
     notes: list[str]
     difficulty: str = "medium"
+    # One entry per gate that applies to the case, True when it held. A case
+    # passes exactly when every entry is True. Gate names are in runner.GATES.
+    gates: dict[str, bool] = field(default_factory=dict)
+
+    @property
+    def failed_gates(self) -> list[str]:
+        return [g for g, ok in self.gates.items() if not ok]
