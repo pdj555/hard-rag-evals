@@ -43,7 +43,7 @@ python examples/grader_attacks.py
 python -m pytest
 ```
 
-The test suite is 126 tests. `python scripts/export_dataset.py OUT_DIR` writes the cases, each with its reference answer, as the JSON Lines file published on Hugging Face.
+The test suite is 251 tests with the `mcp` extra installed. `hard-rag-evals` is also a command: `hard-rag-evals grade answers.jsonl --json` grades answers from any agent, and `hard-rag-evals mcp` serves the cases and the grader over MCP; exact commands and exit codes are in [AGENTS.md](AGENTS.md). `python scripts/export_dataset.py OUT_DIR` writes the cases, each with its reference answer, as the JSON Lines file published on Hugging Face.
 
 ## What the grader does not check
 

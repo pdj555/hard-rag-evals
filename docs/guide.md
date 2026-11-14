@@ -69,7 +69,7 @@ The intervals are wide because the suite is small: 0 of 5 brutal cases still all
 pip install -e .
 python examples/demo.py             # reference and fabricating agents, by tier
 python examples/grader_attacks.py   # the six gamers against the checks
-python -m pytest                    # 126 tests, 86 of them gold answers passing and breaking
+python -m pytest                    # 251 tests with the mcp extra, 86 of them gold answers passing and breaking
 ```
 
 ## Adding a case
