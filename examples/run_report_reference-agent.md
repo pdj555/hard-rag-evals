@@ -12,6 +12,11 @@ Intervals are exact 95% Clopper-Pearson intervals on the pass rate.
 | brutal | 0/5 | 0.00 | 0.00 to 0.52 |
 | all | 9/42 | 0.21 | 0.10 to 0.37 |
 
+| abstention | abstained | rate | 95% interval |
+| --- | --- | --- | --- |
+| over-refusal (answerable cases refused) | 0/39 | 0.00 | 0.00 to 0.09 |
+| correct abstention (unanswerable cases refused) | 0/3 | 0.00 | 0.00 to 0.71 |
+
 Failures by gate. A case can fail more than one.
 
 | gate | failed | cases it applies to |

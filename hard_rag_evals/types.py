@@ -95,6 +95,12 @@ class EvalResult:
     # passes exactly when every entry is True. Gate names are in runner.GATES.
     gates: dict[str, bool] = field(default_factory=dict)
 
+    # What the agent did and what the case wanted, kept apart from the
+    # abstention gate so refusing an answerable question (over-refusal) can be
+    # counted separately from answering an unanswerable one.
+    abstained: bool = False
+    should_abstain: bool = False
+
     @property
     def failed_gates(self) -> list[str]:
         return [g for g, ok in self.gates.items() if not ok]

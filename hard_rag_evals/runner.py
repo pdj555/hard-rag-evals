@@ -112,6 +112,8 @@ def grade(case: EvalCase, answer) -> EvalResult:
         notes=notes,
         difficulty=case.difficulty,
         gates=gates,
+        abstained=bool(answer.abstained),
+        should_abstain=case.should_abstain,
     )
 
 
@@ -226,6 +228,29 @@ def summary_by_mode(results: list[EvalResult]) -> dict[str, dict]:
     return out
 
 
+def refusal_summary(results: list[EvalResult]) -> dict[str, dict | None]:
+    """The two ways abstention goes wrong, counted on separate denominators.
+
+    over_refusal: of the answerable cases, how many the agent refused.
+    correct_abstention: of the unanswerable cases, how many it refused.
+    Each holds abstained, total, rate and an exact 95% interval, or is None
+    when the results hold no case of that kind. An agent that refuses
+    everything scores 1.0 on both; one that never refuses scores 0.0 on both.
+    """
+
+    def rate(rows: list[EvalResult]) -> dict | None:
+        if not rows:
+            return None
+        k = sum(r.abstained for r in rows)
+        lo, hi = stats.clopper_pearson(k, len(rows))
+        return {"abstained": k, "total": len(rows), "rate": k / len(rows), "ci95": [lo, hi]}
+
+    return {
+        "over_refusal": rate([r for r in results if not r.should_abstain]),
+        "correct_abstention": rate([r for r in results if r.should_abstain]),
+    }
+
+
 def render_markdown(agent_name: str, results: list[EvalResult]) -> str:
     passed = sum(1 for r in results if r.passed)
     lines = [f"# Eval report: {agent_name}", "", f"**{passed}/{len(results)} cases passed.**", ""]
@@ -245,6 +270,18 @@ def render_markdown(agent_name: str, results: list[EvalResult]) -> str:
             f"| {tier} | {rate['passed']}/{rate['total']} | {rate['rate']:.2f} "
             f"| {lo:.2f} to {hi:.2f} |"
         )
+    lines += ["", "| abstention | abstained | rate | 95% interval |", "| --- | --- | --- | --- |"]
+    labels = {
+        "over_refusal": "over-refusal (answerable cases refused)",
+        "correct_abstention": "correct abstention (unanswerable cases refused)",
+    }
+    for key, row in refusal_summary(results).items():
+        if row is not None:
+            lo, hi = row["ci95"]
+            lines.append(
+                f"| {labels[key]} | {row['abstained']}/{row['total']} | {row['rate']:.2f} "
+                f"| {lo:.2f} to {hi:.2f} |"
+            )
     lines += [
         "",
         "Failures by gate. A case can fail more than one.",
