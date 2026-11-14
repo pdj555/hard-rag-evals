@@ -1,0 +1,711 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pdj555/hard-rag-evals/blob/main/hard_rag_evals/schemas/output.schema.json",
+  "title": "hard-rag-evals output",
+  "description": "Every document `hard-rag-evals ... --json` prints on stdout is one of these, told apart by `kind`. `$defs/answer` is one line of the answers file that `hard-rag-evals grade` reads.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/case_list"
+    },
+    {
+      "$ref": "#/$defs/case"
+    },
+    {
+      "$ref": "#/$defs/report"
+    },
+    {
+      "$ref": "#/$defs/error"
+    }
+  ],
+  "$defs": {
+    "interval": {
+      "description": "Lower and upper bound of an exact 95% Clopper-Pearson interval.",
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "gate": {
+      "enum": [
+        "abstention",
+        "required_citation",
+        "forbidden_citation",
+        "unknown_citation",
+        "contradiction",
+        "numeric",
+        "order",
+        "forbidden_phrase"
+      ]
+    },
+    "rate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed",
+        "total",
+        "rate",
+        "ci95"
+      ],
+      "properties": {
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "ci95": {
+          "$ref": "#/$defs/interval"
+        }
+      }
+    },
+    "refusal_rate": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "abstained",
+            "total",
+            "rate",
+            "ci95"
+          ],
+          "properties": {
+            "abstained": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "ci95": {
+              "$ref": "#/$defs/interval"
+            }
+          }
+        }
+      ]
+    },
+    "case_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mode",
+        "difficulty",
+        "query",
+        "n_documents",
+        "budget"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "difficulty": {
+          "enum": [
+            "easy",
+            "medium",
+            "hard",
+            "brutal"
+          ]
+        },
+        "query": {
+          "type": "string"
+        },
+        "n_documents": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "max_docs",
+            "max_chars"
+          ],
+          "properties": {
+            "max_docs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_chars": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "public_case": {
+      "description": "A case as an agent under test sees it. Gates and gold document ids are left out on purpose.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mode",
+        "difficulty",
+        "query",
+        "n_documents",
+        "budget",
+        "documents"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "difficulty": {
+          "enum": [
+            "easy",
+            "medium",
+            "hard",
+            "brutal"
+          ]
+        },
+        "query": {
+          "type": "string"
+        },
+        "n_documents": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "max_docs",
+            "max_chars"
+          ],
+          "properties": {
+            "max_docs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_chars": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "documents": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "text",
+              "source",
+              "published"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "published": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "mode",
+        "difficulty",
+        "passed",
+        "gates",
+        "failed_gates",
+        "scores",
+        "notes",
+        "abstained",
+        "should_abstain",
+        "grader_version"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "difficulty": {
+          "enum": [
+            "easy",
+            "medium",
+            "hard",
+            "brutal"
+          ]
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "gates": {
+          "description": "One entry per gate that applies to the case; true when it held. passed is true exactly when all are true.",
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/gate"
+          },
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "required": [
+            "abstention",
+            "unknown_citation"
+          ]
+        },
+        "failed_gates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gate"
+          }
+        },
+        "scores": {
+          "description": "Reported, never decide a pass.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "citation_precision",
+            "citation_recall",
+            "retrieval_recall",
+            "faithfulness"
+          ],
+          "properties": {
+            "citation_precision": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "citation_recall": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "retrieval_recall": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "faithfulness": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "abstained": {
+          "type": "boolean"
+        },
+        "should_abstain": {
+          "type": "boolean"
+        },
+        "grader_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        }
+      }
+    },
+    "answer": {
+      "description": "One line of an answers file for `hard-rag-evals grade`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "text"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "abstained": {
+          "type": "boolean"
+        },
+        "retrieved_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "case_list": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schema_version",
+        "grader_version",
+        "canary",
+        "cases"
+      ],
+      "properties": {
+        "kind": {
+          "const": "case_list"
+        },
+        "schema_version": {
+          "const": "1"
+        },
+        "grader_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "canary": {
+          "type": "string",
+          "pattern": "canary GUID [0-9a-f-]{36}$"
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/case_summary"
+          }
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schema_version",
+        "grader_version",
+        "canary",
+        "case"
+      ],
+      "properties": {
+        "kind": {
+          "const": "case"
+        },
+        "schema_version": {
+          "const": "1"
+        },
+        "grader_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "canary": {
+          "type": "string",
+          "pattern": "canary GUID [0-9a-f-]{36}$"
+        },
+        "case": {
+          "$ref": "#/$defs/public_case"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schema_version",
+        "grader_version",
+        "canary",
+        "error"
+      ],
+      "properties": {
+        "kind": {
+          "const": "error"
+        },
+        "schema_version": {
+          "const": "1"
+        },
+        "grader_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "canary": {
+          "type": "string",
+          "pattern": "canary GUID [0-9a-f-]{36}$"
+        },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "const": "usage"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schema_version",
+        "grader_version",
+        "canary",
+        "agent",
+        "config",
+        "summary",
+        "results"
+      ],
+      "properties": {
+        "kind": {
+          "const": "report"
+        },
+        "schema_version": {
+          "const": "1"
+        },
+        "grader_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "canary": {
+          "type": "string",
+          "pattern": "canary GUID [0-9a-f-]{36}$"
+        },
+        "agent": {
+          "type": "string"
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "difficulty",
+            "modes",
+            "shuffle_seed",
+            "missing_case_ids"
+          ],
+          "properties": {
+            "source": {
+              "enum": [
+                "built_in_agent",
+                "answers_file"
+              ]
+            },
+            "difficulty": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "easy",
+                      "medium",
+                      "hard",
+                      "brutal"
+                    ]
+                  }
+                }
+              ]
+            },
+            "modes": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "shuffle_seed": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "missing_case_ids": {
+              "description": "Cases the answers file left out, graded as nothing; only non-empty with --allow-partial.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "passed",
+            "total",
+            "rate",
+            "ci95",
+            "by_tier",
+            "by_mode",
+            "gates",
+            "over_refusal",
+            "correct_abstention"
+          ],
+          "properties": {
+            "passed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "ci95": {
+              "$ref": "#/$defs/interval"
+            },
+            "by_tier": {
+              "type": "object",
+              "propertyNames": {
+                "enum": [
+                  "easy",
+                  "medium",
+                  "hard",
+                  "brutal"
+                ]
+              },
+              "additionalProperties": {
+                "$ref": "#/$defs/rate"
+              }
+            },
+            "by_mode": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "passed",
+                  "total",
+                  "failed_gates"
+                ],
+                "properties": {
+                  "passed": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "failed_gates": {
+                    "type": "object",
+                    "propertyNames": {
+                      "$ref": "#/$defs/gate"
+                    },
+                    "additionalProperties": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            },
+            "gates": {
+              "description": "Per gate: cases that failed it, and cases it applies to. A case can fail several.",
+              "type": "object",
+              "propertyNames": {
+                "$ref": "#/$defs/gate"
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "failed",
+                  "applicable"
+                ],
+                "properties": {
+                  "failed": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "applicable": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            },
+            "over_refusal": {
+              "description": "Answerable cases the agent refused. null when no answerable case was graded.",
+              "$ref": "#/$defs/refusal_rate"
+            },
+            "correct_abstention": {
+              "description": "Unanswerable cases the agent refused. null when none was graded.",
+              "$ref": "#/$defs/refusal_rate"
+            }
+          }
+        },
+        "results": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/result"
+          }
+        }
+      }
+    }
+  }
+}
