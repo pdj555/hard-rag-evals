@@ -26,7 +26,7 @@ A fixture holds:
 
 Every result records the gates that applied to its case and whether each held, under eight names: abstention, required_citation, forbidden_citation, unknown_citation, contradiction, numeric, order, forbidden_phrase. The report counts failures by gate and by failure mode. A case can fail more than one gate, so the gate counts add up to more than the number of failed cases.
 
-Grading is deterministic. Retrieval sorts by score with document id as the tiebreak, and there is no randomness, network call, or model call anywhere in the package.
+Grading is deterministic. Retrieval sorts by score with document id as the tiebreak, and there is no network call or model call anywhere in the package. The only randomness is opt-in and seeded: `run_suite(agent, shuffle_seed=N)` permutes each case's documents before the agent sees them, and `order_spread(agent)` reports the pass count across 20 such seeds and the cases whose verdict changed. Document order carries no meaning in any case. The grader's verdict on every gold answer is the same under 10 permutations, and the reference agent passes 9 of 42 under all 20 seeds, with no case changing; an agent that just cites the first document does move, and the spread shows it.
 
 ## The scores
 

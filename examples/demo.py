@@ -23,6 +23,7 @@ from hard_rag_evals import (
     summary_by_difficulty,
 )
 from hard_rag_evals.reference_agent import ReferenceAgent
+from hard_rag_evals.runner import order_spread
 from hard_rag_evals.stats import clopper_pearson, pass_rate
 
 
@@ -60,6 +61,12 @@ def main() -> None:
         print(
             f"  {'all':8s} {overall['passed']:2d}/{overall['total']:2d}  "
             f"95% interval {lo:.2f} to {hi:.2f}"
+        )
+        spread = order_spread(agent)
+        print(
+            f"  documents reordered, {len(spread['by_seed'])} seeds: "
+            f"{spread['min']} to {spread['max']} passed, "
+            f"{len(spread['flipped'])} cases changed verdict"
         )
         print()
 

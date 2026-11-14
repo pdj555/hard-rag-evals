@@ -7,10 +7,13 @@ expected behavior, and contradictions are stated claim against claim.
 """
 from __future__ import annotations
 
+import random
+from dataclasses import replace
+
 from . import metrics as M
 from . import stats
 from .failure_modes import ALL_CASES
-from .types import Agent, EvalCase, EvalResult
+from .types import Agent, Corpus, EvalCase, EvalResult
 
 DIFFICULTY_ORDER = ("easy", "medium", "hard", "brutal")
 
@@ -133,16 +136,59 @@ def select_cases(
     ]
 
 
+def permute_documents(case: EvalCase, seed: int) -> EvalCase:
+    """The same case with its documents in a different order.
+
+    Document order carries no meaning in any case, so neither the grader's
+    verdict nor a sound agent's answer should depend on it. The permutation
+    is fixed by the seed and the case id, so a run can be repeated exactly.
+    """
+    docs = list(case.corpus.documents)
+    random.Random(f"{seed}:{case.id}").shuffle(docs)
+    return replace(case, corpus=Corpus(documents=tuple(docs)))
+
+
 def run_suite(
     agent: Agent,
     difficulty: str | tuple[str, ...] | None = None,
     modes: str | tuple[str, ...] | None = None,
+    shuffle_seed: int | None = None,
 ) -> list[EvalResult]:
-    """Grade the agent on every case, or on the tiers and modes asked for."""
-    return [
-        grade(case, agent.answer(case.query, case.corpus, case.budget))
-        for case in select_cases(difficulty, modes)
-    ]
+    """Grade the agent on every case, or on the tiers and modes asked for.
+
+    With shuffle_seed set, each case's documents are permuted with that seed
+    before the agent sees them. None keeps the order written in the fixture.
+    """
+    results = []
+    for case in select_cases(difficulty, modes):
+        if shuffle_seed is not None:
+            case = permute_documents(case, shuffle_seed)
+        results.append(grade(case, agent.answer(case.query, case.corpus, case.budget)))
+    return results
+
+
+def order_spread(agent: Agent, seeds: tuple[int, ...] = tuple(range(20))) -> dict:
+    """How much the agent's result moves when only document order changes.
+
+    Returns the pass count in fixture order, the pass count under each seed,
+    their min and max, and the cases whose verdict changed under any seed.
+    An empty flipped list means the agent is order invariant on these seeds,
+    not that it is in general.
+    """
+    base = {r.case_id: r.passed for r in run_suite(agent)}
+    counts: dict[int, int] = {}
+    flipped: set[str] = set()
+    for seed in seeds:
+        results = run_suite(agent, shuffle_seed=seed)
+        counts[seed] = sum(r.passed for r in results)
+        flipped |= {r.case_id for r in results if r.passed != base[r.case_id]}
+    return {
+        "fixture_order": sum(base.values()),
+        "by_seed": counts,
+        "min": min(counts.values()),
+        "max": max(counts.values()),
+        "flipped": sorted(flipped),
+    }
 
 
 def summary_by_difficulty(results: list[EvalResult]) -> dict[str, tuple[int, int]]:
