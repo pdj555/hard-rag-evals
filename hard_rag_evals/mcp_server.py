@@ -25,7 +25,9 @@ that the agent cannot read the answer key out of it:
 What this does not stop: an agent that can start the server again can still
 compare whole submissions, one verdict per pair of runs. get_case returns
 every document, so an agent that reads them all is not held to the case's
-retrieval budget unless it reports what it read in retrieved_ids. A score is blind only when
+retrieval budget unless it reports what it read in retrieved_ids. A citation
+missing from retrieved_ids fails, but a budget-sized retrieved_ids chosen after
+reading everything passes. A score is blind only when
 the agent cannot restart the grader, which is the operator's job to arrange.
 
 `hard-rag-evals mcp --dev` is for the person writing or debugging cases. It
@@ -102,7 +104,8 @@ def build_server(dev: bool = False) -> MCPServer:
 
         answers: one object for every case, all 42, with case_id (from
         list_cases), text, and optionally citations (document ids), abstained
-        (true when the documents do not hold the answer) and retrieved_ids.
+        (true when the documents do not hold the answer) and retrieved_ids
+        (every document read; a cited document missing from it fails the case).
         A submission that leaves a case out is refused. This can be called
         once per server."""
         if not dev:

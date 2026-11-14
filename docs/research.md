@@ -30,7 +30,7 @@ The one hard case the reference agent passes is citation fabrication at hard tie
 
 The fixtures list each case's documents in the order they were written, and the document that answers the question usually came first: the first document is a required citation in 33 of the 39 cases that require one. FirstDocument copies the first document listed and cites it. It retrieves nothing and reads nothing. In fixture order it scores 19 of 42 against the reference agent's 9: 12 cases gained, 2 lost, a difference in pass rate of 0.24 with a 95% interval of 0.06 to 0.39, exact McNemar p 0.013. That is one test chosen after seeing the result, so the p-value is a description, not a confirmation.
 
-Every run and every view an agent is shown now shuffles each case's documents with a fixed seed, 2026, recorded in each result. Over seeds 0 to 19 FirstDocument averages 7.0 of 42, range 4 to 12, and a required document is first in 15 to 25 of 39 cases, mean 18.9. At the default seed it scores 9 and a required document is first in 22. It does not fall to zero because 33 of the 42 cases hold three documents or fewer. The reference agent and its eight variants score the same in fixture order and under all 20 seeds, because retrieval breaks ties by document id; for them shuffling changes nothing.
+Every run and every view an agent is shown now shuffles each case's documents with a fixed seed, 2026, recorded in each result. Over seeds 0 to 19 FirstDocument averages 7.0 of 42, range 4 to 12, and a required document is first in 15 to 25 of 39 cases, mean 18.9. At the default seed it scores 9 and a required document is first in 22. It does not fall to zero because 33 of the 42 cases hold three documents or fewer. The reference agent and its nine variants score the same in fixture order and under all 20 seeds, because retrieval breaks ties by document id; for them shuffling changes nothing.
 
 ## Reading nothing beats the reference
 
@@ -46,11 +46,11 @@ Four more agents copy one document and cite it, each picked by a surface feature
 
 The reference agent scores 9. At the default seed four of the five beat it, the best by 5 cases. None of the differences is significant: the largest net gain, 8 cases gained against 3 lost, has an exact McNemar p of 0.227. The newest-document agent scored 21 in fixture order for the same reason the first-document agent scored 19: many documents in a case share a published date, ties went to the first listed, and the first listed was usually required.
 
-Three things explain the scores. 23 of the 42 cases can be passed by copying one document verbatim and citing it, so no writing is needed. Most corpora are small: 33 cases hold three documents or fewer. And some document ids name what they are: doc-needle, doc-zz-needle, doc-poisoned, doc-rumor, doc-dupe-07 through doc-dupe-120, doc-refund-old. The ids are part of the published cases and have not been renamed. Counting these five agents and the eight trick agents below, 21 of the 33 cases the reference agent fails are passed by at least one cheap agent at seed 2026.
+Three things explain the scores. 23 of the 42 cases can be passed by copying one document verbatim and citing it, so no writing is needed. Most corpora are small: 33 cases hold three documents or fewer. And some document ids name what they are: doc-needle, doc-zz-needle, doc-poisoned, doc-rumor, doc-dupe-07 through doc-dupe-120, doc-refund-old. The ids are part of the published cases and have not been renamed. Counting these five agents and the nine trick agents below, 21 of the 33 cases the reference agent fails are passed by at least one cheap agent at seed 2026.
 
 ## The grader can be gamed too
 
-Eight agents each add one trick to the reference agent. Their results are pinned by tests, so hardening a check breaks the matching test and is recorded here.
+Nine agents each add one trick to the reference agent. Their results are pinned by tests, so hardening a check breaks the matching test and is recorded here.
 
 Still beaten:
 
@@ -60,6 +60,7 @@ A rule to close this was tried and removed, and the result is a null. The rule f
 
 These were beaten before and hold now:
 
+- The budget gate. BudgetSmuggler answers from every document in the case and lists in `retrieved_ids` only the documents the budget would have let it pull. The budget gate reads only that list, so under grader 1.3.0 the smuggler passed it everywhere and scored 12 of 42, gaining overflow-medium, overflow-hard and compositional-overflow-multihop. Grader 1.4.0 adds the unretrieved citation gate: a cited document must be in the answer's own `retrieved_ids`. The smuggler now fails it on 6 cases and scores 8 of 42; it gains nothing and loses overflow-easy. Listing nothing at all scored 12 under 1.3.0 and scores 0 now. What the gate does not stop: an agent that reads everything and then lists a budget-sized set holding its citations. Listing exactly what the smuggler cites passes the new gate on every case but fails the budget gate on overflow-easy and five cases it already failed, 8 of 42; an agent that picks its citations better is not caught.
 - The contradiction check. The Hedger cites every retrieved document and appends "However, the sources may conflict." It used to turn contradiction-medium and contradiction-hard into passes, because the check asked for both documents cited and one marker word anywhere. The check now asks for one sentence holding both claims and a marker. The hedge holds neither claim. The Hedger gains nothing and scores 8 of 42.
 - The order check. QueryEcho opens the answer with the question, "Which launched first, the Aurora X1 or the Vega S2?", which names Aurora before Vega without dating either. The check used to compare where the terms of each event first appear anywhere in the answer, and the echo won temporal-easy and temporal-hard. The check now counts an event only where one sentence names all of its terms. QueryEcho gains nothing and scores 9 of 42, the reference score.
 

@@ -49,7 +49,9 @@ def test_permutation_is_repeatable_and_depends_on_the_seed():
 @pytest.mark.parametrize("case", ALL_CASES, ids=lambda c: c.id)
 def test_gold_verdict_is_unchanged_under_permutation(case):
     g = GOLD[case.id]
-    answer = Answer(text=g["text"], citations=list(g["citations"]), abstained=g["abstained"])
+    answer = Answer(
+        text=g["text"], citations=list(g["citations"]), retrieved_ids=list(g["retrieved_ids"]), abstained=g["abstained"]
+    )
     base = grade(case, answer)
     assert base.passed
     for seed in SEEDS:

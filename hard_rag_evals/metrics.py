@@ -108,7 +108,8 @@ def within_budget(answer: Answer, corpus: Corpus, budget: RetrievalBudget) -> bo
 
     This checks what the answer reports. An agent that read more than it
     lists in retrieved_ids, or lists nothing, passes: the grader cannot see
-    what was read, only what was declared.
+    what was read, only what was declared. The unretrieved citation gate in
+    runner.grade fails a citation outside that list.
     """
     ids = list(dict.fromkeys(answer.retrieved_ids))
     if len(ids) > budget.max_docs:

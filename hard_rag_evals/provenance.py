@@ -14,7 +14,10 @@ import json
 # the answer is within tolerance, as it did before versions were recorded.
 # 1.3.0: a budget gate. An answer whose retrieved_ids exceed the case's
 # retrieval budget fails.
-GRADER_VERSION = "1.3.0"
+# 1.4.0: an unretrieved citation gate. An answer that cites a document not in
+# its own retrieved_ids fails, so reading past the budget and reporting less
+# no longer passes the budget gate for free.
+GRADER_VERSION = "1.4.0"
 
 # A fixed string carried by every case fixture, the gold answers, and every
 # row of the exported dataset. If a model can complete this string, the suite

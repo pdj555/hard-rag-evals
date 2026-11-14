@@ -2,8 +2,9 @@
 
 Grading is strict and fully deterministic. A case passes only when every
 applicable check holds: required citations present, forbidden citations
-absent, every citation names a real document, abstention matches the
-expected behavior, and contradictions are stated claim against claim.
+absent, every citation names a real document the answer reports retrieving,
+abstention matches the expected behavior, and contradictions are stated claim
+against claim.
 """
 
 import random
@@ -25,14 +26,15 @@ DEFAULT_SHUFFLE_SEED = 2026
 
 
 # The atomic gates, in the order they are checked. Each is binary. A gate
-# applies to a case only when the case sets it; budget, abstention and
-# unknown citation apply to every case.
+# applies to a case only when the case sets it; budget, abstention, unknown
+# citation and unretrieved citation apply to every case.
 GATES = (
     "budget",
     "abstention",
     "required_citation",
     "forbidden_citation",
     "unknown_citation",
+    "unretrieved_citation",
     "contradiction",
     "numeric",
     "order",
@@ -79,6 +81,17 @@ def grade(case: EvalCase, answer) -> EvalResult:
     unknown = [c for c in answer.citations if case.corpus.by_id(c) is None]
     gates["unknown_citation"] = not unknown
     notes += [f"cited unknown document id: {c}" for c in unknown]
+
+    # A citation must name a document the answer says it retrieved. Without
+    # this, an answer could read past the budget, cite what it found there and
+    # report only a budget-sized set, or nothing, in retrieved_ids. Unknown ids
+    # are left to the unknown citation gate so each failure counts once.
+    reported = set(answer.retrieved_ids)
+    unretrieved = [
+        c for c in dict.fromkeys(answer.citations) if c not in reported and case.corpus.by_id(c) is not None
+    ]
+    gates["unretrieved_citation"] = not unretrieved
+    notes += [f"cited a document not in retrieved_ids: {c}" for c in unretrieved]
 
     if case.conflict_claims is not None:
         ok = M.conflict_acknowledged(answer, case.conflict_claims)

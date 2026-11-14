@@ -225,7 +225,7 @@ def test_every_built_in_agent_is_runnable_by_name(capsys):
         "reference", "hedger", "cite-everything", "always-abstain", "number-spray",
         "total-guess", "mean-guess", "sum-minus-largest", "query-echo", "first-document",
         "overlap-document", "greatest-id-document", "newest-document", "shortest-document",
-        "fabricating",
+        "budget-smuggler", "fabricating",
     }
     for name in cli.AGENTS:
         code, doc = run_json(capsys, "run", "--agent", name, "--difficulty", "easy")
