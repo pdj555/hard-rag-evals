@@ -41,6 +41,7 @@
     },
     "gate": {
       "enum": [
+        "budget",
         "abstention",
         "required_citation",
         "forbidden_citation",
@@ -326,6 +327,7 @@
             "type": "boolean"
           },
           "required": [
+            "budget",
             "abstention",
             "unknown_citation"
           ]
@@ -816,7 +818,7 @@
       }
     },
     "submission": {
-      "description": "Aggregate result of grade_submission over MCP, which grades only a submission that answers every case. Holds no per-case field of any kind.",
+      "description": "Aggregate result of grade_submission over MCP, which grades only a submission that answers every case. One overall count; no per-tier or per-case field of any kind.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -827,8 +829,7 @@
         "canary",
         "graded",
         "total_cases",
-        "summary",
-        "by_tier"
+        "summary"
       ],
       "properties": {
         "kind": {
@@ -860,21 +861,6 @@
         },
         "summary": {
           "$ref": "#/$defs/rate"
-        },
-        "by_tier": {
-          "description": "Per tier counts.",
-          "type": "object",
-          "propertyNames": {
-            "enum": [
-              "easy",
-              "medium",
-              "hard",
-              "brutal"
-            ]
-          },
-          "additionalProperties": {
-            "$ref": "#/$defs/rate"
-          }
         }
       }
     }

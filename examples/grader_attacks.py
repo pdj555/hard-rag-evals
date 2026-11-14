@@ -15,7 +15,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from hard_rag_evals import DEFAULT_SHUFFLE_SEED, run_suite
-from hard_rag_evals.gamers import GAMERS, Fabricator, FirstDocument
+from hard_rag_evals.failure_modes import ALL_CASES
+from hard_rag_evals.gamers import GAMERS, SURFACE, Fabricator, FirstDocument, single_document_passes
 from hard_rag_evals.reference_agent import ReferenceAgent
 from hard_rag_evals.runner import first_document_is_required, order_spread
 from hard_rag_evals.stats import compare, compare_many, render_comparison_markdown
@@ -60,10 +61,25 @@ def main() -> None:
         f"{fixture.difference:+.3f} ({lo:+.3f} to {hi:+.3f}), McNemar p {fixture.p_value:.3f}, "
         "one test, not corrected"
     )
+    print("  agents that copy one document and read nothing, pass counts:")
+    print("  | agent | fixture order | seed 2026 | mean, seeds 0 to 19 | range |")
+    print("  | --- | --- | --- | --- | --- |")
+    for cls in SURFACE:
+        s = order_spread(cls())
+        at_default = sum(r.passed for r in runs[cls.name])
+        print(
+            f"  | {cls.name} | {s['fixture_order']} | {at_default} | {s['mean']:.2f} "
+            f"| {s['min']} to {s['max']} |"
+        )
+    gained = set()
+    for cls in GAMERS:
+        gained |= {r.case_id for r in runs[cls.name] if r.passed and not honest[r.case_id]}
     print(
-        f"  first-document shuffled, {len(spread['by_seed'])} seeds: mean {spread['mean']:.1f}, "
-        f"range {spread['min']} to {spread['max']}"
+        f"  cases the reference fails that some cheap agent passes at seed "
+        f"{DEFAULT_SHUFFLE_SEED}: {len(gained)} of {sum(not ok for ok in honest.values())}"
     )
+    copyable = sum(single_document_passes(c) for c in ALL_CASES)
+    print(f"  cases passed by copying one document verbatim and citing it: {copyable} of {len(ALL_CASES)}")
 
 
 if __name__ == "__main__":

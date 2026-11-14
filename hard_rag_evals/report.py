@@ -111,22 +111,17 @@ def case_document(case: EvalCase, dev: bool = False, shuffle_seed: int | None = 
 
 
 def submission_document(results: list[EvalResult], total_cases: int) -> dict:
-    """Aggregate counts for a whole submission and nothing about any one case:
-    how many passed overall and per tier. Only a submission that answers
-    every case is graded, so no count covers fewer than a whole tier."""
+    """One aggregate for a whole submission and nothing else: how many of all
+    the cases passed, with an interval. No per-tier split: two submissions
+    that differ in one answer per tier would then give four verdicts by
+    subtraction instead of one."""
     if len(results) != total_cases:
         raise UsageError(f"a submission must answer all {total_cases} cases")
-    by_tier = {}
-    for tier in DIFFICULTY_ORDER:
-        rows = [r for r in results if r.difficulty == tier]
-        if rows:
-            by_tier[tier] = stats.pass_rate(rows)
     return {
         **_envelope("submission"),
         "graded": len(results),
         "total_cases": total_cases,
         "summary": stats.pass_rate(results),
-        "by_tier": by_tier,
     }
 
 

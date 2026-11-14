@@ -1,6 +1,7 @@
 """The command line: one JSON document per call, a committed schema, fixed exit codes."""
 import io
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -208,12 +209,14 @@ def test_run_a_gamer_by_name_with_filters_and_seed(capsys):
     code, doc = run_json(
         capsys, "run", "--agent", "always-abstain", "--mode", "unanswerable", "--shuffle-seed", "7"
     )
-    assert code == 0  # every graded case passed
+    assert code == 1  # all 3 graded cases passed, but 3 is not the suite
     assert doc["summary"]["passed"] == doc["summary"]["total"] == 3
     assert doc["summary"]["over_refusal"] is None
+    assert len(doc["config"].pop("missing_case_ids")) == 39
+    doc["config"]["missing_case_ids"] = []
     assert doc["config"] == {
         "source": "built_in_agent", "difficulty": None, "modes": ["unanswerable"],
-        "shuffle_seed": 7, "missing_case_ids": [], "total_cases": 3,
+        "shuffle_seed": 7, "missing_case_ids": [], "total_cases": 42,
     }
 
 
@@ -221,11 +224,12 @@ def test_every_built_in_agent_is_runnable_by_name(capsys):
     assert set(cli.AGENTS) == {
         "reference", "hedger", "cite-everything", "always-abstain", "number-spray",
         "total-guess", "mean-guess", "sum-minus-largest", "query-echo", "first-document",
+        "overlap-document", "greatest-id-document", "newest-document", "shortest-document",
         "fabricating",
     }
     for name in cli.AGENTS:
         code, doc = run_json(capsys, "run", "--agent", name, "--difficulty", "easy")
-        assert code in (0, 1) and doc["summary"]["total"] == 12
+        assert code == 1 and doc["summary"]["total"] == 12
 
 
 def test_run_without_json_prints_the_markdown_report(capsys):
@@ -276,8 +280,11 @@ def test_grade_missing_cases_is_a_usage_error_unless_partial_is_allowed(capsys, 
     assert code == 2 and doc["kind"] == "error"
     assert "37 of 42 cases have no answer" in doc["error"]["message"]
     code, doc = run_json(capsys, "grade", path, "--allow-partial")
-    assert code == 0
-    assert doc["summary"]["total"] == 5 and len(doc["config"]["missing_case_ids"]) == 37
+    assert code == 1  # 5 of 5 passed; 0 is kept for the whole suite passing
+    assert doc["summary"]["passed"] == doc["summary"]["total"] == 5
+    assert len(doc["config"]["missing_case_ids"]) == 37
+    assert cli.main(["grade", path, "--allow-partial", "--json"]) == 1
+    assert "partial run, 5 of 42 cases graded; exit code 1" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(
@@ -367,7 +374,7 @@ class ClosedPipe:
     [
         (["list"], 0),
         (["run", "--agent", "reference", "--json"], 1),
-        (["run", "--agent", "always-abstain", "--mode", "unanswerable"], 0),
+        (["run", "--agent", "always-abstain", "--mode", "unanswerable"], 1),
         (["show", "no-such-case", "--json"], 2),
     ],
 )
@@ -396,7 +403,7 @@ def test_closed_stdout_through_a_real_pipe(tmp_path):
 def test_partial_markdown_report_says_how_many_were_graded_and_lists_the_rest(capsys, tmp_path):
     path = answers_file(tmp_path, gold_rows()[:5])
     code, out = run(capsys, "grade", path, "--allow-partial")
-    assert code == 0
+    assert code == 1
     assert "5 of 42 cases graded" in out
     graded = {r["case_id"] for r in gold_rows()[:5]}
     missing = [c.id for c in ALL_CASES if c.id not in graded]
@@ -422,7 +429,7 @@ def test_answer_controlled_text_cannot_break_the_markdown_tables(capsys, tmp_pat
     assert not any(line.startswith("| fake-case") for line in lines)
     # every row of the per-case table still has exactly its ten cells
     header = next(i for i, line in enumerate(lines) if line.startswith("| case | tier |"))
-    table = lines[header:]
+    table = lines[header : lines.index("", header)]
     assert len(table) == 2 + 42
     unescaped = [len(__import__("re").findall(r"(?<!\\)\|", line)) for line in table]
     assert set(unescaped) == {11}
@@ -509,13 +516,13 @@ def test_file_and_stdin_are_decoded_the_same_way(tmp_path):
     good = json.dumps({"case_id": "stale-easy", **GOLD["stale-easy"], "text": "1000 requests — per hour"},
                       ensure_ascii=False).encode("utf-8") + b"\n"
     latin = good.replace("—".encode("utf-8"), "—".encode("cp1252"))
-    for raw, expected in ((good, 0), (latin, 2)):
+    for raw, expected in ((good, 1), (latin, 2)):
         from_file = grade_bytes(tmp_path, raw, "file")
         from_stdin = grade_bytes(tmp_path, raw, "stdin")
         assert from_file[0] == from_stdin[0] == expected
         a, b = json.loads(from_file[1]), json.loads(from_stdin[1])
-        if expected == 0:
-            assert a["results"] == b["results"]
+        if expected == 1:
+            assert a["results"] == b["results"] and a["summary"]["passed"] == 1
         else:
             assert "not valid UTF-8" in a["error"]["message"] and "not valid UTF-8" in b["error"]["message"]
 
@@ -599,3 +606,36 @@ def test_output_failure_in_process(monkeypatch, capsys):
     monkeypatch.undo()
     err = capsys.readouterr().err
     assert "could not write output" in err and "Traceback" not in err
+
+
+# ---- 0 means the whole suite passed; --version; the canary in plain output ----
+
+
+def test_exit_0_needs_all_42_graded_and_passed(capsys, tmp_path):
+    code, _ = run(capsys, "grade", answers_file(tmp_path, gold_rows()), "--json")
+    assert code == 0
+    code, _ = run(capsys, "grade", answers_file(tmp_path, gold_rows()[:41]), "--allow-partial", "--json")
+    assert code == 1
+    code, out = run(capsys, "run", "--agent", "always-abstain", "--mode", "unanswerable")
+    assert code == 1 and "Partial run: 3 of 42 cases graded" in out and "3/3 cases passed" in out
+
+
+def test_version_flag(capsys):
+    from hard_rag_evals import DATASET_VERSION
+
+    code, out = run(capsys, "--version")
+    assert code == 0
+    lines = out.splitlines()
+    assert re.fullmatch(r"hard-rag-evals \d+\.\d+\.\d+", lines[0])
+    assert lines[1:] == [f"grader {GRADER_VERSION}", f"dataset {DATASET_VERSION}"]
+    pyproject = (ROOT / "pyproject.toml").read_text()
+    assert f'version = "{lines[0].split()[1]}"' in pyproject
+
+
+def test_canary_is_in_plain_text_show_and_markdown_reports(capsys, tmp_path):
+    code, out = run(capsys, "show", R.public_id("stale-easy"))
+    assert out.rstrip().endswith(CANARY)
+    code, out = run(capsys, "run", "--agent", "reference")
+    assert out.rstrip().endswith(CANARY)
+    code, out = run(capsys, "grade", answers_file(tmp_path, gold_rows()))
+    assert out.count(CANARY) == 1

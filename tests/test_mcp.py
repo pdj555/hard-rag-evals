@@ -146,14 +146,13 @@ def test_grade_submission_returns_aggregates_and_no_per_case_field():
     VALIDATOR.validate(doc)
     assert set(doc) == {
         "kind", "schema_version", "grader_version", "dataset_version", "canary",
-        "graded", "total_cases", "summary", "by_tier",
+        "graded", "total_cases", "summary",
     }
     assert doc["kind"] == "submission"
     assert (doc["graded"], doc["total_cases"]) == (42, 42)
     assert (doc["summary"]["passed"], doc["summary"]["total"]) == (42, 42)
-    assert {t: (v["passed"], v["total"]) for t, v in doc["by_tier"].items()} == {
-        "easy": (12, 12), "medium": (12, 12), "hard": (13, 13), "brutal": (5, 5),
-    }
+    assert set(doc["summary"]) == {"passed", "total", "rate", "ci95"}
+    assert not {"by_tier", "easy", "medium", "hard", "brutal"} & set(all_keys(doc))
     assert doc["grader_version"] == GRADER_VERSION and doc["dataset_version"] == DATASET_VERSION
     assert not set(all_keys(doc)) & PER_CASE_KEYS
     blob = json.dumps(doc) + result.content[0].text
@@ -187,6 +186,30 @@ def test_a_server_grades_one_submission_so_two_cannot_be_differenced():
     assert not first.is_error
     assert second.is_error and "already graded a submission" in second.content[0].text
     assert second.structured_content is None
+
+
+def test_concurrent_submissions_grade_exactly_one():
+    # The SDK runs tools on worker threads. Five submissions sent at once,
+    # each abstaining on a different number of cases so their scores differ:
+    # exactly one may come back graded, or the others give verdicts away.
+    def submission(n):
+        answers = gold_answers()
+        for a in answers[:n]:
+            a["abstained"] = not a["abstained"]
+        answers[0]["text"] = "x " * 200000  # slow to parse, to widen the window
+        return answers
+
+    async def go(c):
+        calls = [c.call_tool("grade_submission", {"answers": submission(n)}) for n in range(5)]
+        return await asyncio.gather(*calls, return_exceptions=True)
+
+    for _ in range(3):
+        results = session(go)
+        graded = [r for r in results if not isinstance(r, Exception) and not r.is_error]
+        assert len(graded) == 1, [getattr(r, "is_error", r) for r in results]
+        refused = [r for r in results if not isinstance(r, Exception) and r.is_error]
+        assert len(refused) == 4
+        assert all("already graded a submission" in r.content[0].text for r in refused)
 
 
 def test_a_refused_submission_does_not_use_up_the_one_allowed():

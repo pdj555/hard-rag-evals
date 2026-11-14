@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 
 from .retrieval import tokenize
-from .types import Answer, Corpus
+from .types import Answer, Corpus, RetrievalBudget
 
 _CONFLICT_MARKERS = frozenset(
     {
@@ -99,6 +99,23 @@ def conflict_acknowledged(answer: Answer, claims: tuple[str, str]) -> bool:
         ):
             return True
     return False
+
+
+def within_budget(answer: Answer, corpus: Corpus, budget: RetrievalBudget) -> bool:
+    """True when the documents the answer says it retrieved fit the case's
+    budget: no more than max_docs of them, and no more than max_chars of text
+    in total. One document longer than max_chars on its own is allowed, as
+    retrieval.retrieve allows it.
+
+    This checks what the answer reports. An agent that read more than it
+    lists in retrieved_ids, or lists nothing, passes: the grader cannot see
+    what was read, only what was declared.
+    """
+    ids = list(dict.fromkeys(answer.retrieved_ids))
+    if len(ids) > budget.max_docs:
+        return False
+    docs = [d for d in (corpus.by_id(i) for i in ids) if d is not None]
+    return len(docs) <= 1 or sum(len(d.text) for d in docs) <= budget.max_chars
 
 
 def abstention_correct(answer: Answer, should_abstain: bool) -> bool:

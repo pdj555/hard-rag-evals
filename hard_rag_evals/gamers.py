@@ -11,6 +11,7 @@ from itertools import combinations
 
 from . import metrics as M
 from .reference_agent import ReferenceAgent
+from .retrieval import tokenize
 from .types import Answer, Corpus, RetrievalBudget
 
 
@@ -158,6 +159,71 @@ class FirstDocument:
         return Answer(text=first.text, citations=[first.id], retrieved_ids=[first.id])
 
 
+class _CopyOneDocument:
+    """Copy one document, chosen without reading any of them for meaning, and
+    cite it. Ties go to the document listed first."""
+
+    name = ""
+    trick = ""
+
+    def choose(self, query: str, corpus: Corpus):
+        raise NotImplementedError
+
+    def answer(self, query: str, corpus: Corpus, budget: RetrievalBudget) -> Answer:
+        doc = self.choose(query, corpus)
+        return Answer(text=doc.text, citations=[doc.id], retrieved_ids=[doc.id])
+
+
+class OverlapDocument(_CopyOneDocument):
+    name = "overlap-document"
+    trick = "copy the document sharing the most words with the question and cite it"
+
+    def choose(self, query: str, corpus: Corpus):
+        words = set(tokenize(query))
+        return max(corpus.documents, key=lambda d: len(words & set(tokenize(d.text))))
+
+
+class GreatestIdDocument(_CopyOneDocument):
+    name = "greatest-id-document"
+    trick = "copy the document whose id sorts last and cite it"
+
+    def choose(self, query: str, corpus: Corpus):
+        return max(corpus.documents, key=lambda d: d.id)
+
+
+class NewestDocument(_CopyOneDocument):
+    name = "newest-document"
+    trick = "copy the most recently published document and cite it"
+
+    def choose(self, query: str, corpus: Corpus):
+        return max(corpus.documents, key=lambda d: d.published)
+
+
+class ShortestDocument(_CopyOneDocument):
+    name = "shortest-document"
+    trick = "copy the shortest document and cite it"
+
+    def choose(self, query: str, corpus: Corpus):
+        return min(corpus.documents, key=lambda d: len(d.text))
+
+
+# Agents that read nothing: each copies one document picked by a surface
+# feature. A score above the reference agent's means the feature predicts
+# which document the case requires.
+SURFACE = (FirstDocument, OverlapDocument, GreatestIdDocument, NewestDocument, ShortestDocument)
+
+
+def single_document_passes(case) -> bool:
+    """True when copying some one document verbatim and citing it passes the
+    case. Such a case can be passed without writing a word."""
+    from .runner import grade
+
+    return any(
+        grade(case, Answer(text=d.text, citations=[d.id], retrieved_ids=[d.id])).passed
+        for d in case.corpus.documents
+    )
+
+
 class Fabricator(ReferenceAgent):
     """The reference agent plus one citation to a document that does not
     exist, on every answer. Not a trick: it shows the unknown citation gate
@@ -181,5 +247,5 @@ GAMERS = (
     MeanGuess,
     SumMinusLargest,
     QueryEcho,
-    FirstDocument,
+    *SURFACE,
 )

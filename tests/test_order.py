@@ -8,7 +8,7 @@ import pytest
 
 from hard_rag_evals import Answer
 from hard_rag_evals.failure_modes import ALL_CASES
-from hard_rag_evals.gamers import GAMERS, FirstDocument
+from hard_rag_evals.gamers import GAMERS, SURFACE, FirstDocument
 from hard_rag_evals.reference_agent import ReferenceAgent
 from hard_rag_evals.runner import (
     DEFAULT_SHUFFLE_SEED,
@@ -122,5 +122,5 @@ def test_reference_agent_and_its_variants_do_not_move_with_order():
     assert set(spread["by_seed"]) == set(range(20))
     assert (spread["min"], spread["max"], spread["flipped"]) == (9, 9, [])
     for gamer in GAMERS:
-        if gamer is not FirstDocument:
+        if gamer not in SURFACE:
             assert order_spread(gamer(), seeds=tuple(range(5)))["flipped"] == [], gamer.name

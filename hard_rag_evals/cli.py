@@ -19,8 +19,8 @@ fixture, which usually puts a required document first.
 With --json each command prints exactly one JSON document on stdout that
 validates against the schema. Exit codes:
 
-    0  the command worked, and every graded case passed
-    1  the command worked, and at least one graded case failed
+    0  the command worked, all 42 cases were graded, and all passed
+    1  the command worked, and a graded case failed or fewer than 42 were graded
     2  usage error: bad arguments, unknown case, malformed input
     3  internal error (a bug in this package), or the output could not be
        written (disk full, stdout closed or invalid)
@@ -37,11 +37,13 @@ import json
 import os
 import sys
 import traceback
+from importlib import metadata
 from pathlib import Path
 
 from . import report as R
-from .failure_modes import ALL_CASES
+from .failure_modes import ALL_CASES, DATASET_VERSION
 from .gamers import GAMERS, Fabricator
+from .provenance import GRADER_VERSION
 from .reference_agent import ReferenceAgent
 from .runner import (
     DEFAULT_SHUFFLE_SEED,
@@ -64,6 +66,16 @@ AGENTS = {
     **{g.name: g for g in GAMERS},
 }
 MODES = tuple(dict.fromkeys(c.mode for c in ALL_CASES))
+
+
+def version_line() -> str:
+    """Package, grader and dataset versions: what two results must share to
+    be comparable, plus the package they came from."""
+    try:
+        package = metadata.version("hard-rag-evals")
+    except metadata.PackageNotFoundError:
+        package = "unknown (not installed)"
+    return f"hard-rag-evals {package}\ngrader {GRADER_VERSION}\ndataset {DATASET_VERSION}"
 
 
 class OutputError(Exception):
@@ -142,10 +154,13 @@ class _Parser(argparse.ArgumentParser):
 def build_parser() -> argparse.ArgumentParser:
     parser = _Parser(
         prog="hard-rag-evals",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Deterministic failure mode evals for agents that answer from documents.",
-        epilog="Exit codes: 0 ok and all cases passed, 1 some cases failed, "
+        epilog="Exit codes: 0 ok and all 42 cases graded and passed, 1 a case failed or the "
+        "run was partial, "
         "2 usage error, 3 internal error or output could not be written.",
     )
+    parser.add_argument("--version", action="version", version=version_line())
     sub = parser.add_subparsers(dest="command", required=True, parser_class=_Parser)
 
     def add_filters(p):
@@ -219,7 +234,16 @@ def _seed(args) -> int | None:
 
 
 def _report(document: dict, results, as_json: bool) -> tuple[int, str]:
-    code = EXIT_OK if all(r.passed for r in results) else EXIT_CASES_FAILED
+    """Exit 0 only when every case in the suite was graded and passed. A run
+    that graded fewer, through --allow-partial or a filter, exits 1 even if
+    everything it graded passed: 0 has to mean the whole suite passed."""
+    missing = document["config"]["missing_case_ids"]
+    code = EXIT_OK if not missing and all(r.passed for r in results) else EXIT_CASES_FAILED
+    if missing:
+        _warn(
+            f"hard-rag-evals: note: partial run, {len(results)} of "
+            f"{len(results) + len(missing)} cases graded; exit code 1"
+        )
     if as_json:
         return code, json.dumps(document) + "\n"
     return code, render_markdown(
@@ -259,6 +283,7 @@ def _cmd_show(args) -> tuple[int, str]:
     ]
     for d in c["documents"]:
         lines.append(f"\n[{d['id']}] {d['source']}, {d['published']}\n{d['text']}")
+    lines.append(f"\n{document['canary']}")
     return EXIT_OK, "\n".join(lines) + "\n"
 
 
@@ -276,8 +301,8 @@ def _cmd_run(args) -> tuple[int, str]:
         "difficulty": args.difficulty,
         "modes": args.mode,
         "shuffle_seed": seed,
-        "missing_case_ids": [],
-        "total_cases": len(results),
+        "missing_case_ids": [c.id for c in ALL_CASES if c.id not in {r.case_id for r in results}],
+        "total_cases": len(ALL_CASES),
     }
     return _report(R.report_document(agent.name, results, config), results, args.json)
 

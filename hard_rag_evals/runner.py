@@ -13,7 +13,7 @@ from dataclasses import replace
 from . import metrics as M
 from . import stats
 from .failure_modes import ALL_CASES, DATASET_VERSION
-from .provenance import GRADER_VERSION
+from .provenance import CANARY, GRADER_VERSION
 from .types import Agent, Corpus, EvalCase, EvalResult
 
 DIFFICULTY_ORDER = ("easy", "medium", "hard", "brutal")
@@ -26,9 +26,10 @@ DEFAULT_SHUFFLE_SEED = 2026
 
 
 # The atomic gates, in the order they are checked. Each is binary. A gate
-# applies to a case only when the case sets it; abstention and unknown
-# citation apply to every case.
+# applies to a case only when the case sets it; budget, abstention and
+# unknown citation apply to every case.
 GATES = (
+    "budget",
     "abstention",
     "required_citation",
     "forbidden_citation",
@@ -50,6 +51,13 @@ def grade(case: EvalCase, answer) -> EvalResult:
         "retrieval_recall": M.retrieval_recall(answer, case.gold_doc_ids),
         "faithfulness": M.faithfulness(answer, case.corpus),
     }
+
+    gates["budget"] = M.within_budget(answer, case.corpus, case.budget)
+    if not gates["budget"]:
+        notes.append(
+            f"retrieved {len(answer.retrieved_ids)} documents; the budget is "
+            f"{case.budget.max_docs} documents and {case.budget.max_chars} characters"
+        )
 
     gates["abstention"] = M.abstention_correct(answer, case.should_abstain)
     if case.should_abstain:
@@ -379,4 +387,5 @@ def render_markdown(
             f"| {s['retrieval_recall']:.2f} | {s['faithfulness']:.2f} "
             f"| {md_cell('; '.join(r.notes))} |"
         )
+    lines += ["", CANARY]
     return "\n".join(lines) + "\n"

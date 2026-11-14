@@ -11,17 +11,21 @@ that the agent cannot read the answer key out of it:
 - get_case lists a case's documents in a shuffled order, fixed by a
   published seed. Fixture order would leak: it usually puts a required
   document first.
-- grade_submission takes the answers for all 42 cases and returns aggregate
-  counts only: passed and total, overall and per tier. A submission that
-  leaves any case out is refused, so no count ever covers a chosen few
-  cases. Nothing about any single case comes back.
-- A server process grades one submission. A second call is refused. Without
-  that, two submissions that differ in one answer would give that case's
-  verdict by subtraction.
+- grade_submission takes the answers for all 42 cases and returns one
+  aggregate: passed and total, with an interval. A submission that leaves
+  any case out is refused, and there is no per-tier split. Nothing about any
+  single case comes back.
+- A server process grades one submission. A second call is refused, and so
+  is a call that arrives while the first is still being graded: the slot is
+  claimed under a lock before anything is parsed. Without that, two
+  submissions that differ in one answer would give that case's verdict by
+  subtraction.
 - There is no per-case grading tool.
 
 What this does not stop: an agent that can start the server again can still
-compare whole submissions, one case per restart. A score is blind only when
+compare whole submissions, one verdict per pair of runs. get_case returns
+every document, so an agent that reads them all is not held to the case's
+retrieval budget unless it reports what it read in retrieved_ids. A score is blind only when
 the agent cannot restart the grader, which is the operator's job to arrange.
 
 `hard-rag-evals mcp --dev` is for the person writing or debugging cases. It
@@ -33,6 +37,7 @@ mean nothing.
 """
 from __future__ import annotations
 
+import threading
 from typing import Any
 
 from mcp.server.mcpserver import MCPServer
@@ -68,7 +73,10 @@ def build_server(dev: bool = False) -> MCPServer:
         ),
         version=GRADER_VERSION,
     )
-    graded = {"submissions": 0}
+    # One submission per server process. The SDK runs tools on worker threads,
+    # so the slot is claimed under a lock before any work is done.
+    slot = {"claimed": False}
+    slot_lock = threading.Lock()
 
     @server.tool()
     def list_cases(difficulty: str | None = None) -> dict[str, Any]:
@@ -89,20 +97,33 @@ def build_server(dev: bool = False) -> MCPServer:
 
     @server.tool()
     def grade_submission(answers: list[dict[str, Any]]) -> dict[str, Any]:
-        """Grade a whole submission and return aggregate counts only: passed
-        and total with a 95% interval, overall and per tier. Nothing about
-        any single case is returned.
+        """Grade a whole submission and return one aggregate: passed and
+        total over all cases, with a 95% interval. Nothing about any single
+        case or tier is returned.
 
         answers: one object for every case, all 42, with case_id (from
         list_cases), text, and optionally citations (document ids), abstained
         (true when the documents do not hold the answer) and retrieved_ids.
         A submission that leaves a case out is refused. This can be called
         once per server."""
-        if not dev and graded["submissions"]:
-            raise ToolError(
-                "this server has already graded a submission; it grades one, so that two "
-                "submissions cannot be compared to find a single case's verdict"
-            )
+        if not dev:
+            with slot_lock:
+                if slot["claimed"]:
+                    raise ToolError(
+                        "this server has already graded a submission; it grades one, so that "
+                        "two submissions cannot be compared to find a single case's verdict"
+                    )
+                slot["claimed"] = True
+        try:
+            return _grade_all(answers)
+        except ToolError:
+            # A submission that was refused was not graded and told the caller
+            # nothing about any case, so it does not use up the slot.
+            with slot_lock:
+                slot["claimed"] = False
+            raise
+
+    def _grade_all(answers: list[dict[str, Any]]) -> dict[str, Any]:
         try:
             parsed = [R.parse_answer(a, f"answers[{i}]") for i, a in enumerate(answers)]
         except R.UsageError as exc:
@@ -118,7 +139,6 @@ def build_server(dev: bool = False) -> MCPServer:
                 f"a submission must answer all {len(ALL_CASES)} cases; "
                 f"{len(ALL_CASES) - len(by_case)} have no answer"
             )
-        graded["submissions"] += 1
         results = [grade(c, by_case[c.id]) for c in ALL_CASES if c.id in by_case]
         return R.submission_document(results, len(ALL_CASES))
 

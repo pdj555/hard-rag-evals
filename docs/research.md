@@ -32,6 +32,22 @@ The fixtures list each case's documents in the order they were written, and the 
 
 Every run and every view an agent is shown now shuffles each case's documents with a fixed seed, 2026, recorded in each result. Over seeds 0 to 19 FirstDocument averages 7.0 of 42, range 4 to 12, and a required document is first in 15 to 25 of 39 cases, mean 18.9. At the default seed it scores 9 and a required document is first in 22. It does not fall to zero because 33 of the 42 cases hold three documents or fewer. The reference agent and its eight variants score the same in fixture order and under all 20 seeds, because retrieval breaks ties by document id; for them shuffling changes nothing.
 
+## Reading nothing beats the reference
+
+Four more agents copy one document and cite it, each picked by a surface feature instead of position. None reads a document for meaning.
+
+| Agent copies the document | Fixture order | Seed 2026 | Mean, seeds 0 to 19 | Range |
+| --- | --- | --- | --- | --- |
+| listed first | 19 | 9 | 7.00 | 4 to 12 |
+| sharing the most words with the question | 17 | 14 | 13.85 | 12 to 16 |
+| whose id sorts last | 13 | 13 | 13.00 | 13 to 13 |
+| most recently published | 21 | 11 | 9.55 | 6 to 13 |
+| shortest | 10 | 10 | 10.00 | 10 to 10 |
+
+The reference agent scores 9. At the default seed four of the five beat it, the best by 5 cases. None of the differences is significant: the largest net gain, 8 cases gained against 3 lost, has an exact McNemar p of 0.227. The newest-document agent scored 21 in fixture order for the same reason the first-document agent scored 19: many documents in a case share a published date, ties went to the first listed, and the first listed was usually required.
+
+Three things explain the scores. 23 of the 42 cases can be passed by copying one document verbatim and citing it, so no writing is needed. Most corpora are small: 33 cases hold three documents or fewer. And some document ids name what they are: doc-needle, doc-zz-needle, doc-poisoned, doc-rumor, doc-dupe-07 through doc-dupe-120, doc-refund-old. The ids are part of the published cases and have not been renamed. Counting these five agents and the eight trick agents below, 21 of the 33 cases the reference agent fails are passed by at least one cheap agent at seed 2026.
+
 ## The grader can be gamed too
 
 Eight agents each add one trick to the reference agent. Their results are pinned by tests, so hardening a check breaks the matching test and is recorded here.

@@ -17,6 +17,7 @@ A fixture holds:
 
 `runner.grade()` is all or nothing. Fail any gate and the case fails:
 
+0. Budget: the documents the answer lists in `retrieved_ids` number no more than the case's `max_docs` and total no more than `max_chars`; one document longer than `max_chars` on its own is allowed. This checks what the answer reports. An answer that lists nothing passes, so the gate binds only agents that report what they read.
 1. Abstention matches the case: the agent refuses exactly when the case is unanswerable.
 2. Every `must_cite` id is cited, and no `must_not_cite` id is cited.
 3. Every citation names a document in the corpus. One invented id fails the case.
@@ -24,7 +25,7 @@ A fixture holds:
 5. When the case sets an expected number, at least one number in the answer lands within tolerance. Numbers are extracted with K, M, and B scaling, so "$4,200K" reads as 4,200,000.
 6. When the case sets an order pair, each event is named whole in one sentence, all of its terms together, and the first event is named before the second. When it sets forbidden phrases, none appears.
 
-Every result records the gates that applied to its case and whether each held, under eight names: abstention, required_citation, forbidden_citation, unknown_citation, contradiction, numeric, order, forbidden_phrase. The report counts failures by gate and by failure mode. A case can fail more than one gate, so the gate counts add up to more than the number of failed cases.
+Every result records the gates that applied to its case and whether each held, under nine names: budget, abstention, required_citation, forbidden_citation, unknown_citation, contradiction, numeric, order, forbidden_phrase. The report counts failures by gate and by failure mode. A case can fail more than one gate, so the gate counts add up to more than the number of failed cases.
 
 Grading is deterministic. Retrieval sorts by score with document id as the tiebreak, and there is no network call or model call anywhere in the package.
 
@@ -45,15 +46,15 @@ There is no freshness check, no ordering check on documents, and no meaning chec
 
 A case has two views. The public view is an opaque id (`c-` and 12 hex characters, a hash of the descriptive id), the tier, the question, the documents in shuffled order, and the budget. It leaves out the failure mode, the descriptive id, which names the mode, the gates, and the gold ids. `hard-rag-evals list` and `show`, and the MCP tools `list_cases` and `get_case`, give the public view, sorted by public id, because the suite's own order groups cases by mode. `--dev` on any of them adds the descriptive id and the mode.
 
-Grading has two paths. `hard-rag-evals run` and `grade` are for the person running the eval: the report names every case and every failed gate. Over MCP the default server has no per-case grading. `grade_submission` takes answers for all 42 cases and returns passed and total with an interval, overall and per tier. A submission that leaves any case out is refused. A server process grades one submission, so two cannot be subtracted to find one case's verdict. `hard-rag-evals mcp --dev` adds `grade_answer`, which returns one case's gates and notes; that is the answer key a probe at a time, and a score from a `--dev` server means nothing.
+Grading has two paths. `hard-rag-evals run` and `grade` are for the person running the eval: the report names every case and every failed gate. Over MCP the default server has no per-case grading. `grade_submission` takes answers for all 42 cases and returns one count: passed and total with an interval. A submission that leaves any case out is refused, and there is no per-tier split, because two submissions differing in one answer per tier would give four verdicts by subtraction instead of one. A server process grades one submission; the slot is claimed under a lock, so calls sent at the same time do not both get graded. `hard-rag-evals mcp --dev` adds `grade_answer`, which returns one case's gates and notes; that is the answer key a probe at a time, and a score from a `--dev` server means nothing.
 
-The limits: document ids belong to the published cases and some name the trap; the tier is shown; an agent that can restart the server can still compare whole submissions.
+The limits: document ids belong to the published cases and some name the trap; the tier is shown; an agent that can restart the server can still compare whole submissions, one verdict per pair of runs; and `get_case` returns every document, so the retrieval budget holds only for an agent that reports what it read.
 
 ## Provenance
 
 Every fixture, the gold answers file, and every row of the exported dataset carry one canary string with a GUID, defined in `provenance.py`. A fixture without it does not load. If a model can complete the string, the suite was in its training data. The canary was added after the cases were first published, so copies taken before it do not carry it.
 
-Every result, report, and exported row also records `GRADER_VERSION` and `DATASET_VERSION`. The grader version is bumped by hand when a change to the grader can alter a verdict or a score. The dataset version is the sha256 of the fixture bytes the package loaded, computed at import, so a result is stamped with the data that was graded. `EXPECTED_DATASET_VERSION` in `provenance.py` is what the docs were written against; a test fails when the two differ, which means the numbers in the docs may be stale. Two results are comparable only when grader version, dataset version, and shuffle seed all match.
+Every result, report, and exported row also records `GRADER_VERSION` and `DATASET_VERSION`. The grader version is bumped by hand when a change to the grader can alter a verdict or a score. The dataset version is the sha256 of the cases as built, computed at import: every field of every case, which covers the fixture content and also the ids, tiers, modes, and budgets set in the Python builders. Changing `max_docs` in a builder changes it; reformatting a fixture does not. `EXPECTED_DATASET_VERSION` in `provenance.py` is what the docs were written against; a test fails when the two differ, which means the numbers in the docs may be stale. Two results are comparable only when grader version, dataset version, and shuffle seed all match.
 
 ## Refusals
 
@@ -69,7 +70,7 @@ The intervals are wide because the suite is small: 0 of 5 brutal cases still all
 
 `reference_agent/agent.py` is the baseline: IDF weighted keyword retrieval inside the budget, then the two sentences per document with the most query overlap, each prefixed with its document id, citing what it copied from. It never abstains.
 
-`gamers.py` holds eight variants, each the reference agent plus one change, and FirstDocument, which reads nothing and cites whatever document is listed first: Hedger (cite everything retrieved, append " However, the sources may conflict."), NumberSpray (append every number found, every pairwise sum, and the total), TotalGuess (append one figure, the sum of every number found), MeanGuess (append their mean), SumMinusLargest (append their sum without the largest), CiteEverything (cite everything retrieved, text unchanged), AlwaysAbstain (the same refusal on every case), QueryEcho (open the answer with the question). `tests/test_gamers.py` pins each gamer's exact gains and losses. If a check is hardened, the matching test should fail; update it and the research summary together.
+`gamers.py` holds eight variants, each the reference agent plus one change, and five agents in `SURFACE` that read nothing and copy one document picked by a surface feature (listed first, most words shared with the question, id sorting last, newest, shortest). The eight variants: Hedger (cite everything retrieved, append " However, the sources may conflict."), NumberSpray (append every number found, every pairwise sum, and the total), TotalGuess (append one figure, the sum of every number found), MeanGuess (append their mean), SumMinusLargest (append their sum without the largest), CiteEverything (cite everything retrieved, text unchanged), AlwaysAbstain (the same refusal on every case), QueryEcho (open the answer with the question). `tests/test_gamers.py` pins each gamer's exact gains and losses. If a check is hardened, the matching test should fail; update it and the research summary together.
 
 `gamers.py` also holds Fabricator, the reference agent plus one invented citation, "doc-does-not-exist-99", on every answer. `examples/demo.py` runs it. It scores 0 of 42.
 
@@ -79,7 +80,7 @@ The intervals are wide because the suite is small: 0 of 5 brutal cases still all
 pip install -e .
 python examples/demo.py             # reference and fabricating agents, by tier
 python examples/grader_attacks.py   # the gamers against the checks, and the order leak
-python -m pytest                    # 310 tests with the mcp extra, 86 of them gold answers passing and breaking
+python -m pytest                    # 332 tests with the mcp extra, 86 of them gold answers passing and breaking
 ```
 
 ## Adding a case

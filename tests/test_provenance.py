@@ -2,12 +2,21 @@
 import importlib.util
 import json
 import re
+from dataclasses import asdict, replace
 from importlib import resources
 from pathlib import Path
 
 import pytest
 
-from hard_rag_evals import CANARY, DATASET_VERSION, GRADER_VERSION, Answer, failure_modes
+from hard_rag_evals import (
+    CANARY,
+    DATASET_VERSION,
+    GRADER_VERSION,
+    Answer,
+    Corpus,
+    RetrievalBudget,
+    failure_modes,
+)
 from hard_rag_evals.failure_modes import ALL_CASES
 from hard_rag_evals.provenance import CANARY_GUID, EXPECTED_DATASET_VERSION, dataset_version
 from hard_rag_evals.reference_agent import ReferenceAgent
@@ -72,40 +81,66 @@ def test_every_result_records_the_grader_version():
     assert f"Grader version {GRADER_VERSION}, dataset version {DATASET_VERSION[:12]}." in report
 
 
-def test_dataset_version_is_computed_from_the_fixture_bytes_that_were_loaded():
-    loaded = failure_modes._LOADED
-    assert len(loaded) == 42
-    fixtures = resources.files("hard_rag_evals").joinpath("fixtures")
-    for name, raw in loaded.items():
-        assert fixtures.joinpath(name).read_bytes() == raw
+def _version(cases):
+    return dataset_version([asdict(c) for c in cases])
+
+
+def test_dataset_version_is_computed_from_the_cases_that_were_built():
     assert re.fullmatch(r"[0-9a-f]{64}", DATASET_VERSION)
-    assert DATASET_VERSION == failure_modes.DATASET_VERSION == dataset_version(loaded)
+    assert DATASET_VERSION == failure_modes.DATASET_VERSION == _version(ALL_CASES)
+    assert _version(list(reversed(ALL_CASES))) == DATASET_VERSION  # order of building is not data
 
 
-def test_dataset_version_moves_with_any_byte_or_name_and_ignores_line_endings():
-    base = {"a.json": b'{"x": 1}\n', "b.json": b"{}"}
-    version = dataset_version(base)
-    assert dataset_version(dict(reversed(base.items()))) == version
-    assert dataset_version({**base, "a.json": b'{"x": 2}\n'}) != version
-    assert dataset_version({"a.json": base["a.json"], "c.json": b"{}"}) != version
-    assert dataset_version({**base, "a.json": b'{"x": 1}\r\n'}) == version
+@pytest.mark.parametrize(
+    "change",
+    [
+        lambda c: replace(c, budget=RetrievalBudget(max_docs=c.budget.max_docs + 1, max_chars=c.budget.max_chars)),
+        lambda c: replace(c, budget=RetrievalBudget(max_docs=c.budget.max_docs, max_chars=c.budget.max_chars + 1)),
+        lambda c: replace(c, difficulty="brutal"),
+        lambda c: replace(c, mode="renamed_mode"),
+        lambda c: replace(c, id=c.id + "-x"),
+        lambda c: replace(c, query=c.query + " "),
+        lambda c: replace(c, must_cite=()),
+        lambda c: replace(c, corpus=Corpus(documents=c.corpus.documents[::-1] + c.corpus.documents[:1])),
+        lambda c: replace(c, corpus=Corpus(documents=(replace(c.corpus.documents[0], published="1999-01-01"),) + c.corpus.documents[1:])),
+    ],
+)
+def test_dataset_version_moves_with_any_field_grading_or_the_public_view_uses(change):
+    cases = list(ALL_CASES)
+    cases[0] = change(cases[0])
+    assert _version(cases) != DATASET_VERSION
 
 
-def test_a_changed_fixture_changes_what_results_are_stamped_with(monkeypatch, tmp_path):
-    # Not a constant: load a different fixture and the computed version differs.
-    fixtures = resources.files("hard_rag_evals").joinpath("fixtures")
-    raw = fixtures.joinpath("stale_docs.json").read_bytes()
-    (tmp_path / "stale_docs.json").write_bytes(raw.replace(b"1000", b"1001"))
-    monkeypatch.setattr(failure_modes, "_FIXTURE_DIR", tmp_path)
-    monkeypatch.setattr(failure_modes, "_LOADED", dict(failure_modes._LOADED))
-    failure_modes._load_fixture("stale_docs")
-    assert failure_modes._LOADED["stale_docs.json"] != raw
-    assert dataset_version(failure_modes._LOADED) != DATASET_VERSION
+def test_changing_a_budget_in_a_python_builder_changes_the_dataset_version(monkeypatch):
+    # Budgets live in failure_modes/*.py, not in the fixture files. Rebuild the
+    # suite with one builder's max_docs changed, as an edit to that file would.
+    from hard_rag_evals.failure_modes import retrieval_misses
+
+    fixtures_before = {
+        p.name: p.read_bytes()
+        for p in resources.files("hard_rag_evals").joinpath("fixtures").iterdir()
+        if p.name.endswith(".json")
+    }
+    assert retrieval_misses._BUDGET.max_docs == 2
+    monkeypatch.setattr(retrieval_misses, "_BUDGET", RetrievalBudget(max_docs=3, max_chars=8000))
+    rebuilt = [m.build_easy() for m in failure_modes._TIERED] + [m.build() for m in failure_modes._TIERED]
+    rebuilt += [m.build_hard() for m in failure_modes._TIERED]
+    rebuilt += failure_modes.adversarial.build_all() + failure_modes.compositional.build_all()
+    assert len(rebuilt) == 42
+    changed = [a.id for a, b in zip(rebuilt, ALL_CASES) if a != b]
+    assert changed and all(i.startswith("retrieval-miss") for i in changed)
+    assert _version(rebuilt) != DATASET_VERSION
+    fixtures_after = {
+        p.name: p.read_bytes()
+        for p in resources.files("hard_rag_evals").joinpath("fixtures").iterdir()
+        if p.name.endswith(".json")
+    }
+    assert fixtures_before == fixtures_after  # no fixture byte changed, and the version still moved
 
 
 def test_docs_were_written_against_this_dataset_version():
     assert DATASET_VERSION == EXPECTED_DATASET_VERSION, (
-        "a fixture changed: the numbers in README.md and docs/ may be stale. Re-run "
+        "a case changed: the numbers in README.md and docs/ may be stale. Re-run "
         "examples/demo.py and examples/grader_attacks.py, update the docs, then set "
         f"EXPECTED_DATASET_VERSION in provenance.py to {DATASET_VERSION}"
     )
