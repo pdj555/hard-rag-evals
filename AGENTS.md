@@ -74,7 +74,7 @@ MCP tools on the default server:
 - `list_cases(difficulty?)` and `get_case(case_id)`: the public view. `get_case` takes public ids only and lists documents shuffled with seed 2026.
 - `grade_submission(answers)`: grades a submission that answers all 42 cases and returns one overall count with an interval. No per-tier split, nothing about a single case. A submission that leaves a case out is refused. A server process grades one submission, and concurrent calls do not get around that.
 
-`hard-rag-evals mcp --dev` adds `grade_answer(case_id, text, citations?, abstained?, retrieved_ids?)`, which returns one case's gates and notes, shows descriptive ids and modes, and lifts the one-submission limit. It hands out the answer key a probe at a time. A score from a `--dev` server means nothing.
+`hard-rag-evals mcp --dev` adds `grade_answer(case_id, text, citations?, abstained?, retrieved_ids?)`, which returns one case's gates and notes, shows descriptive ids and modes, and lifts the one-submission limit. Called case by case, it hands out the answer key. A score from a `--dev` server means nothing.
 
 ## Rules for changes
 
