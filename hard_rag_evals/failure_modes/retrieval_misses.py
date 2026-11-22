@@ -5,11 +5,9 @@ lexical retriever returns nothing useful. This case isolates retriever
 recall from answer quality: the gold document is scored purely on
 whether it was retrieved at all.
 """
-from __future__ import annotations
 
 from ..types import EvalCase, RetrievalBudget
 from . import _build_case
-
 
 # Tight budget on purpose: the gold document ranks below the two
 # distractors on lexical overlap, so it is never retrieved at all.

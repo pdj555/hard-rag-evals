@@ -6,7 +6,6 @@ requires citing the right person's document and never the wrong one's.
 Hard stuffs the wrong document with query terms so lexical ranking
 prefers it: only the role appositive disambiguates.
 """
-from __future__ import annotations
 
 from ..types import EvalCase, RetrievalBudget
 from . import _build_case

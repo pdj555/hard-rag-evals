@@ -8,7 +8,7 @@ Instructions for coding agents working in this repository. `README.md` says what
 python -m pip install -e '.[dev,mcp]'
 ```
 
-Python 3.10 or newer. The package has no runtime dependencies. `dev` adds pytest and jsonschema; `mcp` adds the MCP SDK (2.x), needed only for `hard-rag-evals mcp` and `tests/test_mcp.py`.
+Python 3.13 or newer. The package has no runtime dependencies. `dev` adds pytest and jsonschema; `mcp` adds the MCP SDK (2.x), needed only for `hard-rag-evals mcp` and `tests/test_mcp.py`.
 
 ## Check your work
 

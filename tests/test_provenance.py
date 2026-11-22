@@ -102,7 +102,12 @@ def test_dataset_version_is_computed_from_the_cases_that_were_built():
         lambda c: replace(c, query=c.query + " "),
         lambda c: replace(c, must_cite=()),
         lambda c: replace(c, corpus=Corpus(documents=c.corpus.documents[::-1] + c.corpus.documents[:1])),
-        lambda c: replace(c, corpus=Corpus(documents=(replace(c.corpus.documents[0], published="1999-01-01"),) + c.corpus.documents[1:])),
+        lambda c: replace(
+            c,
+            corpus=Corpus(
+                documents=(replace(c.corpus.documents[0], published="1999-01-01"),) + c.corpus.documents[1:]
+            ),
+        ),
     ],
 )
 def test_dataset_version_moves_with_any_field_grading_or_the_public_view_uses(change):

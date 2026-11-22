@@ -6,7 +6,6 @@ case is tiered brutal. If your agent passes the isolated modes but
 fails these, the failure is in composition: it can do each step but
 cannot hold them together.
 """
-from __future__ import annotations
 
 from ..types import EvalCase, RetrievalBudget
 from . import _build_case

@@ -7,7 +7,6 @@ Hard: 50 documents with near-duplicate distractors that share the
 needle's phrasing but carry different numbers. The agent must find the
 exact document, not just the right neighborhood.
 """
-from __future__ import annotations
 
 from ..types import EvalCase, RetrievalBudget
 from . import _build_case

@@ -6,7 +6,6 @@ see where the baseline breaks, then writes per-agent markdown reports.
 
 Usage: python examples/demo.py
 """
-from __future__ import annotations
 
 import sys
 from pathlib import Path

@@ -1,5 +1,4 @@
 """What a result or an export has to carry to be traced and kept out of training data."""
-from __future__ import annotations
 
 import hashlib
 import json

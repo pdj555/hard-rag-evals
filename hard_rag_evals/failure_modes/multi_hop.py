@@ -4,11 +4,9 @@ No single document contains the answer. The agent must retrieve both the
 launch date and the warranty terms, then do the arithmetic. Passing
 requires citing both source documents.
 """
-from __future__ import annotations
 
 from ..types import EvalCase, RetrievalBudget
 from . import _build_case
-
 
 _BUDGET = RetrievalBudget(max_docs=5, max_chars=8000)
 

@@ -5,7 +5,6 @@ standard benchmarks do not isolate. The suite treats each mode as a
 separate, gradeable behavior so a team can see exactly which failure
 their system still has.
 """
-from __future__ import annotations
 
 import json
 from dataclasses import asdict

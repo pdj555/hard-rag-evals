@@ -515,7 +515,7 @@ def test_hostile_input_exits_2_with_one_error_document_and_no_traceback(tmp_path
 def test_file_and_stdin_are_decoded_the_same_way(tmp_path):
     good = json.dumps({"case_id": "stale-easy", **GOLD["stale-easy"], "text": "1000 requests — per hour"},
                       ensure_ascii=False).encode("utf-8") + b"\n"
-    latin = good.replace("—".encode("utf-8"), "—".encode("cp1252"))
+    latin = good.replace("—".encode(), "—".encode("cp1252"))
     for raw, expected in ((good, 1), (latin, 2)):
         from_file = grade_bytes(tmp_path, raw, "file")
         from_stdin = grade_bytes(tmp_path, raw, "stdin")

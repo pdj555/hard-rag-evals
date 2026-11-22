@@ -5,7 +5,6 @@ applicable check holds: required citations present, forbidden citations
 absent, every citation names a real document, abstention matches the
 expected behavior, and contradictions are stated claim against claim.
 """
-from __future__ import annotations
 
 import random
 from dataclasses import replace
