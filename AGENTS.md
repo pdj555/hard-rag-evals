@@ -5,10 +5,10 @@ Instructions for coding agents working in this repository. `README.md` says what
 ## Setup
 
 ```bash
-python -m pip install -e '.[dev,mcp]'
+python -m pip install -e '.[dev,mcp,models]'
 ```
 
-Python 3.13 or newer. The package has no runtime dependencies. `dev` adds pytest and jsonschema; `mcp` adds the MCP SDK (2.x), needed only for `hard-rag-evals mcp` and `tests/test_mcp.py`.
+Python 3.13 or newer. The package has no runtime dependencies. `dev` adds pytest, jsonschema and ruff; `mcp` adds the MCP SDK (2.x), needed only for `hard-rag-evals mcp` and `tests/test_mcp.py`. `models` adds the Anthropic SDK, needed only for a real run of `scripts/model_run.py`; its tests use a fake client.
 
 ## Check your work
 
@@ -76,6 +76,24 @@ MCP tools on the default server:
 
 `hard-rag-evals mcp --dev` adds `grade_answer(case_id, text, citations?, abstained?, retrieved_ids?)`, which returns one case's gates and notes, shows descriptive ids and modes, and lifts the one-submission limit. Called case by case, it hands out the answer key. A score from a `--dev` server means nothing.
 
+## Run a model
+
+```bash
+python scripts/model_run.py --estimate --prereg docs/prereg/model-run-1.json    # no calls, no key
+gh workflow run model-run.yml -f max_usd=20 -f models=claude-haiku-5-5,claude-sonnet-5-5,claude-opus-5-5 -f trials=3
+```
+
+The second command spends money and is the owner's to start. It is `workflow_dispatch` only and reads the `ANTHROPIC_API_KEY` repository secret. The same run locally is `python scripts/model_run.py --max-usd 20 --out OUT_DIR --prereg docs/prereg/model-run-1.json`.
+
+The estimate for the three models at 3 trials is $12.88: $0.21 for Haiku 5.5, $4.22 for Sonnet 5.5, $8.44 for Opus 5.5, at list prices. It assumes 2.5 characters per token plus 700 tokens per request for input, 3,000 output tokens per call, and one attempt per case. None of those figures has been checked against the API, because no call has been made. The ceiling, `max_tokens` of output on both attempts of every case, is $65.66. The workflow's default cap is $20, above the estimate and below the ceiling; a run that reaches its cap stops, is marked incomplete and makes no claim.
+
+- The cap is checked before every request: a request is sent only if the spend so far plus the most that request can cost fits under `--max-usd`. Spend is measured from the usage the API returns.
+- Each model answers all 42 cases in every trial from the public view, shuffled with seed 2026, with one `submit_answer` tool call. The prompt is `hard_rag_evals/prompts/model_agent_system.txt`; effort is pinned to medium; temperature is not sent.
+- A refusal, a reply with no usable tool call after one retry, and a request that fails after one retry are each written as an empty answer and counted as failed. A request the API rejects outright (HTTP 400, 401, 403, 404) stops the run.
+- The out directory holds `answers-MODEL-trialN.jsonl` (the file `hard-rag-evals grade` takes), the grader's report for each, `calls-MODEL-trialN.jsonl`, `summary.json` (schema: `hard_rag_evals/schemas/model_run.schema.json`) and `summary.md`.
+- A case counts as passed only if it passed in every trial. `summary.json` prints the preregistration's sha256 and withholds every claim when the run deviates from it, is incomplete, or has request errors on more than 5% of a model's cases.
+- The model is shown every document, so on the 11 cases whose corpus exceeds the retrieval budget it is not doing the reference agent's task. The summary reports those 11 and the other 31 separately.
+
 ## Rules for changes
 
 - The grader decides a pass in `runner.grade()`, from the gates in `runner.GATES`. The budget gate reads `retrieved_ids`: report every document your agent read there, or your result on the 11 budget-bound cases is not comparable to anyone's. The unretrieved citation gate fails a citation that is not in `retrieved_ids`. Scores are reported and never decide a pass.
@@ -86,5 +104,6 @@ MCP tools on the default server:
 - The public view (`list`, `show`, `list_cases`, `get_case`, `report.public_case`) must never expose a case's failure mode, descriptive id, gates, gold ids or expected answer. The default MCP server must never return anything about a single case's grade. `tests/test_mcp.py` and `tests/test_cli.py` pin both.
 - `tests/test_gamers.py`, `tests/test_gates.py`, `tests/test_stats.py` and `tests/test_order.py` pin exact counts. If a change moves one, update the pin and the number in `README.md` and `docs/` in the same commit, from what the code prints.
 - Removing or renaming a field of the `--json` output bumps `SCHEMA_VERSION` in `hard_rag_evals/report.py` and updates the schema file. Adding a field updates the schema only.
-- No model calls, API keys or network access anywhere in the package or its tests.
+- No model calls, API keys or network access anywhere in the tests, the CLI or the grader. `hard_rag_evals/model_agent.py` is the one module that can reach a model, and only through a client it is handed; `scripts/model_run.py` builds that client, and only without `--estimate`.
+- A change to the system prompt, the answer tool, or a setting in `model_agent.SETTINGS` changes what a model run measures. `tests/test_model_run.py` fails until `docs/prereg/model-run-1.json` matches; once a run has been made against a preregistration, write a new one instead of editing it.
 - CI runs on GitHub-hosted runners (`ubuntu-latest`).

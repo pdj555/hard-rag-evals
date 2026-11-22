@@ -1,0 +1,56 @@
+{
+  "prereg_version": 1,
+  "name": "model run 1",
+  "written": "2026-11-14",
+  "status": "Written before the run. No model has answered this suite.",
+  "construct": "Whether a model, shown each case's documents through the public view and asked for one structured answer, passes every hard gate of the case. It is not a measure of retrieval: the model is shown every document, so on the 11 cases whose corpus exceeds the retrieval budget it is not doing the task the reference agent does.",
+  "settings": {
+    "models": ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"],
+    "trials": 3,
+    "shuffle_seed": 2026,
+    "effort": "medium",
+    "max_tokens": 8192,
+    "max_attempts": 2,
+    "prompt_sha256": "0758eccbe032a6b5ddb1d0783588eb196df6b5df6b3f045e761f71ddc518ea44",
+    "grader_version": "1.4.0",
+    "dataset_version": "343cfc03b4b0607a16bd8082e28980b06f76952370a208084c1bbfcf820a48a6",
+    "best_surface_heuristic": "overlap-document"
+  },
+  "primary_metric": {
+    "id": "all_trials",
+    "text": "Per model, the number of the 42 cases passed in every one of the 3 trials, with an exact 95% Clopper-Pearson interval. A case passes a trial only if the model returned a usable answer and the grader passed it. A refusal, an answer with no usable tool call, and a request that failed after its retry all count as failed."
+  },
+  "secondary_metrics": [
+    "any_trial: cases passed in at least one trial",
+    "spread: passes per trial, their range, and the number of cases whose verdict differs between trials",
+    "gates and by_mode: failures per gate and per failure mode, pooled over trials",
+    "over_refusal: answerable cases the model abstained on, per trial and pooled",
+    "budget_bound and not_budget_bound: the primary metric on the 11 cases whose corpus exceeds the budget and on the other 31",
+    "statuses, tokens and usd per model"
+  ],
+  "comparisons": {
+    "primary": {
+      "tests": "Each model's all_trials verdict per case against the reference agent, and against overlap-document, the copy-one-document agent with the most passes at seed 2026 (14 of 42; the reference agent passes 9). Exact two-sided McNemar on the 42 paired cases.",
+      "size": 6,
+      "correction": "Holm over the 6 tests"
+    },
+    "between_models": {
+      "tests": "Every two models, all_trials verdict per case, exact two-sided McNemar.",
+      "size": 3,
+      "correction": "Holm over the 3 tests, on its own",
+      "role": "secondary"
+    }
+  },
+  "thresholds": {
+    "alpha": 0.05,
+    "max_share_errors": 0.05
+  },
+  "decision_rule": "A model is said to differ from a baseline, or from another model, only when the Holm-adjusted p of that test is below alpha. Anything else is reported as no difference found, not as equivalence.",
+  "power_note": "With 42 cases the primary family needs 8 discordant cases in one direction and none in the other for its smallest test to reach a Holm-adjusted p below 0.05 (2 * 0.5^8 * 6 = 0.047). Smaller differences will read as no difference found.",
+  "withheld_when": [
+    "any setting above differs from the run (models, trials, seed, effort, max_tokens, max_attempts, prompt, grader version, dataset version, or which surface agent is best)",
+    "the run is incomplete: the spending cap or a rejected request stopped it before every model finished every trial",
+    "more than max_share_errors of a model's cases ended in a request error"
+  ],
+  "not_registered": "Scores (citation precision and recall, retrieval recall, faithfulness), per-tier pass rates, and any comparison not listed above are exploratory."
+}
