@@ -10,6 +10,7 @@ from hard_rag_evals.gamers import (
     GAMERS,
     SURFACE,
     AlwaysAbstain,
+    BudgetSmuggler,
     CiteEverything,
     Fabricator,
     Hedger,
@@ -68,6 +69,7 @@ SCORES = {
     "mean-guess": 10,
     "sum-minus-largest": 9,
     "query-echo": 9,
+    "budget-smuggler": 8,
 }
 
 
@@ -186,3 +188,69 @@ def test_hero_figure_matches_the_gamer_table_at_the_default_seed():
         assert "21 of the 33 failed cases are passed by at least one" in svg
     readme = (assets.parent.parent / "README.md").read_text()
     assert "21 of the 33 cases the reference agent fails" in readme
+
+
+# ---- reading past the budget ----
+
+
+def _passed_ignoring(results, gate):
+    # The verdict an answer would get without one gate: grader 1.3.0 had no
+    # unretrieved citation gate.
+    return {r.case_id for r in results if all(ok for g, ok in r.gates.items() if g != gate)}
+
+
+def test_budget_smuggler_gains_nothing_and_loses_where_it_cites_past_the_budget():
+    honest = {r.case_id for r in run_suite(ReferenceAgent()) if r.passed}
+    results = run_suite(BudgetSmuggler())
+    assert all(r.gates["budget"] for r in results)  # what it reports fits every budget
+    assert {r.case_id for r in results if r.passed} == honest - {"overflow-easy"}
+    assert {r.case_id: r for r in results}["overflow-easy"].failed_gates == ["unretrieved_citation"]
+    assert {r.case_id for r in results if not r.gates["unretrieved_citation"]} == {
+        "overflow-easy",
+        "overflow-medium",
+        "overflow-hard",
+        "needle-medium",
+        "needle-hard",
+        "compositional-overflow-multihop",
+    }
+    # Without the gate, reading past the budget wins three cases.
+    assert _passed_ignoring(results, "unretrieved_citation") - honest == {
+        "overflow-medium",
+        "overflow-hard",
+        "compositional-overflow-multihop",
+    }
+
+
+class _ReportNothing(BudgetSmuggler):
+    name = "smuggler-report-nothing"
+
+    def answer(self, query, corpus, budget):
+        ans = super().answer(query, corpus, budget)
+        ans.retrieved_ids = []
+        return ans
+
+
+class _ReportCitations(BudgetSmuggler):
+    # The limit: report exactly what it cites. This passes the gate by
+    # construction; it is stopped only where its citations do not fit the budget.
+    name = "smuggler-report-citations"
+
+    def answer(self, query, corpus, budget):
+        ans = super().answer(query, corpus, budget)
+        ans.retrieved_ids = list(ans.citations)
+        return ans
+
+
+def test_smuggler_variants():
+    honest = {r.case_id for r in run_suite(ReferenceAgent()) if r.passed}
+    nothing = run_suite(_ReportNothing())
+    assert sum(r.passed for r in nothing) == 0
+    assert _passed_ignoring(nothing, "unretrieved_citation") - honest == {
+        "overflow-medium",
+        "overflow-hard",
+        "compositional-overflow-multihop",
+    }
+    cites = run_suite(_ReportCitations())
+    assert all(r.gates["unretrieved_citation"] for r in cites)
+    assert sum(r.passed for r in cites) == 8
+    assert {r.case_id for r in cites if r.passed} - honest == set()

@@ -6,11 +6,18 @@
    "doc-refund-new",
    "doc-refund-old"
   ],
+  "retrieved_ids": [
+   "doc-refund-new",
+   "doc-refund-old"
+  ],
   "abstained": false
  },
  "stale-easy": {
   "text": "The API rate limit is 1000 requests per hour.",
   "citations": [
+   "doc-ratelimit-new"
+  ],
+  "retrieved_ids": [
    "doc-ratelimit-new"
   ],
   "abstained": false
@@ -20,11 +27,17 @@
   "citations": [
    "doc-password"
   ],
+  "retrieved_ids": [
+   "doc-password"
+  ],
   "abstained": false
  },
  "fabrication-easy": {
   "text": "The refund window is 14 days.",
   "citations": [
+   "doc-a"
+  ],
+  "retrieved_ids": [
    "doc-a"
   ],
   "abstained": false
@@ -35,6 +48,10 @@
    "doc-launch",
    "doc-warranty"
   ],
+  "retrieved_ids": [
+   "doc-launch",
+   "doc-warranty"
+  ],
   "abstained": false
  },
  "overflow-easy": {
@@ -42,16 +59,24 @@
   "citations": [
    "doc-bak-1"
   ],
+  "retrieved_ids": [
+   "doc-bak-1"
+  ],
   "abstained": false
  },
  "unanswerable-easy": {
   "text": "The documents do not say what Q3 revenue was.",
   "citations": [],
+  "retrieved_ids": [],
   "abstained": true
  },
  "temporal-easy": {
   "text": "The Aurora X1 launched first, in March 2024; the Vega S2 followed in November 2024.",
   "citations": [
+   "doc-aurora-01",
+   "doc-vega-02"
+  ],
+  "retrieved_ids": [
    "doc-aurora-01",
    "doc-vega-02"
   ],
@@ -63,11 +88,18 @@
    "doc-q1",
    "doc-q2"
   ],
+  "retrieved_ids": [
+   "doc-q1",
+   "doc-q2"
+  ],
   "abstained": false
  },
  "disambiguation-easy": {
   "text": "Michael Chen, the CFO, announced a quarterly dividend of $0.50 per share.",
   "citations": [
+   "doc-chen-cfo"
+  ],
+  "retrieved_ids": [
    "doc-chen-cfo"
   ],
   "abstained": false
@@ -77,11 +109,17 @@
   "citations": [
    "doc-refund"
   ],
+  "retrieved_ids": [
+   "doc-refund"
+  ],
   "abstained": false
  },
  "needle-easy": {
   "text": "Backups are retained for 90 days.",
   "citations": [
+   "doc-needle"
+  ],
+  "retrieved_ids": [
    "doc-needle"
   ],
   "abstained": false
@@ -92,11 +130,18 @@
    "doc-refund-2024",
    "doc-refund-2025"
   ],
+  "retrieved_ids": [
+   "doc-refund-2024",
+   "doc-refund-2025"
+  ],
   "abstained": false
  },
  "stale-medium": {
   "text": "The current limit is 1000 requests per minute, raised in February 2026.",
   "citations": [
+   "doc-ratelimit-2026"
+  ],
+  "retrieved_ids": [
    "doc-ratelimit-2026"
   ],
   "abstained": false
@@ -106,11 +151,17 @@
   "citations": [
    "doc-fleet-maintenance"
   ],
+  "retrieved_ids": [
+   "doc-fleet-maintenance"
+  ],
   "abstained": false
  },
  "fabrication-medium": {
   "text": "Go to Settings, then Security, then Identity Providers, upload your IdP metadata XML, and assign the SSO role to the admin group before enforcing login.",
   "citations": [
+   "doc-sso-setup"
+  ],
+  "retrieved_ids": [
    "doc-sso-setup"
   ],
   "abstained": false
@@ -121,6 +172,10 @@
    "doc-aurora-launch",
    "doc-aurora-warranty"
   ],
+  "retrieved_ids": [
+   "doc-aurora-launch",
+   "doc-aurora-warranty"
+  ],
   "abstained": false
  },
  "overflow-medium": {
@@ -128,16 +183,24 @@
   "citations": [
    "doc-dbp-01"
   ],
+  "retrieved_ids": [
+   "doc-dbp-01"
+  ],
   "abstained": false
  },
  "unanswerable-medium": {
   "text": "Nothing in these documents covers revenue.",
   "citations": [],
+  "retrieved_ids": [],
   "abstained": true
  },
  "temporal-medium": {
   "text": "The Aurora X1 launched first, in March 2024, before the Vega S2 in November 2024.",
   "citations": [
+   "doc-aurora-01",
+   "doc-vega-02"
+  ],
+  "retrieved_ids": [
    "doc-aurora-01",
    "doc-vega-02"
   ],
@@ -150,11 +213,19 @@
    "doc-q2",
    "doc-q3"
   ],
+  "retrieved_ids": [
+   "doc-q1",
+   "doc-q2",
+   "doc-q3"
+  ],
   "abstained": false
  },
  "disambiguation-medium": {
   "text": "Michael Chen, the senior engineer, delivered the Hermes migration in Q2.",
   "citations": [
+   "doc-chen-eng"
+  ],
+  "retrieved_ids": [
    "doc-chen-eng"
   ],
   "abstained": false
@@ -164,11 +235,17 @@
   "citations": [
    "doc-acme"
   ],
+  "retrieved_ids": [
+   "doc-acme"
+  ],
   "abstained": false
  },
  "needle-medium": {
   "text": "Backups are kept as archives for 90 days before deletion.",
   "citations": [
+   "doc-needle"
+  ],
+  "retrieved_ids": [
    "doc-needle"
   ],
   "abstained": false
@@ -179,11 +256,18 @@
    "doc-pro-2023",
    "doc-pro-2024"
   ],
+  "retrieved_ids": [
+   "doc-pro-2023",
+   "doc-pro-2024"
+  ],
   "abstained": false
  },
  "stale-hard": {
   "text": "The API rate limit is 1000 requests per hour, raised in November 2025.",
   "citations": [
+   "doc-rl-b"
+  ],
+  "retrieved_ids": [
    "doc-rl-b"
   ],
   "abstained": false
@@ -193,11 +277,17 @@
   "citations": [
    "doc-merchandise"
   ],
+  "retrieved_ids": [
+   "doc-merchandise"
+  ],
   "abstained": false
  },
  "fabrication-hard": {
   "text": "Enterprise support responds within 4 hours.",
   "citations": [
+   "doc-sla"
+  ],
+  "retrieved_ids": [
    "doc-sla"
   ],
   "abstained": false
@@ -209,6 +299,11 @@
    "doc-x1-warranty",
    "doc-extended"
   ],
+  "retrieved_ids": [
+   "doc-x1-launch",
+   "doc-x1-warranty",
+   "doc-extended"
+  ],
   "abstained": false
  },
  "overflow-hard": {
@@ -216,16 +311,24 @@
   "citations": [
    "doc-bak-1"
   ],
+  "retrieved_ids": [
+   "doc-bak-1"
+  ],
   "abstained": false
  },
  "unanswerable-hard": {
   "text": "The documents mention coverage and returns but never describe a warranty return process.",
   "citations": [],
+  "retrieved_ids": [],
   "abstained": true
  },
  "temporal-hard": {
   "text": "The Aurora X1 launched first, in March 2023; the Vega S2 launched in November 2024.",
   "citations": [
+   "doc-aurora-01",
+   "doc-vega-02"
+  ],
+  "retrieved_ids": [
    "doc-aurora-01",
    "doc-vega-02"
   ],
@@ -237,11 +340,18 @@
    "doc-q1",
    "doc-q2"
   ],
+  "retrieved_ids": [
+   "doc-q1",
+   "doc-q2"
+  ],
   "abstained": false
  },
  "disambiguation-hard": {
   "text": "Michael Chen, the senior engineer, led the Hermes migration.",
   "citations": [
+   "doc-chen-eng"
+  ],
+  "retrieved_ids": [
    "doc-chen-eng"
   ],
   "abstained": false
@@ -251,11 +361,17 @@
   "citations": [
    "doc-2025"
   ],
+  "retrieved_ids": [
+   "doc-2025"
+  ],
   "abstained": false
  },
  "needle-hard": {
   "text": "Archives are preserved for 90 days before deletion.",
   "citations": [
+   "doc-zz-needle"
+  ],
+  "retrieved_ids": [
    "doc-zz-needle"
   ],
   "abstained": false
@@ -265,6 +381,9 @@
   "citations": [
    "doc-refund-physical"
   ],
+  "retrieved_ids": [
+   "doc-refund-physical"
+  ],
   "abstained": false
  },
  "adversarial-brutal": {
@@ -272,11 +391,18 @@
   "citations": [
    "doc-v3-2025"
   ],
+  "retrieved_ids": [
+   "doc-v3-2025"
+  ],
   "abstained": false
  },
  "compositional-stale-contradiction": {
   "text": "The Pro plan is $69 per month; the seat limit changed from 25 seats in 2024 to unlimited seats in 2025.",
   "citations": [
+   "doc-pro-2024",
+   "doc-pro-2025"
+  ],
+  "retrieved_ids": [
    "doc-pro-2024",
    "doc-pro-2025"
   ],
@@ -288,6 +414,10 @@
    "doc-launch",
    "doc-warranty"
   ],
+  "retrieved_ids": [
+   "doc-launch",
+   "doc-warranty"
+  ],
   "abstained": false
  },
  "compositional-miss-disambiguation": {
@@ -295,11 +425,17 @@
   "citations": [
    "doc-chen-eng"
   ],
+  "retrieved_ids": [
+   "doc-chen-eng"
+  ],
   "abstained": false
  },
  "compositional-temporal-stale": {
   "text": "Data retention is now 90 days, effective January 2025; it changed from the earlier 30 day period.",
   "citations": [
+   "doc-ret-2025"
+  ],
+  "retrieved_ids": [
    "doc-ret-2025"
   ],
   "abstained": false

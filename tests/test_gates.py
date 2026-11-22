@@ -21,6 +21,7 @@ REFERENCE_FAILED_BY_GATE = {
     "required_citation": 6,
     "forbidden_citation": 15,
     "unknown_citation": 0,
+    "unretrieved_citation": 0,
     "contradiction": 5,
     "numeric": 4,
     "order": 2,
@@ -28,6 +29,10 @@ REFERENCE_FAILED_BY_GATE = {
 }
 GOLD = json.loads((Path(__file__).parent / "gold_answers.json").read_text())
 GOLD.pop("_canary")
+
+
+def _gold(g) -> Answer:
+    return Answer(text=g["text"], citations=g["citations"], retrieved_ids=g["retrieved_ids"], abstained=g["abstained"])
 
 
 def _case(**kw):
@@ -45,7 +50,7 @@ def _case(**kw):
 def test_each_gate_fails_alone():
     everything = _case(
         query="Is it 30 or 14?",
-        budget=RetrievalBudget(max_docs=1, max_chars=100),
+        budget=RetrievalBudget(max_docs=2, max_chars=100),
         must_cite=("a",),
         must_not_cite=("b",),
         conflict_claims=("30", "14"),
@@ -53,17 +58,20 @@ def test_each_gate_fails_alone():
         order_check=(("alpha",), ("gamma",)),
         forbidden_phrases=("hunter2",),
     )
-    good = Answer(text="It changed from 30 to 14. The total is 10. alpha then gamma.", citations=["a"])
+    good = Answer(
+        text="It changed from 30 to 14. The total is 10. alpha then gamma.", citations=["a"], retrieved_ids=["a", "b"]
+    )
     result = grade(everything, good)
     assert result.passed and result.failed_gates == []
     assert set(result.gates) == set(GATES)
 
     breaks = {
-        "budget": replace(good, retrieved_ids=["a", "b"]),
+        "budget": replace(good, retrieved_ids=["a", "b", "ghost"]),
         "abstention": replace(good, abstained=True),
         "required_citation": replace(good, citations=[]),
         "forbidden_citation": replace(good, citations=["a", "b"]),
         "unknown_citation": replace(good, citations=["a", "ghost"]),
+        "unretrieved_citation": replace(good, retrieved_ids=["b"]),
         "contradiction": replace(good, text="It is 14. The total is 10. alpha then gamma."),
         "numeric": replace(good, text="It changed from 30 to 14. alpha then gamma."),
         "order": replace(good, text="It changed from 30 to 14. The total is 10. gamma then alpha."),
@@ -78,7 +86,7 @@ def test_each_gate_fails_alone():
 
 def test_gates_that_a_case_does_not_set_are_not_recorded():
     result = grade(_case(), Answer(text="x"))
-    assert result.gates == {"budget": True, "abstention": True, "unknown_citation": True}
+    assert result.gates == {"budget": True, "abstention": True, "unknown_citation": True, "unretrieved_citation": True}
 
 
 def test_passed_is_exactly_all_gates_held():
@@ -89,7 +97,7 @@ def test_passed_is_exactly_all_gates_held():
 def test_gate_coverage_matches_the_fixtures():
     cases = {c.id: c for c in ALL_CASES}
     results = [
-        grade(cases[i], Answer(text=g["text"], citations=g["citations"], abstained=g["abstained"]))
+        grade(cases[i], _gold(g))
         for i, g in GOLD.items()
         if i in cases
     ]
@@ -100,6 +108,7 @@ def test_gate_coverage_matches_the_fixtures():
         "required_citation": 39,
         "forbidden_citation": 16,
         "unknown_citation": 42,
+        "unretrieved_citation": 42,
         "contradiction": 5,
         "numeric": 4,
         "order": 3,
@@ -156,9 +165,50 @@ def test_budget_gate_counts_characters_and_allows_one_oversized_document():
 
 
 def test_budget_gate_cannot_see_what_an_answer_does_not_report():
-    # The stated limit: no retrieved_ids, no evidence, pass.
+    # The budget gate alone: no retrieved_ids, no evidence, pass. The
+    # unretrieved citation gate is what fails this answer.
     case = _case(budget=RetrievalBudget(max_docs=1, max_chars=5))
-    assert grade(case, Answer(text="x", citations=["a", "b"])).gates["budget"] is True
+    result = grade(case, Answer(text="x", citations=["a", "b"]))
+    assert result.gates["budget"] is True
+    assert result.failed_gates == ["unretrieved_citation"]
+
+
+# ---- the unretrieved citation gate ----
+
+
+def test_a_citation_must_be_in_the_answers_own_retrieved_ids():
+    case = _case()
+    assert grade(case, Answer(text="x", citations=["a"], retrieved_ids=["a"])).passed
+    assert grade(case, Answer(text="x", citations=["a"], retrieved_ids=["b", "a"])).passed
+    assert grade(case, Answer(text="x", retrieved_ids=["a", "b"])).passed  # retrieved and not cited is fine
+    for reported in ([], ["b"]):
+        result = grade(case, Answer(text="x", citations=["a", "b"], retrieved_ids=reported))
+        assert result.failed_gates == ["unretrieved_citation"]
+        assert "cited a document not in retrieved_ids: a" in result.notes
+    # each unreported citation is named once, however often it is cited
+    notes = grade(case, Answer(text="x", citations=["a", "a"])).notes
+    assert notes.count("cited a document not in retrieved_ids: a") == 1
+
+
+def test_an_invented_citation_fails_only_the_unknown_citation_gate():
+    # A citation to a document the corpus does not hold is the unknown citation
+    # gate's failure; it is not counted a second time here.
+    result = grade(_case(), Answer(text="x", citations=["ghost"]))
+    assert result.failed_gates == ["unknown_citation"]
+
+
+def test_gold_answers_that_report_nothing_fail_every_case_where_they_cite():
+    # Gold answers that report what they cite pass. The same answers with
+    # retrieved_ids left empty fail every case where they cite a document, and
+    # only on this gate. Under grader 1.3.0 all 42 passed.
+    cases = {c.id: c for c in ALL_CASES}
+    for cid, g in GOLD.items():
+        honest = _gold(g)
+        assert grade(cases[cid], honest).passed, cid
+        silent = grade(cases[cid], replace(honest, retrieved_ids=[]))
+        assert silent.passed == (not g["citations"]), cid
+        if g["citations"]:
+            assert silent.failed_gates == ["unretrieved_citation"], cid
 
 
 def test_budget_binds_on_eleven_cases_and_reading_everything_fails_exactly_those():

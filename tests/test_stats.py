@@ -109,16 +109,16 @@ def test_the_paired_test_has_little_power_at_this_size():
     # What "no significant difference" can and cannot mean here. Alone, an
     # agent needs 6 discordant cases all in one direction to reach p < 0.05.
     assert mcnemar_exact(5, 0) > 0.05 > mcnemar_exact(6, 0)
-    # Across 14 comparisons, Holm asks the smallest p to beat 0.05 / 14,
+    # Across 15 comparisons, Holm asks the smallest p to beat 0.05 / 15,
     # which takes 10. Nine in one direction, the fabricating agent, falls short.
-    assert mcnemar_exact(9, 0) > 0.05 / 14 > mcnemar_exact(10, 0)
+    assert mcnemar_exact(9, 0) > 0.05 / 15 > mcnemar_exact(10, 0)
 
 
 def test_the_comparison_table_printed_by_grader_attacks():
     reference = run_suite(ReferenceAgent())
     agents = (*GAMERS, Fabricator)
     table = compare_many(reference, {a.name: run_suite(a()) for a in agents})
-    assert len(table) == 14
+    assert len(table) == 15
     counts = {name: (len(c.gained), len(c.lost)) for name, c in table.items()}
     assert counts == {
         "hedger": (0, 1),
@@ -129,6 +129,7 @@ def test_the_comparison_table_printed_by_grader_attacks():
         "mean-guess": (1, 0),
         "sum-minus-largest": (0, 0),
         "query-echo": (0, 0),
+        "budget-smuggler": (0, 1),
         "first-document": (6, 6),
         "overlap-document": (8, 3),
         "greatest-id-document": (11, 7),
@@ -136,19 +137,19 @@ def test_the_comparison_table_printed_by_grader_attacks():
         "shortest-document": (6, 5),
         "fabricating-agent": (0, 9),
     }
-    # Nothing survives correction across 14 comparisons. The closest is the
-    # agent that invents a citation: raw p 0.004, corrected 0.055.
+    # Nothing survives correction across 15 comparisons. The closest is the
+    # agent that invents a citation: raw p 0.004, corrected 0.059.
     fab = table["fabricating-agent"]
     assert fab.p_value == pytest.approx(2 * 0.5**9)
-    assert fab.p_holm == pytest.approx(14 * 2 * 0.5**9) and 0.05 < fab.p_holm < 0.06
+    assert fab.p_holm == pytest.approx(15 * 2 * 0.5**9) and 0.05 < fab.p_holm < 0.06
     assert fab.ci95[1] < 0
     assert all(c.p_holm > 0.05 for c in table.values())
     assert table["always-abstain"].p_value == pytest.approx(0.14599609375)
     assert table["overlap-document"].p_value == pytest.approx(0.2265625)
     text = render_comparison_markdown("the reference agent", table)
-    assert "Holm p corrects for 14 comparisons" in text
+    assert "Holm p corrects for 15 comparisons" in text
     assert "| always-abstain | 3 | 9 | -0.143 | -0.298 to +0.025 | 0.146 | 1.000 |" in text
-    assert "| fabricating-agent | 0 | 9 | -0.214 | -0.339 to -0.070 | 0.004 | 0.055 |" in text
+    assert "| fabricating-agent | 0 | 9 | -0.214 | -0.339 to -0.070 | 0.004 | 0.059 |" in text
     assert "| overlap-document | 8 | 3 | +0.119 |" in text
 
 

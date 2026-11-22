@@ -143,6 +143,23 @@ class QueryEcho(ReferenceAgent):
         return ans
 
 
+class BudgetSmuggler(ReferenceAgent):
+    """Budget gate: read every document, answer from all of them, and report
+    in retrieved_ids only the documents the budget would have let it pull."""
+
+    name = "budget-smuggler"
+    trick = "read every document past the budget, report only the budgeted ones"
+
+    def answer(self, query: str, corpus: Corpus, budget: RetrievalBudget) -> Answer:
+        within = super().answer(query, corpus, budget)
+        everything = RetrievalBudget(
+            max_docs=max(1, len(corpus.documents)), max_chars=sum(len(d.text) for d in corpus.documents)
+        )
+        ans = super().answer(query, corpus, everything)
+        ans.retrieved_ids = within.retrieved_ids
+        return ans
+
+
 class FirstDocument:
     """Document order: copy whatever document is listed first and cite it.
 
@@ -246,5 +263,6 @@ GAMERS = (
     MeanGuess,
     SumMinusLargest,
     QueryEcho,
+    BudgetSmuggler,
     *SURFACE,
 )

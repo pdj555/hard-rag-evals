@@ -46,6 +46,7 @@
         "required_citation",
         "forbidden_citation",
         "unknown_citation",
+        "unretrieved_citation",
         "contradiction",
         "numeric",
         "order",
@@ -329,7 +330,8 @@
           "required": [
             "budget",
             "abstention",
-            "unknown_citation"
+            "unknown_citation",
+            "unretrieved_citation"
           ]
         },
         "failed_gates": {
