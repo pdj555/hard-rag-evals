@@ -37,7 +37,7 @@ Four scores are computed for every case: citation precision, citation recall, re
 
 ## Run it
 
-No API key, no model calls, no network. Grading is deterministic.
+Grading needs no API key and makes no model calls and no network calls. Grading is deterministic.
 
 ```bash
 pip install -e .
@@ -52,7 +52,7 @@ Every result, report, and exported row records a grader version, a dataset versi
 
 ## Running a model
 
-Staged, not run. `python scripts/model_run.py --estimate` prices three Claude models at 3 trials each at $12.88 by an estimate meant to be high and not yet checked against the API, with no call made. The `model-run` workflow makes the run under a hard dollar cap, starts only by hand, and checks the result against [docs/prereg/model-run-1.json](docs/prereg/model-run-1.json); the command is in [AGENTS.md](AGENTS.md).
+This model run is staged only and has not been run. `python scripts/model_run.py --estimate` prices three Claude models at 3 trials each at $12.88 by an estimate meant to be high and not yet checked against the API, with no call made. The `model-run` workflow makes the run under a hard dollar cap, starts only by hand, and checks the result against [docs/prereg/model-run-1.json](docs/prereg/model-run-1.json); the command is in [AGENTS.md](AGENTS.md).
 
 ## What the grader does not check
 

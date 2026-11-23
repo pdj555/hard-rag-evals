@@ -16,7 +16,7 @@ Writing them found a case no answer could pass. compositional-temporal-stale for
 
 ## The experiment
 
-The reference agent is a baseline, not a model. It ranks documents by IDF weighted keyword overlap, keeps the top documents inside the budget (5 documents, 8,000 characters by default), copies the two sentences from each with the most query overlap, and cites the documents it copied from. It never abstains.
+The reference agent is a scripted baseline. It ranks documents by IDF weighted keyword overlap, keeps the top documents inside the budget (5 documents, 8,000 characters by default), copies the two sentences from each with the most query overlap, and cites the documents it copied from. It never abstains.
 
 | Agent | Easy | Medium | Hard | Brutal | Total |
 | --- | --- | --- | --- | --- | --- |
@@ -28,7 +28,7 @@ The one hard case the reference agent passes is citation fabrication at hard tie
 
 ## Document order leaked the key
 
-The fixtures list each case's documents in the order they were written, and the document that answers the question usually came first: the first document is a required citation in 33 of the 39 cases that require one. FirstDocument copies the first document listed and cites it. It retrieves nothing and reads nothing. In fixture order it scores 19 of 42 against the reference agent's 9: 12 cases gained, 2 lost, a difference in pass rate of 0.24 with a 95% interval of 0.06 to 0.39, exact McNemar p 0.013. That is one test chosen after seeing the result, so the p-value is a description, not a confirmation.
+The fixtures list each case's documents in the order they were written, and the document that answers the question usually came first: the first document is a required citation in 33 of the 39 cases that require one. FirstDocument copies the first document listed and cites it. It retrieves nothing and reads nothing. In fixture order it scores 19 of 42 against the reference agent's 9: 12 cases gained, 2 lost, a difference in pass rate of 0.24 with a 95% interval of 0.06 to 0.39, exact McNemar p 0.013. That is one test chosen after seeing the result, so the p-value only describes the result it was chosen from.
 
 Every run and every view an agent is shown now shuffles each case's documents with a fixed seed, 2026, recorded in each result. Over seeds 0 to 19 FirstDocument averages 7.0 of 42, range 4 to 12, and a required document is first in 15 to 25 of 39 cases, mean 18.9. At the default seed it scores 9 and a required document is first in 22. It does not fall to zero because 33 of the 42 cases hold three documents or fewer. The reference agent and its nine variants score the same in fixture order and under all 20 seeds, because retrieval breaks ties by document id; for them shuffling changes nothing.
 
